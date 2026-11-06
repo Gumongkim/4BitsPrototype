@@ -166,16 +166,10 @@ class Game {
     this.nextWave();
   }
 
-  get wavePerfectRatio() {
-    const s = this.waveStats;
-    const total = s.perfect + s.good + s.miss;
-    return total ? s.perfect / total : 0;
-  }
-
   enterReward() {
     Sfx.play('clear');
     this.state = 'reward';
-    this.rewardCards = Rewards.draw(this.wavePerfectRatio, this.player, this.wave);
+    this.rewardCards = Rewards.draw(this.player, this.wave);
     this.rewardIndex = 0;
     this.rewardLock = CONFIG.REWARD_INPUT_LOCK;
   }
@@ -224,7 +218,7 @@ class Game {
       this.ringBursts.push({ cells, gap, grade: result.grade, drum: result.drum, age: 0 });
     }
     // 빈 칸을 친 입력은 판정만 표시하고 통계와 콤보에 넣지 않는다.
-    // 안전한 곳에서 Perfect를 쌓아 보상 등급을 올리는 것을 막기 위해서다.
+    // 적이 없는 곳에서 친 판정으로 콤보와 통계가 부풀려지는 것을 막기 위해서다.
     if (!targets.length) return;
 
     this.waveStats[result.grade]++;

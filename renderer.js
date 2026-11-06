@@ -40,13 +40,6 @@ const ENEMY_LOOKS = {
 
 const TELEGRAPH_FILLS = { melee: '#a8323e', ranged: '#b5482c' };
 
-const RARITY_LOOKS = {
-  common: { label: '일반', color: '#8a93ad' },
-  rare: { label: '희귀', color: '#4aa8ff' },
-  epic: { label: '영웅', color: '#c77dff' },
-  weapon: { label: '무기', color: '#ffc14d' },
-};
-
 // 무기 티어별 카드 색
 const TIER_COLORS = { 1: '#8a93ad', 2: '#4aa8ff', 3: '#c77dff', 4: '#ffc14d' };
 
@@ -344,40 +337,33 @@ class Renderer {
     this.drawOverlay();
     const cx = CONFIG.VIEW_WIDTH / 2;
     this.text(`WAVE ${game.wave} 클리어`, cx, 8, 13, COLORS.text, 'center');
-    this.text(this.statLine(game.waveStats), cx, 26, 8, COLORS.dim, 'center');
-    this.text(`Perfect 비율 ${Math.round(game.wavePerfectRatio * 100)}%`, cx, 37, 8, POPUP_STYLES.perfect.color, 'center');
+    this.text(this.statLine(game.waveStats), cx, 24, 8, COLORS.dim, 'center');
 
+    // 무기 카드들과 맨 끝의 '지금 무기 유지' 카드. 모두 이름, 범위 그림, 리듬 막대, 데미지, 쿨다운을 보여준다.
     const cards = game.rewardCards;
-    const width = 92;
-    const gap = 8;
+    const width = 74;
+    const gap = 4;
     const left = (CONFIG.VIEW_WIDTH - (cards.length * width + (cards.length - 1) * gap)) / 2;
-    const top = 52;
-    const height = 100;
+    const top = 40;
+    const height = 112;
     cards.forEach((card, i) => {
       const x = left + i * (width + gap);
-      const weapon = card.weapon ? CONFIG.WEAPONS[card.weapon] : null;
-      const look = weapon
-        ? { label: `${weapon.tier}티어 무기`, color: TIER_COLORS[weapon.tier] }
-        : RARITY_LOOKS[card.rarity];
+      const weapon = CONFIG.WEAPONS[card.weapon || card.keep];
+      const look = card.keep
+        ? { label: '유지', color: COLORS.dim }
+        : { label: `${weapon.tier}티어`, color: TIER_COLORS[weapon.tier] };
       const selected = i === game.rewardIndex;
       this.rect(x, top, width, height, COLORS.cellB);
       this.frame(x, top, width, height, selected ? COLORS.text : look.color, selected ? 2 : 1);
-      this.text(`${i + 1}`, x + 6, top + 5, 8, COLORS.dim);
-      this.text(look.label, x + width - 6, top + 5, 7, look.color, 'right');
-      if (weapon) {
-        // 무기 카드: 이름, 범위 그림, 리듬 막대, 데미지
-        this.text(card.name, x + width / 2, top + 18, this.fitTextSize(card.name, width - 10, 10), COLORS.text, 'center');
-        this.drawRangePreview(weapon, x + (width - 64) / 2, top + 36, 8);
-        this.drawRhythmBar(x + 8, top + 74, width - 16, weapon);
-        this.text(weaponDamageText(weapon), x + width / 2, top + 86, 6, COLORS.text, 'center');
-        return;
-      }
-      this.text(card.name, x + width / 2, top + 22, 10, COLORS.text, 'center');
-      card.desc.split('\n').forEach((line, n) => {
-        this.text(line, x + width / 2, top + 44 + n * 11, 7, COLORS.dim, 'center');
-      });
+      this.text(`${i + 1}`, x + 5, top + 4, 7, COLORS.dim);
+      this.text(look.label, x + width - 5, top + 4, 7, look.color, 'right');
+      this.text(card.name, x + width / 2, top + 16, this.fitTextSize(card.name, width - 8, 9), COLORS.text, 'center');
+      this.drawRangePreview(weapon, x + (width - 56) / 2, top + 32);
+      this.drawRhythmBar(x + 6, top + 70, width - 12, weapon);
+      this.text(weaponDamageText(weapon), x + width / 2, top + 82, 6, COLORS.text, 'center');
+      this.text(card.keep ? '지금 무기 유지' : `쿨다운 ${weapon.cooldown}초`, x + width / 2, top + 96, 7, COLORS.dim, 'center');
     });
-    this.text('← → 선택     Enter 확정     1~3 바로 선택', cx, 160, 8, COLORS.ring, 'center');
+    this.text(`← → 선택     Enter 확정     1~${cards.length} 바로 선택`, cx, 160, 8, COLORS.ring, 'center');
   }
 
   drawGameOver(game) {

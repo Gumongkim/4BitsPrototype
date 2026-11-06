@@ -43,7 +43,7 @@ const CONFIG = {
 
   // 판정 배율
   JUDGE: {
-    perfect: { damageMult: 2 },
+    perfect: { damageMult: 1.25 },
     good: { damageMult: 1 },
   },
   WINDOW_MARGIN: 0.005,         // 판정 윈도우 x 2가 쿨다운보다 이만큼 작게 유지된다
@@ -229,8 +229,8 @@ const CONFIG = {
     },
     bossa_mace: {
       name: '보사노바 메이스', tier: 3,
-      // S. .S .. S. .S .A .S ..
-      intervals: [0.45, 0.45, 0.45, 0.45, 0.3, 0.3], startOffset: 0.3, drums: ['snare', 'snare', 'snare', 'snare', 'kick', 'snare'],
+      // .. S. .S .. S. .S .A .S
+      intervals: [0.45, 0.45, 0.45, 0.45, 0.3, 0.3], drums: ['snare', 'snare', 'snare', 'snare', 'kick', 'snare'],
       damages: [0.75, 0.75, 0.75, 0.75, 0.5, 0.75], cooldown: 0.25, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
       ranges: [
         { cells: [[1, 0]] },
@@ -489,49 +489,21 @@ const CONFIG = {
   ENEMY_TELEGRAPH_MIN: 0.6,     // 공격 예고 시간의 하한. 정의 값이나 공격 속도와 상관없이 이보다 짧아지지 않는다.
   WAVE_CLEAR_DELAY: 0.6,        // 마지막 적 처치 후 보상 화면까지의 대기
 
-  // 보상
-  REWARD_CARD_COUNT: 3,
+  // 보상: 웨이브를 클리어하면 무기 카드와 '지금 무기 유지' 카드 중 하나를 고른다.
+  REWARD_WEAPON_CARDS: 3,       // 무기 카드 수. 서로 다르고 지금 무기는 나오지 않는다.
   REWARD_INPUT_LOCK: 0.4,       // 보상 화면 진입 직후 입력을 막는 시간
-  // Perfect 비율 0%와 100%일 때의 등급 가중치. 그 사이는 선형 보간한다.
-  RARITY_WEIGHTS: {
-    common: { low: 80, high: 25 },
-    rare: { low: 18, high: 45 },
-    epic: { low: 2, high: 30 },
-  },
-  WEAPON_CARD_CHANCE: 0.35,     // 보상 화면 마지막 카드가 다른 무기 카드로 바뀔 확률
   // 무기 티어별 봇 시뮬레이션 목표: 웨이브당 처치 시간(초). 무기 데미지를 맞출 때 쓴 기준이며 게임 중에는 쓰지 않는다.
   WEAPON_TIER_CLEAR_TARGET: { 1: 9, 2: 7.5, 3: 6, 4: 4.5 },
   WEAPON_TIER_UNLOCK_WAVE: { 1: 1, 2: 1, 3: 4, 4: 8 }, // 이 웨이브를 클리어하면 그 티어 무기 카드가 나올 수 있다
-  // 무기 카드의 티어 가중치. Perfect 비율 0%와 100%일 때의 값이며 그 사이는 선형 보간한다.
-  WEAPON_TIER_WEIGHTS: {
-    1: { low: 30, high: 5 },
-    2: { low: 45, high: 30 },
-    3: { low: 20, high: 40 },
-    4: { low: 5, high: 25 },
-  },
-  // 보상으로 도달할 수 있는 수치의 한계.
+  // 무기 카드의 티어 가중치. 판정 결과와 상관없이 고정이며, 지금 웨이브까지 열린 티어 사이에서만 쓴다.
+  WEAPON_TIER_WEIGHTS: { 1: 17.5, 2: 37.5, 3: 30, 4: 15 },
+  // player.stats가 효과로 도달할 수 있는 수치의 한계. 지금은 능력치를 바꾸는 보상이 없고, 추후 유물에서 쓴다.
   STAT_LIMITS: {
     windowBonus: { max: 0.03 },
     perfectMult: { max: 5 },
     moveTick: { min: 0.09 },
     comboBonusDamage: { max: 3 },
   },
-  // 새 보상은 이 배열에만 추가하면 된다.
-  // effects의 stat은 player.stats의 키, add는 더할 값. heal은 현재 HP 회복량.
-  REWARDS: [
-    { id: 'max_hp', name: '체력 단련', desc: '최대 HP +2', rarity: 'common',
-      effects: [{ stat: 'maxHp', add: 2 }], heal: 2 },
-    { id: 'move_tick', name: '가벼운 발', desc: '이동 틱 -0.02초', rarity: 'common',
-      effects: [{ stat: 'moveTick', add: -0.02 }] },
-    { id: 'window_up', name: '넓은 시야', desc: 'Perfect 윈도우 +0.01초\nGood 윈도우 +0.01초', rarity: 'rare',
-      effects: [{ stat: 'windowBonus', add: 0.01 }] },
-    { id: 'perfect_dmg', name: '정밀 타격', desc: 'Perfect 데미지 배율 +1', rarity: 'rare',
-      effects: [{ stat: 'perfectMult', add: 1 }] },
-    { id: 'combo_bonus', name: '리듬 연쇄', desc: '3연속 Perfect마다\n추가 데미지 +2', rarity: 'epic',
-      effects: [{ stat: 'comboBonusDamage', add: 2 }] },
-    { id: 'big_hp', name: '강철 심장', desc: '최대 HP +5', rarity: 'epic',
-      effects: [{ stat: 'maxHp', add: 5 }], heal: 5 },
-  ],
 
   // 연출
   HITSTOP_PERFECT: 0.07,
