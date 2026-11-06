@@ -38,20 +38,42 @@ const Rewards = {
     return pickRandom(pool.filter((c) => c.rarity === chosen));
   },
 
-  // 무기 교체 카드. 내용은 무기 데이터에서 만든다.
+  // 무기 교체 카드. 카드에는 무기 데이터로 범위 그림과 리듬 막대를 그린다.
   weaponCard(kind) {
     const weapon = CONFIG.WEAPONS[kind];
     return {
       id: `weapon_${kind}`,
       name: weapon.name,
-      desc: `리듬 ${weapon.intervals.join(' ')}\n${weaponDamageText(weapon)}\n${weapon.rangeDesc}`,
+      desc: '',
       rarity: 'weapon',
       weapon: kind,
       effects: [],
     };
   },
 
-  draw(ratio, player) {
+  // 지금 웨이브까지 열린 티어 중 Perfect 비율에 따른 가중치로 티어를 뽑고, 그 티어에서 지금 무기가 아닌 것 하나를 고른다.
+  drawWeaponKind(ratio, wave, currentKind) {
+    const kinds = Object.keys(CONFIG.WEAPONS).filter((kind) => kind !== currentKind);
+    const tiers = Object.keys(CONFIG.WEAPON_TIER_WEIGHTS).map(Number)
+      .filter((tier) => wave >= CONFIG.WEAPON_TIER_UNLOCK_WAVE[tier])
+      .filter((tier) => kinds.some((kind) => CONFIG.WEAPONS[kind].tier === tier));
+    const weightOf = (tier) => {
+      const w = CONFIG.WEAPON_TIER_WEIGHTS[tier];
+      return w.low + (w.high - w.low) * ratio;
+    };
+    let roll = Math.random() * tiers.reduce((sum, tier) => sum + weightOf(tier), 0);
+    let chosen = tiers[tiers.length - 1];
+    for (const tier of tiers) {
+      roll -= weightOf(tier);
+      if (roll < 0) {
+        chosen = tier;
+        break;
+      }
+    }
+    return pickRandom(kinds.filter((kind) => CONFIG.WEAPONS[kind].tier === chosen));
+  },
+
+  draw(ratio, player, wave) {
     const pool = CONFIG.REWARDS.filter((r) => this.isUseful(r, player.stats));
     const cards = [];
     while (cards.length < CONFIG.REWARD_CARD_COUNT && pool.length) {
@@ -60,8 +82,8 @@ const Rewards = {
       pool.splice(pool.indexOf(card), 1);
     }
     if (Math.random() < CONFIG.WEAPON_CARD_CHANCE) {
-      const others = Object.keys(CONFIG.WEAPONS).filter((kind) => kind !== player.weaponKind);
-      cards[Math.min(cards.length, CONFIG.REWARD_CARD_COUNT - 1)] = this.weaponCard(pickRandom(others));
+      const kind = this.drawWeaponKind(ratio, wave, player.weaponKind);
+      cards[Math.min(cards.length, CONFIG.REWARD_CARD_COUNT - 1)] = this.weaponCard(kind);
     }
     return cards;
   },

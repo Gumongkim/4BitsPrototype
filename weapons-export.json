@@ -1,0 +1,7902 @@
+{
+  "format": "4bit-prototype-weapon-tool/v1",
+  "exportedAt": "2026-11-06T07:13:38.472Z",
+  "howToRead": [
+    "4Bit_Prototype 무기 제작 툴에서 내보낸 플레이어 무기 데이터다.",
+    "한 사이클은 4/4 박자 8박 = 2.4초다 (1박 0.3초). 사이클은 끝나면 처음부터 반복된다.",
+    "nodes는 시간순이다. beat는 사이클 시작부터 지난 박 수(0.5, 1, ..., 8)이고 time은 그 초(0.15 ~ 2.4)다. 노드는 0.5박 단위이며 0초 자리는 없다. 8박(2.4초)은 사이클 끝이자 다음 사이클 시작과 같은 순간이다. 게임에서 리듬이 간격이 지난 순간에 오는 것과 같다.",
+    "drum: kick = 쿵 (A키, 형광 초록 링), snare = 짝 (S키, 형광 보라 링). 게임 config.js WEAPONS의 drums와 같은 값이다.",
+    "damage: 그 리듬의 기본 공격력. 게임에서는 여기에 판정 배율(Perfect 2, Good 1)이 곱해진다.",
+    "range.cells: 플레이어 칸 기준 [열 차이, 행 차이]. 오른쪽이 +열, 아래가 +행이다. 게임 WEAPONS.range.cells와 같은 형식이다.",
+    "range.firstTargetOnly: true면 범위 안에서 플레이어에게 가장 가까운 적 1명만 맞는다 (게임의 firstTargetOnly).",
+    "range.map: 8열 x 4행 그리드 그림. P = 게임 시작 위치의 플레이어 (열 1, 행 1, 0부터 셈), # = 공격 범위, . = 빈 칸. 이 위치에서 그리드 밖으로 나가는 칸은 그림에는 없고 cells에만 있다.",
+    "pattern: 1박씩 띄어 쓴 리듬 그림. 한 박은 두 글자로 앞 글자는 그 박의 절반(0.5박), 뒤 글자는 그 박 끝이다. A = 쿵, S = 짝, . = 쉼. 예: 한손검은 \".. .A .. .S .. .A .. .S\"",
+    "gameConfig: 게임 config.js WEAPONS에 옮길 때 쓰는 값. intervals, startOffset, drums, damages는 게임과 같은 의미다. ranges는 노드별 공격 범위 배열(노드 순서)이며 게임 WEAPONS.ranges에 그대로 넣는다. 그 경우 range에는 ranges에 없는 리듬이 쓸 기본 범위를 둔다. 쿨다운과 판정 윈도우는 툴에서 정하지 않으므로 리듬 간격에 맞춰 정한다.",
+    "warnings: 비어 있는 범위 등 확인이 필요한 점. 비어 있으면 문제없다."
+  ],
+  "timing": {
+    "beatSeconds": 0.3,
+    "beatsPerCycle": 8,
+    "cycleSeconds": 2.4,
+    "nodeStepBeats": 0.5
+  },
+  "grid": {
+    "cols": 8,
+    "rows": 4,
+    "player": {
+      "col": 1,
+      "row": 1
+    }
+  },
+  "weapons": [
+    {
+      "name": "플로우 8 너클",
+      "pattern": ".. .A S. .A .. .A S. .A",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 2.5,
+          "time": 0.75,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P##....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 6.5,
+          "time": 1.95,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 6,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P##....",
+              "..#.....",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.15,
+          0.45,
+          0.6,
+          0.15,
+          0.45
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "snare",
+          "kick",
+          "kick",
+          "snare",
+          "kick"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "따당 너클",
+      "pattern": ".. AS .. AS .. AS .. AS",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 1.5,
+          "time": 0.45,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 3.5,
+          "time": 1.05,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 5.5,
+          "time": 1.65,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 6,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 7,
+          "beat": 7.5,
+          "time": 2.25,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 8,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.45,
+          0.15,
+          0.45,
+          0.15,
+          0.45,
+          0.15,
+          0.45,
+          0.15
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "snare",
+          "kick",
+          "snare",
+          "kick",
+          "snare",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "백비트 소드",
+      "pattern": ".. .A .. .S .. .A .. .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..##....",
+              ".P##....",
+              "..##....",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "snare",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "3& 킥 소드",
+      "pattern": ".. .A .. .S .. .A .A .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P#.....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 7,
+          "time": 2.1,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P##....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..##....",
+              ".P###...",
+              "..##....",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.6,
+          0.6,
+          0.3,
+          0.3
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "snare",
+          "kick",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "1& 킥 건",
+      "pattern": ".. .A .A .S .. .A .. .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                4,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P...#..",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 3,
+          "time": 0.9,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                4,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P...#..",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                4,
+                0
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                3,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              ".....#..",
+              ".P..###.",
+              ".....#..",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                4,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                4,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              ".....#..",
+              ".P..###.",
+              ".....#..",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                5,
+                -1
+              ],
+              [
+                5,
+                1
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                3,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "....###.",
+              ".P..###.",
+              "....###.",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.3,
+          0.3,
+          0.6,
+          0.6
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "kick",
+          "snare",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                4,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                4,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                4,
+                0
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                3,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                4,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                4,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                5,
+                -1
+              ],
+              [
+                5,
+                1
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                3,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "포 온 더 플로어 나이프",
+      "pattern": ".. .A .. .A .. .A .. .A",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "kick",
+          "kick",
+          "kick"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "하프타임 롱소드",
+      "pattern": ".. .A .. .. .. .S .. ..",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P#.....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..##....",
+              ".P##....",
+              "..##....",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          1.2,
+          1.2
+        ],
+        "startOffset": 0.6,
+        "drums": [
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "더블타임 소드",
+      "pattern": ".S .A .S .A .S .A .S .A",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 1,
+          "time": 0.3,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P##....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P##....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 3,
+          "time": 0.9,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P##....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P##....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 5,
+          "time": 1.5,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P##....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 6,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P##....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 7,
+          "beat": 7,
+          "time": 2.1,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..##....",
+              ".P###...",
+              "..##....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 8,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..####..",
+              ".P#####.",
+              "..####..",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "startOffset": 0,
+        "drums": [
+          "snare",
+          "kick",
+          "snare",
+          "kick",
+          "snare",
+          "kick",
+          "snare",
+          "kick"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "트레실로 보우",
+      "pattern": ".. .A .. .. .A .. .. .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": true,
+            "map": [
+              "........",
+              ".P######",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 5,
+          "time": 1.5,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": true,
+            "map": [
+              "........",
+              ".P######",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ],
+              [
+                5,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P######",
+              "........",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.9,
+          0.9
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": true
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": true
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ],
+              [
+                5,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "쿵쿵짝 숏소드",
+      "pattern": ".. .A .A .S .. .A .A .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 3,
+          "time": 0.9,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 7,
+          "time": 2.1,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 6,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.3,
+          0.3,
+          0.6,
+          0.3,
+          0.3
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "kick",
+          "snare",
+          "kick",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "붐뱁 해머",
+      "pattern": ".. .A .. .S .. A. .A .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P.#....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "...#....",
+              ".P###...",
+              "...#....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 5.5,
+          "time": 1.65,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P.#....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 7,
+          "time": 2.1,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P.#....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "...#....",
+              ".P###...",
+              "...#....",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.6,
+          0.45,
+          0.45,
+          0.3
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "snare",
+          "kick",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "펑크 16 소드",
+      "pattern": ".. .A .. AS .. .. .A .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 3.5,
+          "time": 1.05,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P#.....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                0,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              ".##.....",
+              ".P#.....",
+              ".##.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 7,
+          "time": 2.1,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                0,
+                -1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              ".###....",
+              ".P##....",
+              ".###....",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.45,
+          0.15,
+          0.9,
+          0.3
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "kick",
+          "snare",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                0,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                0,
+                -1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "펑키 드러머 윕",
+      "pattern": ".. SA .A .S .. S. .A .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 1.5,
+          "time": 0.45,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P#.....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 3,
+          "time": 0.9,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..##....",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..###...",
+              ".P#.....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 5.5,
+          "time": 1.65,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..###...",
+              ".P#.#...",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 6,
+          "beat": 7,
+          "time": 2.1,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..###...",
+              ".P#.#...",
+              "..#.#...",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 7,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..###...",
+              ".P###...",
+              "..###...",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.45,
+          0.15,
+          0.3,
+          0.3,
+          0.45,
+          0.45,
+          0.3
+        ],
+        "startOffset": 0,
+        "drums": [
+          "snare",
+          "kick",
+          "kick",
+          "snare",
+          "snare",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "스테퍼스 로어",
+      "pattern": ".. .A .. .A .. .S .. .A",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "...#....",
+              ".P#.....",
+              "...#....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                3,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "....#...",
+              ".P.#....",
+              "....#...",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                5,
+                -1
+              ],
+              [
+                5,
+                1
+              ],
+              [
+                4,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              ".....##.",
+              ".P..##..",
+              ".....##.",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "kick",
+          "snare",
+          "kick"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                3,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                5,
+                -1
+              ],
+              [
+                5,
+                1
+              ],
+              [
+                4,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "보사노바 메이스",
+      "pattern": "S. .S .. S. .S .A .S ..",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 0.5,
+          "time": 0.15,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 3.5,
+          "time": 1.05,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P###...",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 5,
+          "time": 1.5,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P###...",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "...#....",
+              ".P###...",
+              "...#....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 6,
+          "beat": 7,
+          "time": 2.1,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                3,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "....#...",
+              ".P###...",
+              "....#...",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.3,
+          0.3
+        ],
+        "startOffset": 0.3,
+        "drums": [
+          "snare",
+          "snare",
+          "snare",
+          "snare",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                3,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "손 클라베 소드",
+      "pattern": ".. .A .. A. .A .. .S .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 3.5,
+          "time": 1.05,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 5,
+          "time": 1.5,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 7,
+          "time": 2.1,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                -1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              ".##.....",
+              ".P#.....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P#.....",
+              ".##.....",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.45,
+          0.45,
+          0.6,
+          0.3
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "kick",
+          "kick",
+          "snare",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                -1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "룸바 레이피어",
+      "pattern": ".. .A .. A. .. A. .S .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 3.5,
+          "time": 1.05,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 5.5,
+          "time": 1.65,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 7,
+          "time": 2.1,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P###...",
+              "........",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.45,
+          0.6,
+          0.45,
+          0.3
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "kick",
+          "kick",
+          "snare",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "트랩 크로스",
+      "pattern": ".. .A .. .. .A .S .A ..",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P.#....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 5,
+          "time": 1.5,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.#...",
+              ".P.#....",
+              "..#.#...",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "...#....",
+              ".P###...",
+              "...#....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 7,
+          "time": 2.1,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..###...",
+              ".P.#....",
+              "..###...",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.9,
+          0.9,
+          0.3,
+          0.3
+        ],
+        "startOffset": 0.3,
+        "drums": [
+          "kick",
+          "kick",
+          "snare",
+          "kick"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "DnB 투스텝 스피어",
+      "pattern": ".. .A .. .S .. .. .A .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 7,
+          "time": 2.1,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ]
+            ],
+            "firstTargetOnly": true,
+            "map": [
+              "........",
+              ".P####..",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P######",
+              "........",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.6,
+          0.9,
+          0.3
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "snare",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ]
+            ],
+            "firstTargetOnly": true
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "브레이크 소드",
+      "pattern": ".. SA .A .S .. S. .A AS",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 1.5,
+          "time": 0.45,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "...#....",
+              ".P.#....",
+              "...#....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P#.....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 3,
+          "time": 0.9,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P#.....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "...#....",
+              ".P.#....",
+              "...#....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 5.5,
+          "time": 1.65,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "...##...",
+              ".P.##...",
+              "...##...",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 6,
+          "beat": 7,
+          "time": 2.1,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..##....",
+              ".P##....",
+              "..##....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 7,
+          "beat": 7.5,
+          "time": 2.25,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..##....",
+              ".P##....",
+              "..##....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 8,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "...##...",
+              ".P.##...",
+              "...##...",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.45,
+          0.15,
+          0.3,
+          0.3,
+          0.45,
+          0.45,
+          0.15,
+          0.15
+        ],
+        "startOffset": 0,
+        "drums": [
+          "snare",
+          "kick",
+          "kick",
+          "snare",
+          "snare",
+          "kick",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                1,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "뎀보우",
+      "pattern": ".S .A .. SA .S .A .. SA",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 1,
+          "time": 0.3,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ],
+              [
+                3,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P..####",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P..####",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 3.5,
+          "time": 1.05,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P..####",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P..####",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 5,
+          "time": 1.5,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P..####",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 6,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P..####",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 7,
+          "beat": 7.5,
+          "time": 2.25,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                5,
+                1
+              ],
+              [
+                6,
+                1
+              ],
+              [
+                7,
+                1
+              ],
+              [
+                7,
+                -1
+              ],
+              [
+                6,
+                -1
+              ],
+              [
+                5,
+                -1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "....####",
+              ".P..####",
+              "....####",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 8,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                5,
+                1
+              ],
+              [
+                6,
+                1
+              ],
+              [
+                7,
+                1
+              ],
+              [
+                7,
+                -1
+              ],
+              [
+                6,
+                -1
+              ],
+              [
+                5,
+                -1
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                3,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "....####",
+              ".P..####",
+              "....####",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.3,
+          0.3,
+          0.45,
+          0.15,
+          0.3,
+          0.3,
+          0.45,
+          0.15
+        ],
+        "startOffset": 0,
+        "drums": [
+          "snare",
+          "kick",
+          "snare",
+          "kick",
+          "snare",
+          "kick",
+          "snare",
+          "kick"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ],
+              [
+                3,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                5,
+                1
+              ],
+              [
+                6,
+                1
+              ],
+              [
+                7,
+                1
+              ],
+              [
+                7,
+                -1
+              ],
+              [
+                6,
+                -1
+              ],
+              [
+                5,
+                -1
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                5,
+                0
+              ],
+              [
+                6,
+                0
+              ],
+              [
+                7,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                5,
+                1
+              ],
+              [
+                6,
+                1
+              ],
+              [
+                7,
+                1
+              ],
+              [
+                7,
+                -1
+              ],
+              [
+                6,
+                -1
+              ],
+              [
+                5,
+                -1
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                3,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "행진",
+      "pattern": ".S .A .. .S .S .A .. .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 1,
+          "time": 0.3,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 5,
+          "time": 1.5,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "..#.....",
+              ".P##....",
+              "..#.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 6,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                0,
+                -1
+              ],
+              [
+                -1,
+                0
+              ],
+              [
+                -1,
+                -1
+              ],
+              [
+                -1,
+                1
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "####....",
+              "#P##....",
+              "####....",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.3,
+          0.3,
+          0.6,
+          0.3,
+          0.3,
+          0.6
+        ],
+        "startOffset": 0,
+        "drums": [
+          "snare",
+          "kick",
+          "snare",
+          "snare",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                1,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                0,
+                -1
+              ],
+              [
+                -1,
+                0
+              ],
+              [
+                -1,
+                -1
+              ],
+              [
+                -1,
+                1
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "일렉트로 (808)",
+      "pattern": ".. .A .. .S .A .. .A .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P#.....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P##....",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 5,
+          "time": 1.5,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "...#....",
+              ".P###...",
+              "...#....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 7,
+          "time": 2.1,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "........",
+              ".P.##...",
+              "........",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 5,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "...###..",
+              ".P.###..",
+              "...###..",
+              "........"
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.6,
+          0.3,
+          0.6,
+          0.3
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "snare",
+          "kick",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                3,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                -1
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                4,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    },
+    {
+      "name": "백 비트 봄바",
+      "pattern": ".. .A .. .S .. .A .. .S",
+      "nodes": [
+        {
+          "index": 1,
+          "beat": 2,
+          "time": 0.6,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                -1,
+                0
+              ],
+              [
+                0,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              ".#......",
+              "#P#.....",
+              ".#......",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 2,
+          "beat": 4,
+          "time": 1.2,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                -1,
+                -1
+              ],
+              [
+                -1,
+                1
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                -1
+              ],
+              [
+                -1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "###.....",
+              "#P#.....",
+              "###.....",
+              "........"
+            ]
+          }
+        },
+        {
+          "index": 3,
+          "beat": 6,
+          "time": 1.8,
+          "drum": "kick",
+          "key": "A",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                -2
+              ],
+              [
+                1,
+                -2
+              ],
+              [
+                0,
+                -2
+              ],
+              [
+                -1,
+                -2
+              ],
+              [
+                -2,
+                -2
+              ],
+              [
+                -2,
+                -1
+              ],
+              [
+                -2,
+                0
+              ],
+              [
+                -2,
+                1
+              ],
+              [
+                -2,
+                2
+              ],
+              [
+                -1,
+                2
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "...#....",
+              ".P.#....",
+              "...#....",
+              "####...."
+            ]
+          }
+        },
+        {
+          "index": 4,
+          "beat": 8,
+          "time": 2.4,
+          "drum": "snare",
+          "key": "S",
+          "damage": 1,
+          "range": {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                0,
+                -1
+              ],
+              [
+                -1,
+                0
+              ],
+              [
+                -1,
+                2
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                -1,
+                1
+              ],
+              [
+                -1,
+                -1
+              ],
+              [
+                -2,
+                -1
+              ],
+              [
+                -2,
+                0
+              ],
+              [
+                2,
+                -2
+              ],
+              [
+                1,
+                -2
+              ],
+              [
+                0,
+                -2
+              ],
+              [
+                -1,
+                -2
+              ],
+              [
+                -2,
+                -2
+              ],
+              [
+                -2,
+                1
+              ],
+              [
+                -2,
+                2
+              ]
+            ],
+            "firstTargetOnly": false,
+            "map": [
+              "####....",
+              "#P##....",
+              "####....",
+              "####...."
+            ]
+          }
+        }
+      ],
+      "gameConfig": {
+        "intervals": [
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "startOffset": 0,
+        "drums": [
+          "kick",
+          "snare",
+          "kick",
+          "snare"
+        ],
+        "damages": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "ranges": [
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                -1,
+                0
+              ],
+              [
+                0,
+                -1
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                -1,
+                -1
+              ],
+              [
+                -1,
+                1
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                -1
+              ],
+              [
+                -1,
+                0
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                -2
+              ],
+              [
+                1,
+                -2
+              ],
+              [
+                0,
+                -2
+              ],
+              [
+                -1,
+                -2
+              ],
+              [
+                -2,
+                -2
+              ],
+              [
+                -2,
+                -1
+              ],
+              [
+                -2,
+                0
+              ],
+              [
+                -2,
+                1
+              ],
+              [
+                -2,
+                2
+              ],
+              [
+                -1,
+                2
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "firstTargetOnly": false
+          },
+          {
+            "cells": [
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                1,
+                -1
+              ],
+              [
+                0,
+                -1
+              ],
+              [
+                -1,
+                0
+              ],
+              [
+                -1,
+                2
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                -1,
+                1
+              ],
+              [
+                -1,
+                -1
+              ],
+              [
+                -2,
+                -1
+              ],
+              [
+                -2,
+                0
+              ],
+              [
+                2,
+                -2
+              ],
+              [
+                1,
+                -2
+              ],
+              [
+                0,
+                -2
+              ],
+              [
+                -1,
+                -2
+              ],
+              [
+                -2,
+                -2
+              ],
+              [
+                -2,
+                1
+              ],
+              [
+                -2,
+                2
+              ]
+            ],
+            "firstTargetOnly": false
+          }
+        ]
+      },
+      "warnings": []
+    }
+  ]
+}

@@ -10,7 +10,7 @@ const MOVE_KEYS = Object.keys(MOVE_DIRS);
 
 // beat번 리듬의 공격 범위. ranges에 그 리듬 범위가 있으면 그것을, 없으면 range를 쓴다.
 function weaponBeatRange(weapon, beat) {
-  return (weapon.ranges && weapon.ranges[beat]) || weapon.range;
+  return (weapon.ranges && weapon.ranges[beat]) || weapon.range || { cells: [] };
 }
 
 // beat번 리듬이 범위에서 가장 가까운 적 하나만 맞는지

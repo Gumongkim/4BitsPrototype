@@ -47,6 +47,9 @@ const RARITY_LOOKS = {
   weapon: { label: '무기', color: '#ffc14d' },
 };
 
+// 무기 티어별 카드 색
+const TIER_COLORS = { 1: '#8a93ad', 2: '#4aa8ff', 3: '#c77dff', 4: '#ffc14d' };
+
 const POPUP_STYLES = {
   perfect: { label: 'Perfect', size: 11, color: '#ffe066' },
   good: { label: 'Good', size: 9, color: COLORS.ringFlash },
@@ -128,6 +131,14 @@ class Renderer {
   // 좌표와 크기는 내부 해상도 기준. 프레임 끝에 한 번에 그려진다.
   text(str, x, y, size, color, align = 'left', alpha = 1) {
     this.texts.push({ str, x, y, size, color, align, alpha });
+  }
+
+  // maxWidth(내부 해상도 픽셀) 안에 들어가는 글자 크기. maxSize보다 크게 하지 않는다.
+  fitTextSize(str, maxWidth, maxSize) {
+    const ctx = this.screenCtx;
+    ctx.font = `bold 10px ${FONT_FAMILY}`;
+    const perSize = ctx.measureText(str).width / 10;
+    return Math.min(maxSize, Math.floor(maxWidth / perSize * 2) / 2);
   }
 
   flushTexts() {
@@ -268,41 +279,44 @@ class Renderer {
       this.rect(x, top, width, height, COLORS.cellB);
       this.frame(x, top, width, height, selected ? COLORS.text : COLORS.gridLine, selected ? 2 : 1);
       this.text(`${i + 1}`, x + 5, top + 4, 7, COLORS.dim);
-      this.text(weapon.name, x + width / 2, top + 12, 10, COLORS.text, 'center');
-      this.drawRangePreview(weapon, x + (width - 48) / 2, top + 28);
-      this.drawRhythmBar(x + 6, top + 60, width - 12, weapon);
-      this.text(weaponDamageText(weapon), x + width / 2, top + 72, 6, COLORS.text, 'center');
-      this.text(weapon.rangeDesc, x + width / 2, top + 84, 7, COLORS.dim, 'center');
-      this.text(`쿨다운 ${weapon.cooldown}초`, x + width / 2, top + 96, 7, COLORS.dim, 'center');
+      this.text(weapon.name, x + width / 2, top + 14, this.fitTextSize(weapon.name, width - 8, 9), COLORS.text, 'center');
+      this.drawRangePreview(weapon, x + (width - 56) / 2, top + 30);
+      this.drawRhythmBar(x + 6, top + 68, width - 12, weapon);
+      this.text(weaponDamageText(weapon), x + width / 2, top + 80, 6, COLORS.text, 'center');
+      this.text(`쿨다운 ${weapon.cooldown}초`, x + width / 2, top + 94, 7, COLORS.dim, 'center');
     });
     this.text('← → 선택     Enter 확정     1~4 바로 선택', cx, 158, 8, COLORS.ring, 'center');
   }
 
-  // 3행 6열의 작은 격자에 플레이어와 공격 범위를 그린다.
+  // 게임과 같은 8열 4행 격자를 작게 그리고, 플레이어를 시작 위치(열 1, 행 1)에 두고 공격 범위를 그린다.
   // 범위는 그 범위를 쓰는 리듬의 드럼 색이다. 쿵과 짝이 함께 쓰는 칸은 위 절반 초록, 아래 절반 보라다.
-  drawRangePreview(weapon, x, y) {
-    const size = 8;
+  drawRangePreview(weapon, x, y, size = 7) {
+    const cols = CONFIG.GRID_COLS;
+    const rows = CONFIG.GRID_ROWS;
+    const pc = CONFIG.PLAYER_START_COL;
+    const pr = CONFIG.PLAYER_START_ROW;
+    const half = Math.floor(size / 2);
     const drums = {};
     weapon.drums.forEach((drum, beat) => {
-      for (const cell of weaponRangeCells(weapon, beat, 0, 1, 5)) {
+      for (const cell of weaponRangeCells(weapon, beat, pc, pr, cols - 1)) {
         const key = `${cell.col},${cell.row}`;
         drums[key] = drums[key] || new Set();
         drums[key].add(drum);
       }
     });
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 6; col++) {
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
         const px = x + col * size;
         const py = y + row * size;
         const used = drums[`${col},${row}`];
         if (!used) this.rect(px, py, size - 1, size - 1, COLORS.cellA);
         else if (used.size === 2) {
-          this.rect(px, py, size - 1, 4, COLORS.ringKick);
-          this.rect(px, py + 4, size - 1, size - 5, COLORS.ringSnare);
+          this.rect(px, py, size - 1, half, COLORS.ringKick);
+          this.rect(px, py + half, size - 1, size - 1 - half, COLORS.ringSnare);
         } else this.rect(px, py, size - 1, size - 1, drumColor([...used][0]));
       }
     }
-    this.rect(x, y + size, size - 1, size - 1, COLORS.player);
+    this.rect(x + pc * size, y + pr * size, size - 1, size - 1, COLORS.player);
   }
 
   drawTitle() {
@@ -341,12 +355,23 @@ class Renderer {
     const height = 100;
     cards.forEach((card, i) => {
       const x = left + i * (width + gap);
-      const look = RARITY_LOOKS[card.rarity];
+      const weapon = card.weapon ? CONFIG.WEAPONS[card.weapon] : null;
+      const look = weapon
+        ? { label: `${weapon.tier}티어 무기`, color: TIER_COLORS[weapon.tier] }
+        : RARITY_LOOKS[card.rarity];
       const selected = i === game.rewardIndex;
       this.rect(x, top, width, height, COLORS.cellB);
       this.frame(x, top, width, height, selected ? COLORS.text : look.color, selected ? 2 : 1);
       this.text(`${i + 1}`, x + 6, top + 5, 8, COLORS.dim);
       this.text(look.label, x + width - 6, top + 5, 7, look.color, 'right');
+      if (weapon) {
+        // 무기 카드: 이름, 범위 그림, 리듬 막대, 데미지
+        this.text(card.name, x + width / 2, top + 18, this.fitTextSize(card.name, width - 10, 10), COLORS.text, 'center');
+        this.drawRangePreview(weapon, x + (width - 64) / 2, top + 36, 8);
+        this.drawRhythmBar(x + 8, top + 74, width - 16, weapon);
+        this.text(weaponDamageText(weapon), x + width / 2, top + 86, 6, COLORS.text, 'center');
+        return;
+      }
       this.text(card.name, x + width / 2, top + 22, 10, COLORS.text, 'center');
       card.desc.split('\n').forEach((line, n) => {
         this.text(line, x + width / 2, top + 44 + n * 11, 7, COLORS.dim, 'center');

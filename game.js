@@ -45,7 +45,8 @@ const Sfx = {
 class Game {
   constructor() {
     this.debug = false;
-    this.weaponKinds = Object.keys(CONFIG.WEAPONS);
+    // 런 시작 화면에는 1티어 무기만 나온다
+    this.weaponKinds = Object.keys(CONFIG.WEAPONS).filter((kind) => CONFIG.WEAPONS[kind].tier === 1);
     this.weaponIndex = 0;  // 재시작할 때 지난번 선택을 기억한다
     this.resetRun();
     this.state = 'title';
@@ -174,7 +175,7 @@ class Game {
   enterReward() {
     Sfx.play('clear');
     this.state = 'reward';
-    this.rewardCards = Rewards.draw(this.wavePerfectRatio, this.player);
+    this.rewardCards = Rewards.draw(this.wavePerfectRatio, this.player, this.wave);
     this.rewardIndex = 0;
     this.rewardLock = CONFIG.REWARD_INPUT_LOCK;
   }

@@ -57,6 +57,9 @@ const CONFIG = {
   DRUM_KEYS: { kick: 'KeyA', snare: 'KeyS' },
 
   // 무기. 새 무기는 여기에 추가한다.
+  //   tier: 1~4. 1티어 무기만 런 시작 화면에 나오고, 나머지는 보상의 무기 카드로 얻는다.
+  //     데미지는 한 사이클 데미지 총량을 쿵 1 : 짝 1.5 비율로 리듬에 나눠 0.25 단위로 반올림했다.
+  //     총량은 봇 시뮬레이션의 웨이브당 처치 시간이 티어별 목표(WEAPON_TIER_CLEAR_TARGET)에 가깝도록 무기마다 맞췄다.
   //   intervals: 각 리듬을 치기 전까지의 간격. 끝나면 처음으로 돌아간다.
   //   startOffset: 리듬이 시작될 때 이미 지나 있는 시간. 패턴 전체가 이만큼 일찍 온다. 없으면 0.
   //   drums: 리듬별 드럼. kick(쿵, 초록 링) 또는 snare(짝, 보라 링).
@@ -64,43 +67,337 @@ const CONFIG = {
   //   cooldown: 공격 입력 쿨다운. 가장 짧은 간격보다 조금 작게 둔다.
   //   missCooldown: Miss를 냈을 때의 쿨다운. 없으면 cooldown과 같다.
   //   perfectWindow, goodWindow: 매치 시점 기준 ± 초
-  //   range: 공격 범위. ranges에 범위가 없는 리듬은 모두 이 범위를 쓴다.
+  //   range: 공격 범위. ranges에 범위가 없는 리듬은 모두 이 범위를 쓴다. ranges가 모든 리듬을 채우면 없어도 된다.
   //     cells: [[열, 행], ...]  플레이어 기준 상대 위치
   //     rowToEnd: true          오른쪽 끝까지 이어지는 같은 행
   //     firstTargetOnly: true   범위에서 가장 가까운 적 하나만 맞는다. 없으면 무기의 firstTargetOnly를 따른다.
   //   ranges: 리듬별 공격 범위 [range, ...]. 리듬 순서이고 형식은 range와 같다. 없거나 빈 자리는 range를 쓴다.
   //     무기 제작 툴 JSON의 gameConfig.ranges를 그대로 넣으면 된다.
   //   firstTargetOnly: true면 범위에서 가장 가까운 적 하나만 맞는다
-  DEFAULT_WEAPON: 'sword',
+  DEFAULT_WEAPON: 'backbeat_sword',
   WEAPONS: {
-    sword: {
-      name: '한손검', rangeDesc: '앞 1칸',
-      // 기본 백비트: 쿵 . 짝 . 쿵 . 짝 .
-      intervals: [0.6, 0.6, 0.6, 0.6], drums: ['kick', 'snare', 'kick', 'snare'], damages: [0.5, 1.5, 0.5, 1.5], cooldown: 0.5,
-      perfectWindow: 0.05, goodWindow: 0.12,
-      range: { cells: [[1, 0]] },
+    // 1티어
+    backbeat_sword: {
+      name: '백비트 소드', tier: 1,
+      // .. .A .. .S .. .A .. .S
+      intervals: [0.6, 0.6, 0.6, 0.6], drums: ['kick', 'snare', 'kick', 'snare'],
+      damages: [1, 1.25, 1, 1.25], cooldown: 0.5, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0], [1, -1], [2, -1], [2, 0], [2, 1], [1, 1]] },
+      ],
     },
-    dagger: {
-      name: '단검', rangeDesc: '앞 1칸',
-      // 쿵쿵짝: 쿵 쿵 짝 . 쿵 쿵 짝 .
-      intervals: [0.6, 0.3, 0.3, 0.6, 0.3, 0.3], drums: ['kick', 'kick', 'snare', 'kick', 'kick', 'snare'], damages: [0.5, 0.5, 1.25, 0.5, 0.5, 1.25], cooldown: 0.25, missCooldown: 0.6,
-      perfectWindow: 0.05, goodWindow: 0.12,
-      range: { cells: [[1, 0]] },
+    four_floor_knife: {
+      name: '포 온 더 플로어 나이프', tier: 1,
+      // .. .A .. .A .. .A .. .A
+      intervals: [0.6, 0.6, 0.6, 0.6], drums: ['kick', 'kick', 'kick', 'kick'],
+      damages: [0.75, 0.75, 0.75, 0.75], cooldown: 0.5, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[1, 0]] },
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+      ],
     },
-    greatsword: {
-      name: '양손검', rangeDesc: '앞 열 3칸',
-      // 하프타임: 쿵 . . . 짝 . . .
-      intervals: [1.2, 1.2], startOffset: 0.3, drums: ['kick', 'snare'], damages: [2, 3.5], cooldown: 0.85,
-      perfectWindow: 0.05, goodWindow: 0.12,
-      range: { cells: [[1, -1], [1, 0], [1, 1]] },
+    halftime_longsword: {
+      name: '하프타임 롱소드', tier: 1,
+      // .. .A .. .. .. .S .. ..
+      intervals: [1.2, 1.2], startOffset: 0.6, drums: ['kick', 'snare'],
+      damages: [1, 1.5], cooldown: 0.85, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0], [1, 1], [1, -1]] },
+        { cells: [[1, 0], [1, 1], [2, 0], [1, -1], [2, -1], [2, 1]] },
+      ],
     },
-    bow: {
-      name: '활', rangeDesc: '같은 행 첫 적',
-      // 트레실로: 쿵 . . 쿵 . . 짝 .
-      intervals: [0.6, 0.9, 0.9], drums: ['kick', 'kick', 'snare'], damages: [1, 1, 1.5], cooldown: 0.55,
-      perfectWindow: 0.05, goodWindow: 0.12,
-      range: { rowToEnd: true },
-      firstTargetOnly: true,
+    tresillo_bow: {
+      name: '트레실로 보우', tier: 1,
+      // .. .A .. .. .A .. .. .S
+      intervals: [0.6, 0.9, 0.9], drums: ['kick', 'kick', 'snare'],
+      damages: [0.75, 0.75, 1], cooldown: 0.5, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [7, 0]], firstTargetOnly: true },
+        { cells: [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [7, 0]], firstTargetOnly: true },
+        { cells: [[1, 0], [2, 0], [3, 0], [4, 0], [6, 0], [7, 0], [5, 0]] },
+      ],
+    },
+    // 2티어
+    kungkungjjak_shortsword: {
+      name: '쿵쿵짝 숏소드', tier: 2,
+      // .. .A .A .S .. .A .A .S
+      intervals: [0.6, 0.3, 0.3, 0.6, 0.3, 0.3], drums: ['kick', 'kick', 'snare', 'kick', 'kick', 'snare'],
+      damages: [0.75, 0.75, 1, 0.75, 0.75, 1], cooldown: 0.25, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[1, 0]] },
+        { cells: [[1, 0]] },
+        { cells: [[1, 0]] },
+        { cells: [[1, 0]] },
+        { cells: [[1, 0]] },
+      ],
+    },
+    kick3and_sword: {
+      name: '3& 킥 소드', tier: 2,
+      // .. .A .. .S .. .A .A .S
+      intervals: [0.6, 0.6, 0.6, 0.3, 0.3], drums: ['kick', 'snare', 'kick', 'kick', 'snare'],
+      damages: [1, 1.25, 1, 1, 1.25], cooldown: 0.25, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [1, -1], [1, 1]] },
+        { cells: [[1, 0]] },
+        { cells: [[2, 0], [1, -1], [1, 1], [1, 0]] },
+        { cells: [[1, 0], [1, -1], [2, -1], [3, 0], [2, 1], [1, 1], [2, 0]] },
+      ],
+    },
+    rumba_rapier: {
+      name: '룸바 레이피어', tier: 2,
+      // .. .A .. A. .. A. .S .S
+      intervals: [0.6, 0.45, 0.6, 0.45, 0.3], drums: ['kick', 'kick', 'kick', 'snare', 'snare'],
+      damages: [1.25, 1.25, 1.25, 1.75, 1.75], cooldown: 0.25, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0], [2, 0], [3, 0]] },
+      ],
+    },
+    son_clave_sword: {
+      name: '손 클라베 소드', tier: 2,
+      // .. .A .. A. .A .. .S .S
+      intervals: [0.6, 0.45, 0.45, 0.6, 0.3], drums: ['kick', 'kick', 'kick', 'snare', 'snare'],
+      damages: [0.75, 0.75, 0.75, 1.25, 1.25], cooldown: 0.25, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0], [0, -1], [1, -1], [1, 1]] },
+        { cells: [[1, 0], [0, 1], [1, 1], [1, -1]] },
+      ],
+    },
+    dnb_spear: {
+      name: 'DnB 투스텝 스피어', tier: 2,
+      // .. .A .. .S .. .. .A .S
+      intervals: [0.6, 0.6, 0.9, 0.3], drums: ['kick', 'snare', 'kick', 'snare'],
+      damages: [2, 3.25, 2, 3.25], cooldown: 0.25, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0], [2, 0], [3, 0], [4, 0]], firstTargetOnly: true },
+        { cells: [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [7, 0]] },
+      ],
+    },
+    steppers_roar: {
+      name: '스테퍼스 로어', tier: 2,
+      // .. .A .. .A .. .S .. .A
+      intervals: [0.6, 0.6, 0.6, 0.6], drums: ['kick', 'kick', 'snare', 'kick'],
+      damages: [2.75, 2.75, 4.25, 2.75], cooldown: 0.5, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, -1], [2, 1]] },
+        { cells: [[2, 0], [3, 1], [3, -1]] },
+        { cells: [[3, 0], [4, -1], [4, 1], [5, -1], [5, 1], [4, 0]] },
+      ],
+    },
+    boombap_hammer: {
+      name: '붐뱁 해머', tier: 2,
+      // .. .A .. .S .. A. .A .S
+      intervals: [0.6, 0.6, 0.45, 0.45, 0.3], drums: ['kick', 'snare', 'kick', 'kick', 'snare'],
+      damages: [0.75, 1.25, 0.75, 0.75, 1.25], cooldown: 0.25, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[2, 0]] },
+        { cells: [[1, 0], [2, -1], [2, 1], [3, 0], [2, 0]] },
+        { cells: [[2, 0]] },
+        { cells: [[2, 0]] },
+        { cells: [[1, 0], [2, 0], [2, 1], [3, 0], [2, -1]] },
+      ],
+    },
+    // 3티어
+    kick1and_gun: {
+      name: '1& 킥 건', tier: 3,
+      // .. .A .A .S .. .A .. .S
+      intervals: [0.6, 0.3, 0.3, 0.6, 0.6], drums: ['kick', 'kick', 'snare', 'kick', 'snare'],
+      damages: [1.25, 1.25, 1.75, 1.25, 1.75], cooldown: 0.25, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[4, 0]] },
+        { cells: [[4, 0]] },
+        { cells: [[4, 0], [4, -1], [4, 1], [5, 0], [3, 0]] },
+        { cells: [[4, 0], [3, 0], [5, 0], [4, 1], [4, -1]] },
+        { cells: [[3, 0], [4, 0], [5, 0], [3, -1], [4, -1], [5, -1], [5, 1], [4, 1], [3, 1]] },
+      ],
+    },
+    bossa_mace: {
+      name: '보사노바 메이스', tier: 3,
+      // S. .S .. S. .S .A .S ..
+      intervals: [0.45, 0.45, 0.45, 0.45, 0.3, 0.3], startOffset: 0.3, drums: ['snare', 'snare', 'snare', 'snare', 'kick', 'snare'],
+      damages: [0.75, 0.75, 0.75, 0.75, 0.5, 0.75], cooldown: 0.25, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0], [2, 0], [3, 0]] },
+        { cells: [[1, 0], [2, 0], [3, 0], [1, 1], [1, -1]] },
+        { cells: [[1, 0], [2, 0], [3, 0], [2, 1], [2, -1]] },
+        { cells: [[1, 0], [2, 0], [3, 0], [3, -1], [3, 1]] },
+      ],
+    },
+    trap_cross: {
+      name: '트랩 크로스', tier: 3,
+      // .. .A .. .. .A .S .A ..
+      intervals: [0.9, 0.9, 0.3, 0.3], startOffset: 0.3, drums: ['kick', 'kick', 'snare', 'kick'],
+      damages: [1.75, 1.75, 2.5, 1.75], cooldown: 0.25, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[2, 0]] },
+        { cells: [[2, 0], [3, -1], [3, 1], [1, -1], [1, 1]] },
+        { cells: [[1, 0], [2, -1], [2, 1], [3, 0], [2, 0]] },
+        { cells: [[2, 0], [3, -1], [1, -1], [3, 1], [1, 1], [2, -1], [2, 1]] },
+      ],
+    },
+    march: {
+      name: '행진', tier: 3,
+      // .S .A .. .S .S .A .. .S
+      intervals: [0.3, 0.3, 0.6, 0.3, 0.3, 0.6], drums: ['snare', 'kick', 'snare', 'snare', 'kick', 'snare'],
+      damages: [1.5, 1, 1.5, 1.5, 1, 1.5], cooldown: 0.25, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0], [2, 0], [1, -1], [1, 1]] },
+        { cells: [[0, 1], [1, 1], [1, -1], [0, -1], [-1, 0], [-1, -1], [-1, 1], [1, 0], [2, 1], [2, -1], [2, 0]] },
+      ],
+    },
+    electro808: {
+      name: '일렉트로 (808)', tier: 3,
+      // .. .A .. .S .A .. .A .S
+      intervals: [0.6, 0.6, 0.3, 0.6, 0.3], drums: ['kick', 'snare', 'kick', 'kick', 'snare'],
+      damages: [1.5, 2.25, 1.5, 1.5, 2.25], cooldown: 0.25, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[2, 0], [1, 0]] },
+        { cells: [[2, 0], [2, -1], [3, 0], [1, 0], [2, 1]] },
+        { cells: [[3, 0], [2, 0]] },
+        { cells: [[3, 0], [2, 0], [3, -1], [4, 0], [3, 1], [4, -1], [2, -1], [2, 1], [4, 1]] },
+      ],
+    },
+    funk16_sword: {
+      name: '펑크 16 소드', tier: 3,
+      // .. .A .. AS .. .. .A .S
+      intervals: [0.6, 0.45, 0.15, 0.9, 0.3], drums: ['kick', 'kick', 'snare', 'kick', 'snare'],
+      damages: [1.5, 1.5, 2.25, 1.5, 2.25], cooldown: 0.12, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [1, 1], [1, -1]] },
+        { cells: [[1, 0], [0, 1], [1, 1], [1, -1], [0, -1]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0], [1, 1], [0, 1], [1, -1], [0, -1], [2, 0], [2, -1], [2, 1]] },
+      ],
+    },
+    ddadang_knuckle: {
+      name: '따당 너클', tier: 3,
+      // .. AS .. AS .. AS .. AS
+      intervals: [0.45, 0.15, 0.45, 0.15, 0.45, 0.15, 0.45, 0.15], drums: ['kick', 'snare', 'kick', 'snare', 'kick', 'snare', 'kick', 'snare'],
+      damages: [0.75, 1.25, 0.75, 1.25, 0.75, 1.25, 0.75, 1.25], cooldown: 0.12, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+      ],
+    },
+    // 4티어
+    doubletime_sword: {
+      name: '더블타임 소드', tier: 4,
+      // .S .A .S .A .S .A .S .A
+      intervals: [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3], drums: ['snare', 'kick', 'snare', 'kick', 'snare', 'kick', 'snare', 'kick'],
+      damages: [0.75, 0.5, 0.75, 0.5, 0.75, 0.5, 0.75, 0.5], cooldown: 0.25, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0], [2, 0], [1, 1], [1, -1]] },
+        { cells: [[1, 0], [1, -1], [2, 0], [1, 1]] },
+        { cells: [[1, 0], [2, 0], [1, -1], [1, 1]] },
+        { cells: [[1, 0], [1, 1], [2, 0], [1, -1]] },
+        { cells: [[1, 0], [2, 0], [1, -1], [1, 1]] },
+        { cells: [[1, 0], [1, 1], [2, 0], [1, -1]] },
+        { cells: [[2, 0], [3, 0], [2, -1], [1, -1], [2, 1], [1, 0], [1, 1]] },
+        { cells: [[1, 0], [2, 0], [3, 0], [1, -1], [1, 1], [2, 1], [2, -1], [3, 1], [3, -1], [4, -1], [4, 0], [5, 0], [4, 1]] },
+      ],
+    },
+    funky_whip: {
+      name: '펑키 드러머 윕', tier: 4,
+      // .. SA .A .S .. S. .A .S
+      intervals: [0.45, 0.15, 0.3, 0.3, 0.45, 0.45, 0.3], drums: ['snare', 'kick', 'kick', 'snare', 'snare', 'kick', 'snare'],
+      damages: [1.5, 1, 1, 1.5, 1.5, 1, 1.5], cooldown: 0.12, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0], [1, 1]] },
+        { cells: [[1, 0], [1, -1], [1, 1]] },
+        { cells: [[1, 0], [1, -1], [2, -1]] },
+        { cells: [[1, 0], [1, -1], [2, -1], [3, -1], [1, 1]] },
+        { cells: [[1, 0], [1, -1], [2, -1], [3, -1], [3, 0], [1, 1]] },
+        { cells: [[1, 0], [3, 0], [3, -1], [2, -1], [1, -1], [3, 1], [1, 1]] },
+        { cells: [[1, 0], [1, -1], [2, -1], [3, -1], [3, 0], [3, 1], [2, 1], [1, 1], [2, 0]] },
+      ],
+    },
+    break_sword: {
+      name: '브레이크 소드', tier: 4,
+      // .. SA .A .S .. S. .A AS
+      intervals: [0.45, 0.15, 0.3, 0.3, 0.45, 0.45, 0.15, 0.15], drums: ['snare', 'kick', 'kick', 'snare', 'snare', 'kick', 'kick', 'snare'],
+      damages: [1.5, 1, 1, 1.5, 1.5, 1, 1, 1.5], cooldown: 0.12, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[2, 1], [2, 0], [2, -1]] },
+        { cells: [[1, 0], [1, 1], [1, -1]] },
+        { cells: [[1, 0], [1, -1], [1, 1]] },
+        { cells: [[2, 0], [2, -1], [2, 1]] },
+        { cells: [[2, 1], [2, -1], [3, -1], [3, 0], [2, 0], [3, 1]] },
+        { cells: [[1, 0], [2, 0], [2, -1], [1, -1], [1, 1], [2, 1]] },
+        { cells: [[1, 0], [2, 1], [1, 1], [2, 0], [2, -1], [1, -1]] },
+        { cells: [[2, 0], [2, -1], [3, -1], [3, 0], [3, 1], [2, 1]] },
+      ],
+    },
+    dembow: {
+      name: '뎀보우', tier: 4,
+      // .S .A .. SA .S .A .. SA
+      intervals: [0.3, 0.3, 0.45, 0.15, 0.3, 0.3, 0.45, 0.15], drums: ['snare', 'kick', 'snare', 'kick', 'snare', 'kick', 'snare', 'kick'],
+      damages: [1, 0.75, 1, 0.75, 1, 0.75, 1, 0.75], cooldown: 0.12, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[4, 0], [5, 0], [6, 0], [7, 0], [3, 0]] },
+        { cells: [[3, 0], [4, 0], [5, 0], [6, 0], [7, 0]] },
+        { cells: [[3, 0], [4, 0], [5, 0], [6, 0], [7, 0]] },
+        { cells: [[3, 0], [4, 0], [5, 0], [6, 0], [7, 0]] },
+        { cells: [[3, 0], [4, 0], [5, 0], [6, 0], [7, 0]] },
+        { cells: [[3, 0], [4, 0], [5, 0], [6, 0], [7, 0]] },
+        { cells: [[3, 0], [4, 0], [5, 0], [6, 0], [7, 0], [3, 1], [5, 1], [6, 1], [7, 1], [7, -1], [6, -1], [5, -1], [3, -1], [4, -1], [4, 1]] },
+        { cells: [[3, 0], [4, 0], [5, 0], [6, 0], [7, 0], [3, 1], [4, 1], [5, 1], [6, 1], [7, 1], [7, -1], [6, -1], [5, -1], [4, -1], [3, -1]] },
+      ],
+    },
+    flow8_knuckle: {
+      name: '플로우 8 너클', tier: 4,
+      // .. .A S. .A .. .A S. .A
+      intervals: [0.6, 0.15, 0.45, 0.6, 0.15, 0.45], drums: ['kick', 'snare', 'kick', 'kick', 'snare', 'kick'],
+      damages: [1.75, 2.5, 1.75, 1.75, 2.5, 1.75], cooldown: 0.12, missCooldown: 0.6, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0], [2, 0], [1, -1], [1, 1]] },
+        { cells: [[1, 0]] },
+        { cells: [[1, 0], [2, 0]] },
+        { cells: [[1, 0], [2, 0], [1, -1], [1, 1]] },
+      ],
+    },
+    backbeat_bomba: {
+      name: '백 비트 봄바', tier: 4,
+      // .. .A .. .S .. .A .. .S
+      intervals: [0.6, 0.6, 0.6, 0.6], drums: ['kick', 'snare', 'kick', 'snare'],
+      damages: [1, 1.5, 1, 1.5], cooldown: 0.5, perfectWindow: 0.05, goodWindow: 0.12,
+      ranges: [
+        { cells: [[1, 0], [0, 1], [-1, 0], [0, -1]] },
+        { cells: [[1, 1], [1, -1], [-1, -1], [-1, 1], [0, 1], [1, 0], [0, -1], [-1, 0]] },
+        { cells: [[2, 1], [2, 0], [2, -1], [2, -2], [1, -2], [0, -2], [-1, -2], [-2, -2], [-2, -1], [-2, 0], [-2, 1], [-2, 2], [-1, 2], [0, 2], [2, 2], [1, 2]] },
+        { cells: [[1, 0], [2, 2], [1, 2], [0, 1], [1, 1], [2, 1], [2, 0], [2, -1], [1, -1], [0, -1], [-1, 0], [-1, 2], [0, 2], [-1, 1], [-1, -1], [-2, -1], [-2, 0], [2, -2], [1, -2], [0, -2], [-1, -2], [-2, -2], [-2, 1], [-2, 2]] },
+      ],
     },
   },
 
@@ -202,6 +499,16 @@ const CONFIG = {
     epic: { low: 2, high: 30 },
   },
   WEAPON_CARD_CHANCE: 0.35,     // 보상 화면 마지막 카드가 다른 무기 카드로 바뀔 확률
+  // 무기 티어별 봇 시뮬레이션 목표: 웨이브당 처치 시간(초). 무기 데미지를 맞출 때 쓴 기준이며 게임 중에는 쓰지 않는다.
+  WEAPON_TIER_CLEAR_TARGET: { 1: 9, 2: 7.5, 3: 6, 4: 4.5 },
+  WEAPON_TIER_UNLOCK_WAVE: { 1: 1, 2: 1, 3: 4, 4: 8 }, // 이 웨이브를 클리어하면 그 티어 무기 카드가 나올 수 있다
+  // 무기 카드의 티어 가중치. Perfect 비율 0%와 100%일 때의 값이며 그 사이는 선형 보간한다.
+  WEAPON_TIER_WEIGHTS: {
+    1: { low: 30, high: 5 },
+    2: { low: 45, high: 30 },
+    3: { low: 20, high: 40 },
+    4: { low: 5, high: 25 },
+  },
   // 보상으로 도달할 수 있는 수치의 한계.
   STAT_LIMITS: {
     windowBonus: { max: 0.03 },

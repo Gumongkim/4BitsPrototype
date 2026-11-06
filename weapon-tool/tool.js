@@ -13,7 +13,8 @@ const TOOL = {
   // 게임에서도 리듬은 간격이 지난 순간에 오므로 0초에는 오지 않는다.
   SLOTS_PER_BEAT: 2,
 
-  // 그리드 필드: 게임과 같은 8열 x 4행, 플레이어는 열 1, 행 1 (0부터 셈)
+  // 그리드 필드: 게임과 같은 8열 x 4행. PLAYER_COL/ROW는 게임 시작 위치(0부터 셈)로,
+  // 내보내기의 범위 그림 기준이다. 화면의 플레이어는 드래그로 옮길 수 있다 (state.player).
   COLS: 8,
   ROWS: 4,
   PLAYER_COL: 1,
@@ -80,7 +81,20 @@ function makeWork(name) {
 
 function freshState() {
   const work = makeWork('무기 1');
-  return { works: [work], currentId: work.id, selectedNodeId: null, paletteDrum: 'kick' };
+  return { works: [work], currentId: work.id, selectedNodeId: null, paletteDrum: 'kick', player: startPlayer() };
+}
+
+// 화면의 플레이어 위치. 모든 무기에 공통인 보기 설정이며 내보내기에는 들어가지 않는다.
+function startPlayer() {
+  return { col: TOOL.PLAYER_COL, row: TOOL.PLAYER_ROW };
+}
+
+function inGrid(col, row) {
+  return col >= 0 && col < TOOL.COLS && row >= 0 && row < TOOL.ROWS;
+}
+
+function isPlayerCell(col, row) {
+  return col === state.player.col && row === state.player.row;
 }
 
 // 브라우저 저장소는 막혀 있을 수 있으므로 실패해도 툴은 그대로 동작한다.
@@ -92,6 +106,8 @@ function loadState() {
     if (!data || !Array.isArray(data.works) || !data.works.length) return null;
     if (!data.works.some((w) => w.id === data.currentId)) data.currentId = data.works[0].id;
     if (!DRUMS[data.paletteDrum]) data.paletteDrum = 'kick';
+    const p = data.player;
+    if (!p || !Number.isInteger(p.col) || !Number.isInteger(p.row) || !inGrid(p.col, p.row)) data.player = startPlayer();
     // 예전 버전의 0초 노드는 같은 순간인 사이클 끝(8박)으로 옮긴다. 그 자리에 이미 노드가 있으면 버린다.
     for (const work of data.works) {
       for (const node of work.nodes) {
@@ -205,9 +221,9 @@ function deleteNode(id) {
 
 function toggleCell(col, row) {
   const node = selectedNode();
-  if (!node || (col === TOOL.PLAYER_COL && row === TOOL.PLAYER_ROW)) return;
-  const dc = col - TOOL.PLAYER_COL;
-  const dr = row - TOOL.PLAYER_ROW;
+  if (!node || isPlayerCell(col, row)) return;
+  const dc = col - state.player.col;
+  const dr = row - state.player.row;
   const i = node.cells.findIndex(([c, r]) => c === dc && r === dr);
   if (i >= 0) node.cells.splice(i, 1);
   else node.cells.push([dc, dr]);
@@ -262,11 +278,12 @@ function cellY(row) {
   return TOOL.FIELD_PAD + row * TOOL.CELL;
 }
 
-// 노드 범위의 그리드 칸들 (절대 좌표, 그리드 안만)
+// 노드 범위의 그리드 칸들 (지금 플레이어 위치 기준 절대 좌표, 그리드 안만)
+// 플레이어를 옮겨 그리드 밖으로 나간 칸은 화면에서만 빠지고 데이터에는 남는다.
 function nodeCells(node) {
   return node.cells
-    .map(([dc, dr]) => ({ col: TOOL.PLAYER_COL + dc, row: TOOL.PLAYER_ROW + dr }))
-    .filter((c) => c.col >= 0 && c.col < TOOL.COLS && c.row >= 0 && c.row < TOOL.ROWS);
+    .map(([dc, dr]) => ({ col: state.player.col + dc, row: state.player.row + dr }))
+    .filter((c) => inGrid(c.col, c.row));
 }
 
 // 범위 전체를 감싼 직사각형
@@ -335,8 +352,12 @@ function drawFieldBase(ctx) {
 }
 
 function drawPlayer(ctx) {
-  const x = cellX(TOOL.PLAYER_COL);
-  const y = cellY(TOOL.PLAYER_ROW);
+  const x = cellX(state.player.col);
+  const y = cellY(state.player.row);
+  if (playerDrag) {
+    // 드래그 중에는 칸 테두리로 잡고 있음을 보여준다
+    strokeCells(ctx, [state.player], COLORS.player, 0.9, 2);
+  }
   const m = 12;
   ctx.fillStyle = COLORS.playerDark;
   ctx.fillRect(x + m, y + m, TOOL.CELL - m * 2, TOOL.CELL - m * 2);
@@ -357,7 +378,7 @@ function drawEditRange(ctx) {
   const cells = nodeCells(node);
   fillCells(ctx, cells, color, 0.3);
   strokeCells(ctx, cells, color, 0.95, 2);
-  if (hoverCell && !(hoverCell.col === TOOL.PLAYER_COL && hoverCell.row === TOOL.PLAYER_ROW)) {
+  if (hoverCell && !playerDrag && !isPlayerCell(hoverCell.col, hoverCell.row)) {
     strokeCells(ctx, [hoverCell], COLORS.text, 0.5, 1);
   }
 }
@@ -444,13 +465,49 @@ function fieldCellAt(e) {
   return { col, row };
 }
 
+// 플레이어 칸을 누르면 드래그로 옮기고, 다른 칸을 누르면 범위를 넣고 뺀다.
+// 범위는 플레이어 기준 상대 위치라 플레이어를 따라 움직인다.
+let playerDrag = false;
+
+function movePlayer(col, row) {
+  if (isPlayerCell(col, row)) return;
+  state.player = { col, row };
+  changed();
+}
+
 fieldCanvas.addEventListener('pointerdown', (e) => {
   if (e.button !== 0) return;
   const cell = fieldCellAt(e);
-  if (cell) toggleCell(cell.col, cell.row);
+  if (!cell) return;
+  if (isPlayerCell(cell.col, cell.row)) {
+    playerDrag = true;
+    fieldCanvas.setPointerCapture(e.pointerId);
+    fieldCanvas.style.cursor = 'grabbing';
+  } else {
+    toggleCell(cell.col, cell.row);
+  }
 });
-fieldCanvas.addEventListener('pointermove', (e) => { hoverCell = fieldCellAt(e); });
+fieldCanvas.addEventListener('pointermove', (e) => {
+  hoverCell = fieldCellAt(e);
+  if (playerDrag) {
+    if (hoverCell) movePlayer(hoverCell.col, hoverCell.row);
+    return;
+  }
+  fieldCanvas.style.cursor = hoverCell && isPlayerCell(hoverCell.col, hoverCell.row) ? 'grab' : '';
+});
+const endPlayerDrag = () => {
+  if (!playerDrag) return;
+  playerDrag = false;
+  fieldCanvas.style.cursor = '';
+};
+fieldCanvas.addEventListener('pointerup', endPlayerDrag);
+fieldCanvas.addEventListener('pointercancel', endPlayerDrag);
 fieldCanvas.addEventListener('pointerleave', () => { hoverCell = null; });
+// 플레이어를 더블클릭하면 게임 시작 위치로 돌아간다
+fieldCanvas.addEventListener('dblclick', (e) => {
+  const cell = fieldCellAt(e);
+  if (cell && isPlayerCell(cell.col, cell.row)) movePlayer(TOOL.PLAYER_COL, TOOL.PLAYER_ROW);
+});
 
 // ---------------------------------------------------------------- 비트라인
 
@@ -541,7 +598,7 @@ function drawBeatline() {
       ctx.stroke();
     }
     drawNode(ctx, x, y, node.drum, radius, 1);
-    if (!nodeCells(node).length) {
+    if (!node.cells.length) {
       // 범위가 비어 있는 노드는 내보내기 전에 알아볼 수 있게 표시한다
       ctx.fillStyle = COLORS.warn;
       ctx.font = 'bold 11px sans-serif';
@@ -803,9 +860,10 @@ function renderPanel() {
     }
     if (document.activeElement !== damageInput) damageInput.value = node.damage;
     firstInput.checked = node.firstTargetOnly;
-    const count = nodeCells(node).length;
+    const count = node.cells.length;
+    const hidden = count - nodeCells(node).length;
     document.getElementById('node-range-info').textContent = count
-      ? `공격 범위 ${count}칸. 위 그리드에서 칸을 클릭해 넣고 뺍니다.`
+      ? `공격 범위 ${count}칸${hidden ? ` (지금 위치에서 ${hidden}칸은 그리드 밖이라 안 보임)` : ''}. 위 그리드에서 칸을 클릭해 넣고 뺍니다.`
       : '공격 범위가 비어 있습니다. 위 그리드에서 칸을 클릭하세요.';
   }
 
@@ -813,9 +871,11 @@ function renderPanel() {
     button.classList.toggle('on', button.dataset.palette === state.paletteDrum);
   }
   document.getElementById('demo-toggle').textContent = demo.running ? '■ 정지' : '▶ 시연';
+  const p = state.player;
+  const playerText = `P = 플레이어 (열 ${p.col}, 행 ${p.row}) · P 드래그: 이동, 더블클릭: 시작 위치로`;
   document.getElementById('field-hint').textContent = node
-    ? `${DRUMS[node.drum].label}(${DRUMS[node.drum].key}) 노드의 공격 범위를 편집 중 · 칸 클릭으로 넣고 빼기 · P = 플레이어 (열 1, 행 1)`
-    : '비트라인에서 노드를 선택하면 공격 범위를 지정할 수 있습니다 · P = 플레이어 (열 1, 행 1)';
+    ? `${DRUMS[node.drum].label}(${DRUMS[node.drum].key}) 노드의 공격 범위를 편집 중 · 칸 클릭으로 넣고 빼기 · ${playerText}`
+    : `비트라인에서 노드를 선택하면 공격 범위를 지정할 수 있습니다 · ${playerText}`;
 }
 
 nameInput.addEventListener('input', () => {
@@ -977,7 +1037,7 @@ function buildExport(works) {
       'damage: 그 리듬의 기본 공격력. 게임에서는 여기에 판정 배율(Perfect 2, Good 1)이 곱해진다.',
       'range.cells: 플레이어 칸 기준 [열 차이, 행 차이]. 오른쪽이 +열, 아래가 +행이다. 게임 WEAPONS.range.cells와 같은 형식이다.',
       'range.firstTargetOnly: true면 범위 안에서 플레이어에게 가장 가까운 적 1명만 맞는다 (게임의 firstTargetOnly).',
-      'range.map: 8열 x 4행 그리드 그림. P = 플레이어 (열 1, 행 1, 0부터 셈), # = 공격 범위, . = 빈 칸.',
+      'range.map: 8열 x 4행 그리드 그림. P = 게임 시작 위치의 플레이어 (열 1, 행 1, 0부터 셈), # = 공격 범위, . = 빈 칸. 이 위치에서 그리드 밖으로 나가는 칸은 그림에는 없고 cells에만 있다.',
       'pattern: 1박씩 띄어 쓴 리듬 그림. 한 박은 두 글자로 앞 글자는 그 박의 절반(0.5박), 뒤 글자는 그 박 끝이다. A = 쿵, S = 짝, . = 쉼. 예: 한손검은 ".. .A .. .S .. .A .. .S"',
       'gameConfig: 게임 config.js WEAPONS에 옮길 때 쓰는 값. intervals, startOffset, drums, damages는 게임과 같은 의미다. ranges는 노드별 공격 범위 배열(노드 순서)이며 게임 WEAPONS.ranges에 그대로 넣는다. 그 경우 range에는 ranges에 없는 리듬이 쓸 기본 범위를 둔다. 쿨다운과 판정 윈도우는 툴에서 정하지 않으므로 리듬 간격에 맞춰 정한다.',
       'warnings: 비어 있는 범위 등 확인이 필요한 점. 비어 있으면 문제없다.',
@@ -1133,15 +1193,15 @@ function parseWeapon(raw, index, notes) {
     for (const cell of Array.isArray(range.cells) ? range.cells : []) {
       const dc = Array.isArray(cell) ? Number(cell[0]) : NaN;
       const dr = Array.isArray(cell) ? Number(cell[1]) : NaN;
-      const col = TOOL.PLAYER_COL + dc;
-      const row = TOOL.PLAYER_ROW + dr;
+      // 플레이어를 옮겨 가며 범위를 찍을 수 있으므로, 플레이어가 그리드 어딘가에 있을 때
+      // 그리드 안에 들어올 수 있는 상대 위치면 받는다 (열 차이 ±7, 행 차이 ±3).
       const valid = Number.isInteger(dc) && Number.isInteger(dr)
-        && col >= 0 && col < TOOL.COLS && row >= 0 && row < TOOL.ROWS
+        && Math.abs(dc) < TOOL.COLS && Math.abs(dr) < TOOL.ROWS
         && !(dc === 0 && dr === 0);
       if (!valid) dropped++;
       else if (!cells.some(([c, r]) => c === dc && r === dr)) cells.push([dc, dr]);
     }
-    if (dropped) note(at, `그리드 밖이거나 잘못된 범위 칸 ${dropped}개를 뺐습니다.`);
+    if (dropped) note(at, `그리드보다 멀거나 잘못된 범위 칸 ${dropped}개를 뺐습니다.`);
     if (!cells.length) note(at, '공격 범위가 비어 있습니다.');
 
     work.nodes.push({
