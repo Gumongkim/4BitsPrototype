@@ -1,0 +1,38 @@
+<title>타이밍 그리드</title>
+<style>
+  /* 레이아웃: 게임 화면 하나를 가운데에 둔다. 아케이드 화면이라 어두운 테마 하나로 고정한다. */
+  :root { --bg: #0b0d14; --hint-bg: #12141f; --hint-fg: #e8ecf5; --hint-edge: #4aa8ff; color-scheme: dark; }
+  html, body { height: 100%; }
+  body { background: var(--bg); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  canvas { display: block; image-rendering: pixelated; }
+  #focus-hint {
+    position: fixed; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+    max-width: calc(100% - 32px); padding-block: 6px; padding-inline: 12px;
+    background: var(--hint-bg); color: var(--hint-fg); border: 1px solid var(--hint-edge);
+    font: bold 13px "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    pointer-events: none;
+  }
+</style>
+<canvas id="screen"></canvas>
+<div id="focus-hint" hidden>화면을 클릭하면 키보드 입력이 시작됩니다</div>
+<script src="config.js"></script>
+<script src="input.js"></script>
+<script src="grid.js"></script>
+<script src="player.js"></script>
+<script src="telegraph.js"></script>
+<script src="enemy.js"></script>
+<script src="rewards.js"></script>
+<script src="renderer.js"></script>
+<script src="game.js"></script>
+<script src="main.js"></script>
+<script>
+  // 웹 뷰어 안에서는 페이지를 클릭해야 키 입력이 들어온다.
+  (function () {
+    const hint = document.getElementById('focus-hint');
+    const sync = () => { hint.hidden = document.hasFocus(); };
+    window.addEventListener('focus', sync);
+    window.addEventListener('blur', sync);
+    window.addEventListener('pointerdown', () => { window.focus(); sync(); });
+    sync();
+  })();
+</script>

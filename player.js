@@ -1,0 +1,241 @@
+// 플레이어: 이동 틱, 무기 리듬, 판정.
+
+const MOVE_DIRS = {
+  ArrowLeft: { col: -1, row: 0 },
+  ArrowRight: { col: 1, row: 0 },
+  ArrowUp: { col: 0, row: -1 },
+  ArrowDown: { col: 0, row: 1 },
+};
+const MOVE_KEYS = Object.keys(MOVE_DIRS);
+
+// 무기 공격 범위의 칸들. lastCol은 rowToEnd 범위가 끝나는 열이다.
+function weaponRangeCells(weapon, col, row, lastCol) {
+  const { cells = [], rowToEnd } = weapon.range;
+  const result = cells.map(([dc, dr]) => ({ col: col + dc, row: row + dr }));
+  if (rowToEnd) {
+    for (let c = col + 1; c <= lastCol; c++) result.push({ col: c, row });
+  }
+  return result;
+}
+
+// 카드에 표시할 데미지. 박자가 많은 무기도 한 줄에 들어가도록 같은 값은 한 번만 쓴다.
+function weaponDamageText(weapon) {
+  return `데미지 ${[...new Set(weapon.damages)].join(' / ')}`;
+}
+
+class Player {
+  constructor(weaponKind = CONFIG.DEFAULT_WEAPON) {
+    this.col = CONFIG.PLAYER_START_COL;
+    this.row = CONFIG.PLAYER_START_ROW;
+    this.prevCol = this.col;
+    this.prevRow = this.row;
+    this.moveTimer = 0;
+    this.bufferedMove = null;
+    this.stats = {
+      maxHp: CONFIG.PLAYER_MAX_HP,
+      moveTick: CONFIG.MOVE_TICK,
+      windowBonus: 0,
+      perfectMult: CONFIG.JUDGE.perfect.damageMult,
+      goodMult: CONFIG.JUDGE.good.damageMult,
+      comboBonusDamage: 0,
+    };
+    this.hp = this.stats.maxHp;
+    this.hurtFlash = 0;    // 시각 효과일 뿐 판정에 영향을 주지 않는다
+    this.goalFlash = 0;    // 공격 키를 누른 뒤 목표 테두리가 선명한 남은 시간. 역시 시각 효과다.
+
+    this.ringTime = 0;     // 현재 간격의 경과 시간. 간격이 끝나는 순간이 매치 시점.
+    this.ringCycles = 0;   // 링 생성 후 지나간 매치 시점 수
+    this.beatIndex = 0;    // 다음에 맞을 리듬 번호
+    this.clearedRing = -1; // 공격 성공으로 사라진 링. ringCycles와 같은 기준으로 센 번호.
+    this.lastBeat = 0;     // 마지막으로 지나간 리듬 번호
+    this.justMatched = false;
+    this.lastError = null; // 디버그용: 마지막 입력의 매치 시점 오차
+    this.setWeapon(weaponKind);
+  }
+
+  setWeapon(kind) {
+    this.weaponKind = kind;
+    this.weapon = CONFIG.WEAPONS[kind];
+    this.ringActive = false;
+    this.cooldown = 0;
+    this.cooldownTotal = this.weapon.cooldown; // HUD 막대용: 현재 쿨다운의 전체 길이
+  }
+
+  // 판정 윈도우. 한 리듬에 두 번 성공하지 못하도록 쿨다운의 절반보다 작게 제한한다.
+  limitWindow(value) {
+    return Math.min(value, this.weapon.cooldown / 2 - CONFIG.WINDOW_MARGIN);
+  }
+
+  get perfectWindow() {
+    return this.limitWindow(this.weapon.perfectWindow + this.stats.windowBonus);
+  }
+
+  get goodWindow() {
+    return this.limitWindow(this.weapon.goodWindow + this.stats.windowBonus);
+  }
+
+  // 그리드 안에 있는 공격 범위 칸들
+  attackCells() {
+    return weaponRangeCells(this.weapon, this.col, this.row, CONFIG.GRID_COLS - 1)
+      .filter((c) => Grid.inBounds(c.col, c.row));
+  }
+
+  // 공격 범위 전체를 감싼 직사각형 (내부 해상도 픽셀)
+  get attackBounds() {
+    const cells = this.attackCells();
+    const size = CONFIG.CELL_SIZE;
+    const left = Grid.cellX(Math.min(...cells.map((c) => c.col)));
+    const top = Grid.cellY(Math.min(...cells.map((c) => c.row)));
+    return {
+      left,
+      top,
+      width: Grid.cellX(Math.max(...cells.map((c) => c.col))) + size - left,
+      height: Grid.cellY(Math.max(...cells.map((c) => c.row))) + size - top,
+    };
+  }
+
+  // 현재 입력을 읽어 이동을 시도한다. isBlocked(col, row)면 들어갈 수 없다.
+  // 막혀서 이동하지 못한 입력은 정지 상태를 깨지 않는다.
+  updateMovement(dt, isBlocked) {
+    for (const code of MOVE_KEYS) {
+      if (Input.wasPressed(code)) this.bufferedMove = code;
+    }
+    this.moveTimer = tickDown(this.moveTimer, dt);
+    if (this.moveTimer > 0) return;
+
+    // 키를 한 번 누를 때마다 한 칸만 이동한다. 누르고 있어도 반복하지 않는다.
+    const code = this.bufferedMove;
+    this.bufferedMove = null;
+    if (!code) return;
+    const col = this.col + MOVE_DIRS[code].col;
+    const row = this.row + MOVE_DIRS[code].row;
+    if (!Grid.inBounds(col, row) || isBlocked(col, row)) return;
+    this.prevCol = this.col;
+    this.prevRow = this.row;
+    this.col = col;
+    this.row = row;
+    this.moveTimer = this.stats.moveTick;
+    this.ringActive = false;
+  }
+
+  // 리듬은 입력과 상관없이 무기의 간격대로 계속 진행한다.
+  updateRing(dt) {
+    this.justMatched = false;
+    this.cooldown = tickDown(this.cooldown, dt);
+    if (!this.ringActive && this.moveTimer <= 0 && this.attackCells().length) this.restartRing();
+    if (!this.ringActive) return;
+    this.ringTime += dt;
+    if (this.ringTime >= this.currentInterval) {
+      this.ringTime -= this.currentInterval;
+      this.lastBeat = this.beatIndex;
+      this.beatIndex = (this.beatIndex + 1) % this.weapon.intervals.length;
+      this.ringCycles++;
+      this.justMatched = true;
+    }
+  }
+
+  restartRing() {
+    this.ringActive = true;
+    this.ringTime = this.weapon.startOffset || 0;
+    this.ringCycles = 0;
+    this.beatIndex = 0;
+    this.clearedRing = -1;
+  }
+
+  get currentInterval() {
+    return this.weapon.intervals[this.beatIndex];
+  }
+
+  // 다음 리듬까지 남은 시간
+  get timeToNextBeat() {
+    return this.currentInterval - this.ringTime;
+  }
+
+  // within초 안에 올 리듬들을 가까운 순서로 돌려준다. { time: 남은 시간, beat: 리듬 번호 }
+  // 공격 성공으로 사라진 링은 뺀다.
+  upcomingBeats(within) {
+    const beats = [];
+    let beat = this.beatIndex;
+    let ring = this.ringCycles;
+    let time = this.timeToNextBeat;
+    while (time <= within) {
+      if (ring !== this.clearedRing) beats.push({ time, beat });
+      beat = (beat + 1) % this.weapon.intervals.length;
+      ring++;
+      time += this.weapon.intervals[beat];
+    }
+    return beats;
+  }
+
+  // 지나갔지만 늦은 입력이 아직 인정되는 리듬. time은 음수다. 없거나 링이 사라졌으면 null.
+  // 쿨다운이 끝나기 전에 Good 윈도우가 닫히면 칠 수 없으므로 링도 안쪽으로 들어오지 않는다.
+  get lateBeat() {
+    if (this.ringCycles === 0 || this.ringTime + this.cooldown > this.goodWindow) return null;
+    if (this.ringCycles - 1 === this.clearedRing) return null;
+    return { time: -this.ringTime, beat: this.lastBeat };
+  }
+
+  // 지금 쳐야 할 리듬 번호. 늦은 입력이 남았으면 그 리듬, 다음 링이 이미 사라졌으면 그다음 리듬이다.
+  get targetBeat() {
+    if (this.lateBeat) return this.lastBeat;
+    if (this.ringCycles === this.clearedRing) return (this.beatIndex + 1) % this.weapon.intervals.length;
+    return this.beatIndex;
+  }
+
+  // 패턴 한 바퀴 안에서의 경과 시간
+  get cycleTime() {
+    const before = this.weapon.intervals.slice(0, this.beatIndex).reduce((sum, v) => sum + v, 0);
+    return before + this.ringTime;
+  }
+
+  // 짝 리듬인지. 아니면 쿵 리듬이다.
+  isSnare(index) {
+    return this.weapon.drums[index] === 'snare';
+  }
+
+  // 가장 가까운 리듬과 부호 있는 오차. 음수면 이름, 양수면 늦음.
+  // 늦은 입력은 다음 간격 초반에 들어오므로 지나간 리듬과도 비교한다.
+  matchBeat(age) {
+    const t = this.ringCycles > 0 ? this.ringTime - age : Math.max(0, this.ringTime - age);
+    const early = t - this.currentInterval;
+    if (this.ringCycles === 0 || Math.abs(early) <= Math.abs(t)) {
+      return { error: early, beat: this.beatIndex, ring: this.ringCycles };
+    }
+    return { error: t, beat: this.lastBeat, ring: this.ringCycles - 1 };
+  }
+
+  gradeOf(error) {
+    const abs = Math.abs(error);
+    if (abs <= this.perfectWindow) return 'perfect';
+    if (abs <= this.goodWindow) return 'good';
+    return 'miss';
+  }
+
+  // 공격 키 입력 처리. age는 입력 후 경과 초, drum은 누른 키의 드럼('kick' 또는 'snare').
+  // 쿨다운 중이거나 링이 없으면 null(완전 무시). 가장 가까운 리듬과 드럼이 다르면 Miss다.
+  tryAttack(age, drum) {
+    if (this.cooldown > 0 || !this.ringActive) return null;
+    const { error, beat, ring } = this.matchBeat(age);
+    const grade = this.weapon.drums[beat] === drum ? this.gradeOf(error) : 'miss';
+    if (grade !== 'miss') this.clearedRing = ring;
+    this.cooldownTotal = grade === 'miss' && this.weapon.missCooldown ? this.weapon.missCooldown : this.weapon.cooldown;
+    this.cooldown = this.cooldownTotal;
+    this.lastError = error;
+    return { grade, error, drum, damage: this.weapon.damages[beat] };
+  }
+
+  // 화면상 이동 진행도. 틱의 앞부분 MOVE_ANIM_TIME 동안 새 칸에 도착하고, 남은 틱 동안은 멈춰 있다.
+  // 보상으로 틱이 이보다 짧아지면 틱 전체에 걸쳐 이동한다.
+  get moveProgress() {
+    const elapsed = this.stats.moveTick - this.moveTimer;
+    return Math.min(1, elapsed / Math.min(CONFIG.MOVE_ANIM_TIME, this.stats.moveTick));
+  }
+
+  get drawCol() {
+    return this.prevCol + (this.col - this.prevCol) * this.moveProgress;
+  }
+
+  get drawRow() {
+    return this.prevRow + (this.row - this.prevRow) * this.moveProgress;
+  }
+}
