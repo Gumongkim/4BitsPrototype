@@ -186,9 +186,14 @@ class Game {
     if (player.justMatched) Sfx.play(player.isSnare(player.lastBeat) ? 'tickStrong' : 'tick');
     for (const [drum, code] of Object.entries(CONFIG.DRUM_KEYS)) {
       if (!Input.wasPressed(code)) continue;
+      // 누른 순간 그 리듬의 공격 범위 테두리가 하얗게 보인다
       player.goalFlash = CONFIG.RING_GOAL_PRESS_TIME;
+      player.goalFlashBeat = player.targetBeat;
       const result = player.tryAttack(Input.pressAge(code), drum);
-      if (result) this.resolveAttack(result);
+      if (result) {
+        player.goalFlashBeat = result.beat;
+        this.resolveAttack(result);
+      }
     }
     // 히트스톱은 적과 텔레그래프만 멈춘다. 링 박자와 플레이어 입력은 멈추지 않는다.
     if (this.hitStop > 0) {
@@ -203,18 +208,19 @@ class Game {
 
   resolveAttack(result) {
     const player = this.player;
-    const cells = player.attackCells();
+    const cells = player.attackCells(result.beat);
     let targets = cells.map((c) => this.enemyAt(c.col, c.row)).filter(Boolean);
-    if (player.weapon.firstTargetOnly) {
+    if (weaponFirstTargetOnly(player.weapon, result.beat)) {
       targets = targets.sort((a, b) => a.col - b.col).slice(0, 1);
     }
-    const popupCell = targets[0] || cells.find((c) => c.row === player.row) || cells[0];
+    // 이 리듬 범위가 그리드 밖이면 플레이어 칸 위에 판정을 띄운다
+    const popupCell = targets[0] || cells.find((c) => c.row === player.row) || cells[0] || player;
     this.addPopup(popupCell.col, popupCell.row, result.grade, !targets.length);
     Sfx.play(result.grade);
-    if (result.grade !== 'miss') {
+    if (result.grade !== 'miss' && cells.length) {
       // 입력 순간의 링 크기에서 터진다. 오차의 부호가 남은 시간과 반대다.
       const gap = Math.round(CONFIG.RING_SPEED * -result.error);
-      this.ringBursts.push({ ...player.attackBounds, gap, grade: result.grade, drum: result.drum, age: 0 });
+      this.ringBursts.push({ cells, gap, grade: result.grade, drum: result.drum, age: 0 });
     }
     // 빈 칸을 친 입력은 판정만 표시하고 통계와 콤보에 넣지 않는다.
     // 안전한 곳에서 Perfect를 쌓아 보상 등급을 올리는 것을 막기 위해서다.

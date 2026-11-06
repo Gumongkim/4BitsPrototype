@@ -32,9 +32,11 @@ const CONFIG = {
   RING_MAX_ALPHA: 1,            // 리듬 순간의 진하기. 링은 완전히 투명한 상태로 나타나 여기까지 진해진다.
   RING_THICKNESS: 2,            // 링 두께 (내부 해상도 픽셀)
   RING_CORNER_LENGTH: 32 / 2,   // 링 모서리 ㄱ자 한 변의 길이. 0.5칸이라 네 개가 모이면 1칸이 된다.
-  RING_GOAL_FILL_ALPHA: 0.12,   // 공격 범위를 옅게 채우는 진하기
-  RING_GOAL_ALPHA: 0.4,         // 공격 범위 테두리의 평소 진하기
-  RING_GOAL_PRESS_TIME: 0.15,   // 공격 키를 누른 순간 테두리가 선명했다가 평소로 돌아오는 시간
+  // 공격 범위는 평소에 그리지 않는다. 링이 보이는 동안만 그 리듬의 드럼 색으로 채운다.
+  RANGE_FILL_ALPHA: 0.22,       // 링이 보이는 동안 범위 채우기가 리듬 순간까지 이 진하기로 진해진다
+  RANGE_MATCH_FILL_ALPHA: 0.45, // 리듬 순간의 범위 채우기 진하기. MATCH_FLASH_TIME 동안 흐려진다.
+  RING_GOAL_THICKNESS: 2,       // 공격 키를 눌렀을 때 나타나는 하얀 범위 테두리 두께
+  RING_GOAL_PRESS_TIME: 0.15,   // 그 테두리가 선명하게 나타났다가 사라지는 시간
   RING_KEY_SIZE: 8,             // 플레이어 위에 표시하는 키 글자 크기
   RING_KEY_GAP: 9,              // 키 글자 사이 간격 (내부 해상도 픽셀)
   RING_KEY_DIM_ALPHA: 0.3,      // 지금 눌러야 할 키가 아닌 글자의 진하기
@@ -62,9 +64,12 @@ const CONFIG = {
   //   cooldown: 공격 입력 쿨다운. 가장 짧은 간격보다 조금 작게 둔다.
   //   missCooldown: Miss를 냈을 때의 쿨다운. 없으면 cooldown과 같다.
   //   perfectWindow, goodWindow: 매치 시점 기준 ± 초
-  //   range: 공격 범위
+  //   range: 공격 범위. ranges에 범위가 없는 리듬은 모두 이 범위를 쓴다.
   //     cells: [[열, 행], ...]  플레이어 기준 상대 위치
   //     rowToEnd: true          오른쪽 끝까지 이어지는 같은 행
+  //     firstTargetOnly: true   범위에서 가장 가까운 적 하나만 맞는다. 없으면 무기의 firstTargetOnly를 따른다.
+  //   ranges: 리듬별 공격 범위 [range, ...]. 리듬 순서이고 형식은 range와 같다. 없거나 빈 자리는 range를 쓴다.
+  //     무기 제작 툴 JSON의 gameConfig.ranges를 그대로 넣으면 된다.
   //   firstTargetOnly: true면 범위에서 가장 가까운 적 하나만 맞는다
   DEFAULT_WEAPON: 'sword',
   WEAPONS: {
@@ -231,7 +236,7 @@ const CONFIG = {
   ENEMY_FLASH_TIME: 0.1,
   POPUP_TIME: 0.6,
   IMPACT_TIME: 0.12,            // 적 공격 실행 순간의 번쩍임
-  MATCH_FLASH_TIME: 0.08,       // 링이 칸에 맞는 순간의 번쩍임
+  MATCH_FLASH_TIME: 0.15,       // 리듬 순간 범위가 드럼 색으로 진하게 채워졌다가 흐려지는 시간
   RING_BURST_TIME: 0.2,         // 공격 성공으로 링이 터지는 이펙트
   RING_BURST_SPREAD: { perfect: 14, good: 6 }, // 터지며 퍼지는 거리 (내부 해상도 픽셀)
   RING_BURST_ALPHA: { perfect: 1, good: 0.7 }, // 터지는 순간의 진하기

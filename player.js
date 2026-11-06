@@ -8,9 +8,20 @@ const MOVE_DIRS = {
 };
 const MOVE_KEYS = Object.keys(MOVE_DIRS);
 
-// 무기 공격 범위의 칸들. lastCol은 rowToEnd 범위가 끝나는 열이다.
-function weaponRangeCells(weapon, col, row, lastCol) {
-  const { cells = [], rowToEnd } = weapon.range;
+// beat번 리듬의 공격 범위. ranges에 그 리듬 범위가 있으면 그것을, 없으면 range를 쓴다.
+function weaponBeatRange(weapon, beat) {
+  return (weapon.ranges && weapon.ranges[beat]) || weapon.range;
+}
+
+// beat번 리듬이 범위에서 가장 가까운 적 하나만 맞는지
+function weaponFirstTargetOnly(weapon, beat) {
+  const range = weaponBeatRange(weapon, beat);
+  return range.firstTargetOnly !== undefined ? !!range.firstTargetOnly : !!weapon.firstTargetOnly;
+}
+
+// beat번 리듬 공격 범위의 칸들. lastCol은 rowToEnd 범위가 끝나는 열이다.
+function weaponRangeCells(weapon, beat, col, row, lastCol) {
+  const { cells = [], rowToEnd } = weaponBeatRange(weapon, beat);
   const result = cells.map(([dc, dr]) => ({ col: col + dc, row: row + dr }));
   if (rowToEnd) {
     for (let c = col + 1; c <= lastCol; c++) result.push({ col: c, row });
@@ -41,7 +52,8 @@ class Player {
     };
     this.hp = this.stats.maxHp;
     this.hurtFlash = 0;    // 시각 효과일 뿐 판정에 영향을 주지 않는다
-    this.goalFlash = 0;    // 공격 키를 누른 뒤 목표 테두리가 선명한 남은 시간. 역시 시각 효과다.
+    this.goalFlash = 0;    // 공격 키를 누른 뒤 공격 범위 테두리가 하얗게 보이는 남은 시간. 역시 시각 효과다.
+    this.goalFlashBeat = 0; // 그 테두리를 그릴 리듬 번호
 
     this.ringTime = 0;     // 현재 간격의 경과 시간. 간격이 끝나는 순간이 매치 시점.
     this.ringCycles = 0;   // 링 생성 후 지나간 매치 시점 수
@@ -74,24 +86,15 @@ class Player {
     return this.limitWindow(this.weapon.goodWindow + this.stats.windowBonus);
   }
 
-  // 그리드 안에 있는 공격 범위 칸들
-  attackCells() {
-    return weaponRangeCells(this.weapon, this.col, this.row, CONFIG.GRID_COLS - 1)
+  // beat번 리듬의 그리드 안에 있는 공격 범위 칸들
+  attackCells(beat) {
+    return weaponRangeCells(this.weapon, beat, this.col, this.row, CONFIG.GRID_COLS - 1)
       .filter((c) => Grid.inBounds(c.col, c.row));
   }
 
-  // 공격 범위 전체를 감싼 직사각형 (내부 해상도 픽셀)
-  get attackBounds() {
-    const cells = this.attackCells();
-    const size = CONFIG.CELL_SIZE;
-    const left = Grid.cellX(Math.min(...cells.map((c) => c.col)));
-    const top = Grid.cellY(Math.min(...cells.map((c) => c.row)));
-    return {
-      left,
-      top,
-      width: Grid.cellX(Math.max(...cells.map((c) => c.col))) + size - left,
-      height: Grid.cellY(Math.max(...cells.map((c) => c.row))) + size - top,
-    };
+  // 어느 리듬이든 그리드 안에 공격 범위가 있는지
+  get hasAttackCells() {
+    return this.weapon.intervals.some((_, beat) => this.attackCells(beat).length > 0);
   }
 
   // 현재 입력을 읽어 이동을 시도한다. isBlocked(col, row)면 들어갈 수 없다.
@@ -122,7 +125,7 @@ class Player {
   updateRing(dt) {
     this.justMatched = false;
     this.cooldown = tickDown(this.cooldown, dt);
-    if (!this.ringActive && this.moveTimer <= 0 && this.attackCells().length) this.restartRing();
+    if (!this.ringActive && this.moveTimer <= 0 && this.hasAttackCells) this.restartRing();
     if (!this.ringActive) return;
     this.ringTime += dt;
     if (this.ringTime >= this.currentInterval) {
@@ -221,7 +224,7 @@ class Player {
     this.cooldownTotal = grade === 'miss' && this.weapon.missCooldown ? this.weapon.missCooldown : this.weapon.cooldown;
     this.cooldown = this.cooldownTotal;
     this.lastError = error;
-    return { grade, error, drum, damage: this.weapon.damages[beat] };
+    return { grade, error, drum, beat, damage: this.weapon.damages[beat] };
   }
 
   // 화면상 이동 진행도. 틱의 앞부분 MOVE_ANIM_TIME 동안 새 칸에 도착하고, 남은 틱 동안은 멈춰 있다.

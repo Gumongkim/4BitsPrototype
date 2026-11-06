@@ -15,7 +15,7 @@ const COLORS = {
   ringSnare: '#c13cff',         // 짝: 형광 보라
   ringTarget: '#2f4f7f',
   ringFlash: '#cfe8ff',
-  ringGoal: '#a9c4e6',
+  ringGoal: '#ffffff',          // 공격 키를 눌렀을 때 나타나는 범위 테두리
   ringOutline: '#0b0d14',
   telegraphBase: '#3a1c24',
   telegraphEdge: '#ff5a5f',
@@ -56,6 +56,32 @@ const POPUP_STYLES = {
 const PLAYER_TOP = 6; // 칸 위쪽에서 플레이어 몸통까지의 거리
 
 const FONT_FAMILY ='"Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif';
+
+function drumColor(drum) {
+  return drum === 'snare' ? COLORS.ringSnare : COLORS.ringKick;
+}
+
+// 공격 범위 칸들이 이루는 모양의 바깥으로 튀어나온 모서리. 링의 ㄱ자는 이 모서리에만 놓인다.
+// 안쪽으로 꺾인 모서리에는 ㄱ자가 맞물릴 수 없으므로 뺀다.
+// x, y는 모서리 좌표(내부 해상도 픽셀), dirX, dirY는 범위 안쪽 방향(1 또는 -1).
+function rangeCorners(cells) {
+  const size = CONFIG.CELL_SIZE;
+  const has = new Set(cells.map((c) => `${c.col},${c.row}`));
+  const corners = [];
+  for (const key of has) {
+    const [col, row] = key.split(',').map(Number);
+    for (const [ox, oy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      if (has.has(`${col + ox},${row}`) || has.has(`${col},${row + oy}`)) continue;
+      corners.push({
+        x: Grid.cellX(col) + (ox > 0 ? size : 0),
+        y: Grid.cellY(row) + (oy > 0 ? size : 0),
+        dirX: -ox,
+        dirY: -oy,
+      });
+    }
+  }
+  return corners;
+}
 
 class Renderer {
   constructor(canvas) {
@@ -253,15 +279,28 @@ class Renderer {
   }
 
   // 3행 6열의 작은 격자에 플레이어와 공격 범위를 그린다.
+  // 범위는 그 범위를 쓰는 리듬의 드럼 색이다. 쿵과 짝이 함께 쓰는 칸은 위 절반 초록, 아래 절반 보라다.
   drawRangePreview(weapon, x, y) {
     const size = 8;
+    const drums = {};
+    weapon.drums.forEach((drum, beat) => {
+      for (const cell of weaponRangeCells(weapon, beat, 0, 1, 5)) {
+        const key = `${cell.col},${cell.row}`;
+        drums[key] = drums[key] || new Set();
+        drums[key].add(drum);
+      }
+    });
     for (let row = 0; row < 3; row++) {
       for (let col = 0; col < 6; col++) {
-        this.rect(x + col * size, y + row * size, size - 1, size - 1, COLORS.cellA);
+        const px = x + col * size;
+        const py = y + row * size;
+        const used = drums[`${col},${row}`];
+        if (!used) this.rect(px, py, size - 1, size - 1, COLORS.cellA);
+        else if (used.size === 2) {
+          this.rect(px, py, size - 1, 4, COLORS.ringKick);
+          this.rect(px, py + 4, size - 1, size - 5, COLORS.ringSnare);
+        } else this.rect(px, py, size - 1, size - 1, drumColor([...used][0]));
       }
-    }
-    for (const cell of weaponRangeCells(weapon, 0, 1, 5)) {
-      this.rect(x + cell.col * size, y + cell.row * size, size - 1, size - 1, COLORS.ring);
     }
     this.rect(x, y + size, size - 1, size - 1, COLORS.player);
   }
@@ -414,82 +453,86 @@ class Renderer {
     part(0, thickness, thickness, length - thickness, color);
   }
 
+  // 범위 모양의 바깥 모서리마다 ㄱ자를 그린다. gap만큼 모서리에서 바깥 대각선으로 떨어진다 (음수면 안쪽).
+  // 안쪽으로 들어갈 때 같은 변의 ㄱ자끼리 겹치지 않도록 길이를 줄인다.
+  drawRangeRing(cells, gap, color, thickness) {
+    const length = Math.max(thickness + 1,
+      Math.min(CONFIG.RING_CORNER_LENGTH, Math.floor(CONFIG.CELL_SIZE / 2 + Math.min(0, gap))));
+    for (const { x, y, dirX, dirY } of rangeCorners(cells)) {
+      this.drawCorner(x - dirX * gap, y - dirY * gap, dirX, dirY, length, thickness, color);
+    }
+  }
+
+  // 칸마다 1픽셀 안쪽을 채운다. 무기 제작 툴처럼 칸 경계가 보인다.
+  fillCells(cells, color) {
+    const size = CONFIG.CELL_SIZE;
+    for (const c of cells) this.rect(Grid.cellX(c.col) + 1, Grid.cellY(c.row) + 1, size - 2, size - 2, color);
+  }
+
   // 공격에 성공한 링이 그 크기에서 바깥으로 퍼지며 흐려진다.
-  // 색은 쿵과 짝의 링 색을 따른다. Perfect는 굵고 네 모서리에 불꽃이 튀며, Good은 얇고 약하게 퍼진다.
+  // 색은 쿵과 짝의 링 색을 따른다. Perfect는 굵고 모서리마다 불꽃이 튀며, Good은 얇고 약하게 퍼진다.
   drawRingBursts(game) {
     const ctx = this.ctx;
     ctx.save();
     for (const burst of game.ringBursts) {
       const t = burst.age / CONFIG.RING_BURST_TIME;
       const eased = 1 - (1 - t) * (1 - t);
-      const gap = burst.gap + CONFIG.RING_BURST_SPREAD[burst.grade] * eased;
-      const x = burst.left - gap;
-      const y = burst.top - gap;
-      const w = burst.width + gap * 2;
-      const h = burst.height + gap * 2;
+      const gap = Math.round(burst.gap + CONFIG.RING_BURST_SPREAD[burst.grade] * eased);
       const perfect = burst.grade === 'perfect';
-      const color = burst.drum === 'snare' ? COLORS.ringSnare : COLORS.ringKick;
+      const color = drumColor(burst.drum);
       ctx.globalAlpha = CONFIG.RING_BURST_ALPHA[burst.grade] * (1 - t);
-      this.frame(x, y, w, h, color, (perfect ? 2 : 1) + (t < 0.5 ? 1 : 0));
+      this.drawRangeRing(burst.cells, gap, color, (perfect ? 2 : 1) + (t < 0.5 ? 1 : 0));
       if (perfect) {
-        const out = CONFIG.RING_BURST_SPREAD.perfect * eased * 0.6;
-        for (const [sx, sy] of [[x, y], [x + w, y], [x, y + h], [x + w, y + h]]) {
-          const dx = sx === x ? -out : out;
-          const dy = sy === y ? -out : out;
-          this.rect(sx + dx - 2, sy + dy - 2, 4, 4, color);
+        const out = gap + CONFIG.RING_BURST_SPREAD.perfect * eased * 0.6;
+        for (const { x, y, dirX, dirY } of rangeCorners(burst.cells)) {
+          this.rect(x - dirX * out - 2, y - dirY * out - 2, 4, 4, color);
         }
       }
     }
     ctx.restore();
   }
 
+  // 무기 제작 툴의 시연과 같은 연출이다. 공격 범위는 평소에 보이지 않는다.
+  // 리듬마다 링이 하나씩이고, 그 리듬의 공격 범위 모양으로 고정 속도로 줄어든다. 그 리듬까지 남은 시간이 곧 링 크기다.
+  // 링이 보이는 동안 범위가 그 리듬의 드럼 색으로 점점 진하게 채워지고, 리듬 순간 진하게 채워졌다가 흐려진다.
+  // 리듬이 지나면 늦은 입력이 인정되는 동안 링이 범위 안쪽으로 계속 줄어든다.
+  // 공격 키를 누르면 그 리듬의 범위 테두리가 하얗게 나타났다가 사라진다.
   drawRing(player) {
     if (!player.ringActive) return;
-    const size = CONFIG.CELL_SIZE;
-    const cells = player.attackCells();
-    for (const cell of cells) {
-      this.frame(Grid.cellX(cell.col), Grid.cellY(cell.row), size, size, COLORS.ringTarget);
-    }
-    // 링은 공격 범위 전체를 감싼 직사각형으로, 고정 속도로 줄어든다.
-    // 리듬마다 링이 하나씩이고, 그 리듬까지 남은 시간이 곧 링 크기다.
-    // 리듬이 지나면 늦은 입력이 인정되는 동안 범위 안쪽으로 계속 줄어든다.
-    const { left, top, width, height } = player.attackBounds;
     const ctx = this.ctx;
     ctx.save();
-    // 링을 맞출 목표: 범위를 옅게 채우고 바깥 테두리를 밝게 그린다
-    ctx.globalAlpha = CONFIG.RING_GOAL_FILL_ALPHA;
-    this.rect(left, top, width, height, COLORS.ring);
-    // 평소에는 반투명하고, 공격 키를 누르는 순간 선명해졌다가 돌아온다
-    const goalAlpha = CONFIG.RING_GOAL_ALPHA + (1 - CONFIG.RING_GOAL_ALPHA) * player.goalFlash / CONFIG.RING_GOAL_PRESS_TIME;
-    ctx.globalAlpha = goalAlpha;
-    this.frame(left, top, width, height, COLORS.ringGoal, 2);
     // 가까운 리듬의 링이 위에 오도록 먼 것부터 그린다
     const beats = player.upcomingBeats(CONFIG.RING_APPEAR_TIME).reverse();
     if (player.lateBeat) beats.push(player.lateBeat);
-    for (const { time, beat } of beats) {
-      const gap = Math.round(CONFIG.RING_SPEED * time);
-      const color = player.isSnare(beat) ? COLORS.ringSnare : COLORS.ringKick;
+    const rings = beats.map(({ time, beat }) => ({
+      time,
+      cells: player.attackCells(beat),
+      color: drumColor(player.weapon.drums[beat]),
       // 투명하게 나타나 리듬 순간에 가장 진해진다. 지나간 리듬은 그 진하기를 유지한다.
-      const closeness = 1 - Math.max(0, time) / CONFIG.RING_APPEAR_TIME;
-      const thickness = CONFIG.RING_THICKNESS;
-      const x0 = left - gap;
-      const y0 = top - gap;
-      const x1 = left + width + gap;
-      const y1 = top + height + gap;
-      const length = Math.min(CONFIG.RING_CORNER_LENGTH, Math.floor(Math.min(x1 - x0, y1 - y0) / 2));
+      closeness: 1 - Math.max(0, time) / CONFIG.RING_APPEAR_TIME,
+    }));
+    for (const { cells, color, closeness } of rings) {
+      ctx.globalAlpha = CONFIG.RANGE_FILL_ALPHA * closeness;
+      this.fillCells(cells, color);
+    }
+    // 리듬 순간: 범위가 진하게 채워졌다가 흐려진다
+    if (player.ringCycles > 0 && player.ringTime < CONFIG.MATCH_FLASH_TIME) {
+      ctx.globalAlpha = CONFIG.RANGE_MATCH_FILL_ALPHA * (1 - player.ringTime / CONFIG.MATCH_FLASH_TIME);
+      this.fillCells(player.attackCells(player.lastBeat), drumColor(player.weapon.drums[player.lastBeat]));
+    }
+    for (const { time, cells, color, closeness } of rings) {
       ctx.globalAlpha = CONFIG.RING_MAX_ALPHA * closeness;
-      this.drawCorner(x0, y0, 1, 1, length, thickness, color);
-      this.drawCorner(x1, y0, -1, 1, length, thickness, color);
-      this.drawCorner(x0, y1, 1, -1, length, thickness, color);
-      this.drawCorner(x1, y1, -1, -1, length, thickness, color);
+      this.drawRangeRing(cells, Math.round(CONFIG.RING_SPEED * time), color, CONFIG.RING_THICKNESS);
+    }
+    // 공격 키를 누른 순간의 하얀 범위 테두리
+    if (player.goalFlash > 0) {
+      const size = CONFIG.CELL_SIZE;
+      ctx.globalAlpha = player.goalFlash / CONFIG.RING_GOAL_PRESS_TIME;
+      for (const c of player.attackCells(player.goalFlashBeat)) {
+        this.frame(Grid.cellX(c.col) + 1, Grid.cellY(c.row) + 1, size - 2, size - 2, COLORS.ringGoal, CONFIG.RING_GOAL_THICKNESS);
+      }
     }
     ctx.restore();
-    // 매치 직후 범위를 잠깐 밝혀 박자를 알려준다
-    if (player.ringCycles > 0 && player.ringTime < CONFIG.MATCH_FLASH_TIME) {
-      ctx.globalAlpha = goalAlpha;
-      this.frame(left, top, width, height, COLORS.ringFlash, 4);
-      ctx.globalAlpha = 1;
-    }
   }
 
   // 플레이어 위에 공격 키를 표시한다. 지금 눌러야 할 키만 선명하고 나머지는 흐리다.

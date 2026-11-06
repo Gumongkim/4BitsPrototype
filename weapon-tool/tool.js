@@ -979,7 +979,7 @@ function buildExport(works) {
       'range.firstTargetOnly: true면 범위 안에서 플레이어에게 가장 가까운 적 1명만 맞는다 (게임의 firstTargetOnly).',
       'range.map: 8열 x 4행 그리드 그림. P = 플레이어 (열 1, 행 1, 0부터 셈), # = 공격 범위, . = 빈 칸.',
       'pattern: 1박씩 띄어 쓴 리듬 그림. 한 박은 두 글자로 앞 글자는 그 박의 절반(0.5박), 뒤 글자는 그 박 끝이다. A = 쿵, S = 짝, . = 쉼. 예: 한손검은 ".. .A .. .S .. .A .. .S"',
-      'gameConfig: 게임 config.js WEAPONS에 옮길 때 쓰는 값. intervals, startOffset, drums, damages는 게임과 같은 의미다. 게임 무기는 지금 무기당 공격 범위가 하나라서, 노드별 범위는 ranges 배열(노드 순서)로 따로 둔다. 쿨다운과 판정 윈도우는 툴에서 정하지 않으므로 리듬 간격에 맞춰 정한다.',
+      'gameConfig: 게임 config.js WEAPONS에 옮길 때 쓰는 값. intervals, startOffset, drums, damages는 게임과 같은 의미다. ranges는 노드별 공격 범위 배열(노드 순서)이며 게임 WEAPONS.ranges에 그대로 넣는다. 그 경우 range에는 ranges에 없는 리듬이 쓸 기본 범위를 둔다. 쿨다운과 판정 윈도우는 툴에서 정하지 않으므로 리듬 간격에 맞춰 정한다.',
       'warnings: 비어 있는 범위 등 확인이 필요한 점. 비어 있으면 문제없다.',
     ],
     timing: {
@@ -1037,6 +1037,7 @@ function timestamp() {
 
 document.getElementById('export').addEventListener('click', () => {
   const status = document.getElementById('export-status');
+  document.getElementById('import-report').hidden = true;
   const works = state.works.filter((w) => w.checked);
   if (!works.length) {
     status.textContent = '체크된 작업이 없습니다.';
@@ -1048,6 +1049,194 @@ document.getElementById('export').addEventListener('click', () => {
   copyText(text).then((copied) => {
     status.textContent = `${works.length}개 무기를 ${filename}로 저장${copied ? '하고 클립보드에 복사했습니다.' : '했습니다. (클립보드 복사 실패)'}`;
   });
+});
+
+// ---------------------------------------------------------------- 불러오기
+
+// 내보낸 JSON(또는 같은 양식)을 읽어 무기 작업으로 만든다. 잘못된 값은 고쳐서 읽고, 고친 내용을 notes에 남긴다.
+// 박 위치는 time(초)을 먼저 쓴다. 예전 버전 파일은 beat를 1부터 셌기 때문에 time이 더 확실하다.
+function parseWeaponFile(text, fileName) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error(`${fileName}: JSON 형식이 아닙니다.`);
+  }
+  let weapons = null;
+  if (data && Array.isArray(data.weapons)) weapons = data.weapons;
+  else if (Array.isArray(data)) weapons = data;
+  else if (data && Array.isArray(data.nodes)) weapons = [data];
+  if (!weapons) throw new Error(`${fileName}: weapons 목록이 없습니다.`);
+  const notes = [];
+  const works = weapons
+    .filter((w) => w && typeof w === 'object')
+    .map((w, i) => parseWeapon(w, i, notes));
+  return { works, notes };
+}
+
+function parseWeapon(raw, index, notes) {
+  const name = typeof raw.name === 'string' && raw.name.trim() ? raw.name.trim().slice(0, 20) : `불러온 무기 ${index + 1}`;
+  const work = makeWork(name);
+  const note = (where, text) => notes.push(`${name}${where ? ` ${where}` : ''}: ${text}`);
+  const rawNodes = Array.isArray(raw.nodes) ? raw.nodes : [];
+  if (!Array.isArray(raw.nodes)) note('', 'nodes가 없어 빈 무기로 불러왔습니다.');
+
+  rawNodes.forEach((rawNode, i) => {
+    const where = `노드 ${i + 1}`;
+    if (!rawNode || typeof rawNode !== 'object') {
+      note(where, '노드 형식이 아니라 뺐습니다.');
+      return;
+    }
+    // 위치: time(초) → 0.5박 칸
+    let seconds = Number(rawNode.time);
+    if (!Number.isFinite(seconds)) seconds = Number(rawNode.beat) * TOOL.BEAT_SEC;
+    if (!Number.isFinite(seconds)) {
+      note(where, '위치(time, beat)가 없어 뺐습니다.');
+      return;
+    }
+    const exact = seconds / TOOL.SLOT_SEC;
+    let slot = Math.round(exact);
+    if (Math.abs(exact - slot) > 1e-6) {
+      note(where, `${round3(seconds)}초를 0.5박 단위인 ${slotTime(slot)}초로 맞췄습니다.`);
+    }
+    if (slot === 0) {
+      slot = TOOL.SLOTS;
+      note(where, '0초 노드를 같은 순간인 8박(2.4초)으로 옮겼습니다.');
+    }
+    if (slot < 1 || slot > TOOL.SLOTS) {
+      note(where, `${round3(seconds)}초는 사이클(0.15 ~ 2.4초) 밖이라 뺐습니다.`);
+      return;
+    }
+    const at = `${where} (${beatLabel(slot)}박)`;
+    if (nodeAtSlot(work, slot)) {
+      note(at, '같은 자리에 노드가 이미 있어 뺐습니다.');
+      return;
+    }
+
+    // 드럼: drum 값, 없으면 key(A/S)
+    let drum = DRUMS[rawNode.drum] ? rawNode.drum : null;
+    if (!drum) drum = Object.keys(DRUMS).find((d) => DRUMS[d].key === String(rawNode.key).toUpperCase()) || null;
+    if (!drum) {
+      note(at, '드럼 종류(kick/snare)를 알 수 없어 뺐습니다.');
+      return;
+    }
+
+    let damage = Number(rawNode.damage);
+    if (!Number.isFinite(damage) || damage < 0) {
+      note(at, `공격력이 올바르지 않아 ${TOOL.DEFAULT_DAMAGE}로 정했습니다.`);
+      damage = TOOL.DEFAULT_DAMAGE;
+    }
+
+    const range = rawNode.range && typeof rawNode.range === 'object' ? rawNode.range : {};
+    const cells = [];
+    let dropped = 0;
+    for (const cell of Array.isArray(range.cells) ? range.cells : []) {
+      const dc = Array.isArray(cell) ? Number(cell[0]) : NaN;
+      const dr = Array.isArray(cell) ? Number(cell[1]) : NaN;
+      const col = TOOL.PLAYER_COL + dc;
+      const row = TOOL.PLAYER_ROW + dr;
+      const valid = Number.isInteger(dc) && Number.isInteger(dr)
+        && col >= 0 && col < TOOL.COLS && row >= 0 && row < TOOL.ROWS
+        && !(dc === 0 && dr === 0);
+      if (!valid) dropped++;
+      else if (!cells.some(([c, r]) => c === dc && r === dr)) cells.push([dc, dr]);
+    }
+    if (dropped) note(at, `그리드 밖이거나 잘못된 범위 칸 ${dropped}개를 뺐습니다.`);
+    if (!cells.length) note(at, '공격 범위가 비어 있습니다.');
+
+    work.nodes.push({
+      id: uid(),
+      slot,
+      drum,
+      damage,
+      cells,
+      firstTargetOnly: range.firstTargetOnly === true,
+    });
+  });
+  return work;
+}
+
+// 이름이 겹치면 '이름 (2)'처럼 번호를 붙인다
+function uniqueName(name) {
+  const used = new Set(state.works.map((w) => w.name));
+  if (!used.has(name)) return name;
+  let n = 2;
+  while (used.has(`${name} (${n})`)) n++;
+  return `${name} (${n})`;
+}
+
+function readFileText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error(`${file.name}: 파일을 읽지 못했습니다.`));
+    reader.readAsText(file);
+  });
+}
+
+async function importFiles(fileList) {
+  const files = [...fileList];
+  if (!files.length) return;
+  const added = [];
+  const notes = [];
+  for (const file of files) {
+    try {
+      const result = parseWeaponFile(await readFileText(file), file.name);
+      for (const work of result.works) {
+        work.name = uniqueName(work.name);
+        state.works.push(work);
+        added.push(work);
+      }
+      notes.push(...result.notes);
+    } catch (e) {
+      notes.push(e.message);
+    }
+  }
+  if (added.length) {
+    state.currentId = added[0].id;
+    state.selectedNodeId = null;
+    demo.reset();
+  }
+  changed();
+  document.getElementById('export-status').textContent = added.length
+    ? `${added.length}개 무기를 불러왔습니다.${notes.length ? ` 고친 점 ${notes.length}개:` : ''}`
+    : '불러온 무기가 없습니다.';
+  const report = document.getElementById('import-report');
+  report.innerHTML = notes.map((n) => `<li>${escapeHtml(n)}</li>`).join('');
+  report.hidden = !notes.length;
+}
+
+const importInput = document.getElementById('import-file');
+document.getElementById('import').addEventListener('click', () => importInput.click());
+importInput.addEventListener('change', () => {
+  importFiles(importInput.files);
+  importInput.value = ''; // 같은 파일을 다시 골라도 불러오도록 비운다
+});
+
+// 파일을 화면 어디에나 끌어다 놓으면 불러온다
+const dropOverlay = document.getElementById('drop-overlay');
+let dragDepth = 0;
+const isFileDrag = (e) => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+window.addEventListener('dragenter', (e) => {
+  if (!isFileDrag(e)) return;
+  e.preventDefault();
+  dragDepth++;
+  dropOverlay.hidden = false;
+});
+window.addEventListener('dragover', (e) => {
+  if (isFileDrag(e)) e.preventDefault();
+});
+window.addEventListener('dragleave', (e) => {
+  if (!isFileDrag(e)) return;
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (!dragDepth) dropOverlay.hidden = true;
+});
+window.addEventListener('drop', (e) => {
+  if (!isFileDrag(e)) return;
+  e.preventDefault();
+  dragDepth = 0;
+  dropOverlay.hidden = true;
+  importFiles(e.dataTransfer.files);
 });
 
 // ---------------------------------------------------------------- 시작

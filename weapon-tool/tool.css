@@ -118,6 +118,31 @@ input[type="checkbox"] { accent-color: var(--accent); }
 .left-foot { padding: 12px; border-top: 1px solid var(--edge); }
 .left-foot .check { margin: 0 0 10px; }
 #export-status { min-height: 18px; word-break: break-all; }
+#import-report {
+  max-height: 140px;
+  overflow-y: auto;
+  margin: 6px 0 0;
+  padding-left: 16px;
+  color: #ffc14d;
+  word-break: break-all;
+}
+
+/* 파일을 끌어다 놓는 동안 화면 전체에 표시 */
+#drop-overlay {
+  position: fixed;
+  inset: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--accent);
+  border-radius: 8px;
+  background: rgba(11, 13, 20, 0.85);
+  color: var(--text);
+  font-size: 18px;
+  pointer-events: none;
+  z-index: 10;
+}
+#drop-overlay[hidden] { display: none; }
 
 /* 가운데: 그리드와 비트라인 */
 #center {
