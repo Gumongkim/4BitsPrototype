@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>4Bit 무기 제작 툴</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="tool.css">
+</head>
+<body>
+<aside id="left">
+  <div class="left-head">
+    <h1>무기 작업</h1>
+    <button id="add-work" class="icon" title="새 무기 작업">+</button>
+  </div>
+  <ul id="work-list"></ul>
+  <div class="left-foot">
+    <label class="check"><input type="checkbox" id="check-all"> 전체 선택</label>
+    <button id="export" class="primary wide">내보내기</button>
+    <p id="export-status" class="hint"></p>
+  </div>
+</aside>
+
+<main id="center">
+  <section class="field-wrap">
+    <canvas id="field"></canvas>
+    <p class="hint" id="field-hint"></p>
+  </section>
+  <section class="beat-wrap">
+    <div class="palette">
+      <span class="label">배치할 노드</span>
+      <button class="drum kick" data-palette="kick">A 쿵</button>
+      <button class="drum snare" data-palette="snare">S 짝</button>
+    </div>
+    <canvas id="beatline"></canvas>
+    <p class="hint">빈 자리 클릭: 배치 · 노드 클릭: 선택 · 우클릭 또는 Delete: 삭제 · A / S: 배치할 노드 · Space: 시연</p>
+  </section>
+</main>
+
+<aside id="right">
+  <section>
+    <h2>무기</h2>
+    <label class="field">이름 <input id="weapon-name" type="text" maxlength="20"></label>
+    <p class="hint" id="weapon-stat"></p>
+  </section>
+  <section>
+    <h2>선택한 노드</h2>
+    <p id="node-empty" class="hint">비트라인에서 노드를 클릭하세요.</p>
+    <div id="node-edit">
+      <p id="node-title" class="node-title"></p>
+      <div class="drum-toggle">
+        <button class="drum kick" data-set-drum="kick">A 쿵</button>
+        <button class="drum snare" data-set-drum="snare">S 짝</button>
+      </div>
+      <label class="field">공격력 <input id="node-damage" type="number" min="0" step="0.25"></label>
+      <label class="check"><input id="node-first" type="checkbox"> 범위 안에서 가장 가까운 적 1명만</label>
+      <p class="hint" id="node-range-info"></p>
+      <div class="row-buttons">
+        <button id="node-clear-range">범위 비우기</button>
+        <button id="node-delete" class="danger">노드 삭제</button>
+      </div>
+    </div>
+  </section>
+  <section>
+    <h2>시연</h2>
+    <button id="demo-toggle" class="primary wide">▶ 시연</button>
+    <label class="check"><input id="demo-sound" type="checkbox" checked> 소리</label>
+    <label class="check"><input id="demo-metronome" type="checkbox" checked> 메트로놈 (1박마다)</label>
+  </section>
+</aside>
+
+<script src="tool.js"></script>
+</body>
+</html>

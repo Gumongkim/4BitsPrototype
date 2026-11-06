@@ -1,0 +1,150 @@
+/* 게임과 같은 어두운 색을 쓴다. */
+:root {
+  --bg: #0b0d14;
+  --panel: #12141f;
+  --panel-2: #1c2030;
+  --edge: #2c3350;
+  --text: #e8ecf5;
+  --dim: #8a93ad;
+  --accent: #4aa8ff;
+  --kick: #39ff14;
+  --snare: #c13cff;
+  --danger: #ff5a5f;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 280px;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  overflow: hidden;
+}
+
+h1, h2 { margin: 0; font-size: 15px; }
+h2 { margin-bottom: 10px; color: var(--dim); font-weight: normal; }
+
+button {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button.primary { background: #1d3a5c; border-color: var(--accent); }
+button.danger { color: var(--danger); }
+button.wide { width: 100%; }
+button.icon { width: 32px; height: 32px; padding: 0; font-size: 20px; line-height: 1; }
+
+button.drum.kick { color: var(--kick); }
+button.drum.snare { color: var(--snare); }
+button.drum.on.kick { background: var(--kick); color: #0b0d14; border-color: var(--kick); }
+button.drum.on.snare { background: var(--snare); color: #0b0d14; border-color: var(--snare); }
+
+input[type="text"], input[type="number"] {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+  padding: 5px 8px;
+  width: 100%;
+}
+input[type="checkbox"] { accent-color: var(--accent); }
+
+.hint { color: var(--dim); font-size: 12px; margin: 8px 0 0; line-height: 1.5; }
+.field { display: grid; gap: 4px; margin-top: 10px; color: var(--dim); font-size: 12px; }
+.check { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 13px; cursor: pointer; }
+
+/* 왼쪽: 무기 작업 목록 */
+#left {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--edge);
+}
+.left-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-bottom: 1px solid var(--edge);
+}
+#work-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+}
+.work-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 8px;
+  margin-bottom: 6px;
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+  background: var(--panel-2);
+  cursor: pointer;
+}
+.work-item.active { border-color: var(--accent); background: #1a2840; }
+.work-item .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.work-item .meta { grid-column: 2 / 4; color: var(--dim); font-size: 11px; }
+.work-item .del { padding: 0 6px; border: none; background: none; color: var(--dim); }
+.work-item .del:hover { color: var(--danger); }
+.mini {
+  grid-column: 1 / 4;
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  gap: 2px;
+}
+.mini span { height: 6px; border-radius: 1px; background: #262b40; }
+.mini span:nth-child(2n+1) { background: #30364f; }
+.mini span.kick { background: var(--kick); }
+.mini span.snare { background: var(--snare); }
+
+.left-foot { padding: 12px; border-top: 1px solid var(--edge); }
+.left-foot .check { margin: 0 0 10px; }
+#export-status { min-height: 18px; word-break: break-all; }
+
+/* 가운데: 그리드와 비트라인 */
+#center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  min-width: 0;
+  padding: 16px;
+  overflow: auto;
+}
+.field-wrap, .beat-wrap { width: 100%; display: flex; flex-direction: column; align-items: center; }
+#field-hint { min-height: 3em; text-align: center; }
+#field { width: 100%; max-width: 576px; height: auto; cursor: pointer; }
+#beatline { width: 100%; max-width: 776px; height: auto; cursor: pointer; }
+.palette { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.palette .label { color: var(--dim); font-size: 12px; }
+
+/* 오른쪽: 무기·노드 값과 시연 */
+#right {
+  overflow-y: auto;
+  background: var(--panel);
+  border-left: 1px solid var(--edge);
+}
+#right section { padding: 14px; border-bottom: 1px solid var(--edge); }
+.node-title { margin: 0 0 10px; font-weight: bold; }
+.drum-toggle, .row-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.row-buttons { margin-top: 12px; }
+#demo-toggle { margin-bottom: 4px; }

@@ -21,6 +21,7 @@
 - `index.html`: 로컬 실행용 페이지
 - `timing-grid-web.html`: 웹 링크(Artifact) 게시용 페이지
 - 스크립트를 추가·삭제하면 두 HTML의 `<script>` 목록을 함께 고친다.
+- `weapon-tool/`: 무기 제작 웹 툴 (`index.html`, `tool.css`, `tool.js`). 게임과 독립이며 웹 링크(Artifact)에 포함하지 않는다. 같은 기술 제약(바닐라 JS, file:// 실행)을 따른다. 툴에서 내보낸 JSON을 받으면 `howToRead`와 `gameConfig`를 보고 `config.js` `WEAPONS`에 옮긴다.
 
 ## 웹 링크 (Artifact)
 
