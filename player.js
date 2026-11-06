@@ -55,7 +55,7 @@ class Player {
     this.prevRow = this.row;
     this.moveTimer = 0;
     this.bufferedMove = null;
-    this.bufferedOnBeat = false; // 버퍼된 이동 키를 누른 순간이 가장 가까운 노드의 Perfect 윈도우 안이었는지
+    this.bufferedMoveError = null; // 버퍼된 이동 키를 누른 순간의 가장 가까운 노드와의 오차. 링이 없었으면 null.
     this.stats = {
       maxHp: CONFIG.PLAYER_MAX_HP,
       moveTick: CONFIG.MOVE_TICK,
@@ -81,7 +81,7 @@ class Player {
     // 게임이 연결하는 훅. 유물이 규칙을 바꾸는 확장 지점이다.
     this.emit = () => {};          // (이벤트 이름, data): 링 재시작·멈춤, 이동
     this.rangeOverride = null;     // (beat) => 공격 범위를 대신할 칸 목록, 없으면 null
-    this.keepRingOnMove = null;    // (onBeat) => true면 이동해도 링을 유지한다
+    this.keepRingOnMove = null;    // (error) => true면 이동해도 링을 유지한다. error는 누른 순간의 노드 오차 또는 null.
 
     this.weapons = [weaponKind];   // 무기 슬롯. 턴테이블이 있으면 2개까지다.
     this.setWeapon(weaponKind);
@@ -179,7 +179,7 @@ class Player {
       if (!Input.wasPressed(code)) continue;
       this.bufferedMove = code;
       // 박자 이동 판정은 누른 순간 기준이다 (워킹 베이스)
-      this.bufferedOnBeat = this.ringActive && Math.abs(this.matchBeat(Input.pressAge(code)).error) <= this.perfectWindow;
+      this.bufferedMoveError = this.ringActive ? this.matchBeat(Input.pressAge(code)).error : null;
     }
     this.moveTimer = tickDown(this.moveTimer, dt);
     if (this.moveTimer > 0) return;
@@ -192,16 +192,16 @@ class Player {
     const row = this.row + MOVE_DIRS[code].row;
     if (!Grid.inBounds(col, row) || isBlocked(col, row)) return;
     const from = { col: this.col, row: this.row };
-    const onBeat = this.bufferedOnBeat;
+    const error = this.bufferedMoveError;
     this.prevCol = this.col;
     this.prevRow = this.row;
     this.col = col;
     this.row = row;
     this.moveTimer = this.stats.moveTick;
     // 이동하면 링과 함께 HIT도 사라진다. 유물(워킹 베이스)이 링을 유지하면 그대로 간다.
-    const kept = this.ringActive && !!this.keepRingOnMove && this.keepRingOnMove(onBeat);
+    const kept = this.ringActive && !!this.keepRingOnMove && this.keepRingOnMove(error);
     if (!kept) this.stopRing();
-    this.emit('playerMove', { from, to: { col, row }, onBeat, kept });
+    this.emit('playerMove', { from, to: { col, row }, error, kept });
   }
 
   // 링을 멈추고 HIT를 지운다. 이동 틱이 끝나면 새 링이 시작된다.

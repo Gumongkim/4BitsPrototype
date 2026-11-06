@@ -16,7 +16,7 @@
 //                           whiff: 빈 범위를 쳤지만 HIT로 센 노드 (에어 드럼)
 //   enemyHit                { enemy, damage, source }  source: node, crash, sforzando, tap, crescendo, freestyle
 //   enemyKill               { enemy, source }
-//   playerMove              { from, to, onBeat, kept }  onBeat: 누른 순간이 가장 가까운 노드의 Perfect 윈도우 안
+//   playerMove              { from, to, error, kept }  error: 누른 순간의 가장 가까운 노드와의 오차 (링이 없었으면 null)
 //                           kept: 링이 리셋되지 않았다
 //   playerHurt              { amount, absorbed }  absorbed: 실드가 막은 양
 //   telegraphStart          { enemy, telegraph }
@@ -32,7 +32,7 @@
 //   damagePct(ctx)          유물 % 풀에 더할 값. ctx = { drum, beat, weaponKind, grade, hits, freestyle }
 //   damageMult(ctx)         최종 데미지에 따로 곱할 배율
 //   attackCells(ctx)        공격 범위를 대신할 칸 목록. null이면 무기 범위를 쓴다. ctx = { beat }
-//   keepRingOnMove(ctx)     true면 이동해도 링을 리셋하지 않는다. ctx = { onBeat }
+//   keepRingOnMove(ctx)     true면 이동해도 링을 리셋하지 않는다. ctx = { error }
 //   whiffHits(ctx)          true면 빈 범위를 친 Good 이상도 HIT로 센다
 //   attackInput(ctx)        true면 공격 키 입력을 유물이 처리했다 (리듬 판정을 하지 않는다). ctx = { drum, age }
 //   weaponSlots(ctx)        무기 슬롯 수. 가장 큰 값을 쓰고 없으면 1이다.
@@ -142,7 +142,7 @@ const RELIC_LOGIC = {
   // 그렇게 이동하면 다음 성공 노드(적을 맞힌 Good 이상) 데미지 x nextAttackMult. 링이 리셋되면 사라진다.
   walking_bass: {
     acquire(game, e, state) { state.bonus = false; },
-    keepRingOnMove: (game, ctx) => ctx.onBeat,
+    keepRingOnMove: (game, ctx, state, def) => ctx.error !== null && Math.abs(ctx.error) <= def.moveWindow,
     playerMove(game, e, state) { if (e.kept) state.bonus = true; },
     ringStop(game, e, state) { state.bonus = false; },
     damageMult: (game, ctx, state, def) => (state.bonus ? def.nextAttackMult : 1),
@@ -255,11 +255,18 @@ const RELIC_LOGIC = {
     damageMult: (game, ctx, state, def) => def.damageMult,
   },
 
-  // 한 사이클의 모든 노드가 적을 맞힌 Perfect면 마지막 노드에서 모든 적과 텔레그래프를 freezeTime초 멈춘다
+  // 한 사이클의 모든 노드가 적을 맞힌 Perfect면 마지막 노드에서 모든 적과 텔레그래프를 freezeTime초 멈추고,
+  // 모든 적에게 무기 damages 합 x damageRatio 피해를 준다 (판정·HIT·유물 배율 없음, 처치 이벤트는 발동)
   fermata: {
     node(game, e, state, def) {
       if (e.grade !== 'perfect' || !e.targets.length || !game.cycle) return;
-      if (game.cycle.perfectHits === game.cycle.nodes) game.freezeTimer = def.freezeTime;
+      if (game.cycle.perfectHits !== game.cycle.nodes) return;
+      game.freezeTimer = def.freezeTime;
+      const damage = game.player.weapon.damages.reduce((sum, v) => sum + v, 0) * def.damageRatio;
+      for (const enemy of game.enemies.slice()) {
+        game.burst(enemy.col, enemy.row, CONFIG.PARTICLES_RELIC);
+        game.damageEnemy(enemy, damage, 'fermata');
+      }
     },
   },
 

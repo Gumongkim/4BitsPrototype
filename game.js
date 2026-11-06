@@ -98,7 +98,7 @@ class Game {
     const player = this.player;
     player.emit = (name, data) => this.onPlayerEvent(name, data);
     player.rangeOverride = (beat) => Relics.first(this, 'attackCells', { beat });
-    player.keepRingOnMove = (onBeat) => Relics.any(this, 'keepRingOnMove', { onBeat });
+    player.keepRingOnMove = (error) => Relics.any(this, 'keepRingOnMove', { error });
   }
 
   onPlayerEvent(name, data) {

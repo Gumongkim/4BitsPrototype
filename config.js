@@ -54,7 +54,12 @@ const CONFIG = {
   // HUD
   HUD_RELIC_SLOT_SIZE: 12,      // 오른쪽 위 유물 칸 한 변 (내부 해상도 픽셀)
   HUD_RELIC_SLOT_GAP: 2,
-  HUD_SHIELD_MAX_CELLS: 4,      // HP 옆에 칸으로 그리는 실드 수. 넘으면 칸 하나와 개수를 쓴다.
+  HUD_HP_BAR_X: 24,             // HP 바 위치와 크기. 수치는 바 안에 쓴다.
+  HUD_HP_BAR_Y: 4,
+  HUD_HP_BAR_WIDTH: 60,
+  HUD_HP_BAR_HEIGHT: 9,
+  HUD_SHIELD_BAR_MIN_WIDTH: 12, // HP 바 오른쪽에 이어 붙이는 실드 칸 길이의 하한과 상한. 실드 1점은 HP 1점과 같은 길이다.
+  HUD_SHIELD_BAR_MAX_WIDTH: 40,
   HUD_FREESTYLE_GAUGE_HEIGHT: 2, // 리듬 막대 아래(화면 맨 아래) 프리스타일 게이지 높이
 
   // 화면 아래 리듬 막대
@@ -545,8 +550,8 @@ const CONFIG = {
     metronome: { name: '메트로놈', rarity: 'rare', desc: 'Perfect 8회마다 실드 +1', perfectsPerShield: 8 },
     sforzando: { name: '스포르찬도', rarity: 'rare', desc: '적 처치 시 인접 적에게 그 적 최대 HP의 25%', maxHpRatio: 0.25 },
     tap_dance: { name: '탭 댄스', rarity: 'rare', desc: '이동할 때마다 인접한 적에게 0.5', damage: 0.5 },
-    // 가장 가까운 노드 시점의 Perfect 윈도우 안에 누른 이동은 링을 유지한다. 그 뒤 첫 성공 노드 데미지 x nextAttackMult
-    walking_bass: { name: '워킹 베이스', rarity: 'rare', desc: '박자에 맞춰 이동하면 리듬이 유지됨', nextAttackMult: 1.25 },
+    // 가장 가까운 노드 시점의 ±moveWindow초 안에 누른 이동은 링을 유지한다. 그 뒤 첫 성공 노드 데미지 x nextAttackMult
+    walking_bass: { name: '워킹 베이스', rarity: 'rare', desc: '박자에 맞춰 이동하면 리듬이 유지됨', moveWindow: 0.12, nextAttackMult: 1.25 },
     counterpoint: { name: '카운터포인트', rarity: 'rare', desc: 'Perfect로 맞은 적의 공격 예고를 취소' },
     // 게이지 0~gaugeMax. 적을 맞힌 Good 이상 노드마다 gaugeMax / (노드 수 x chargeCycles) 충전. 가득 차면 모드 시작,
     // 모드 중에는 초당 drainPerSec씩 줄고 A/S마다 cells를 공격한다 (쿨다운 cooldown).
@@ -561,7 +566,8 @@ const CONFIG = {
     // 에픽
     crescendo: { name: '크레센도', rarity: 'epic', desc: 'HIT 4 이상부터 성공마다 무작위 적 1마리 추가 타격', minHit: 4, damageRatio: 0.5 },
     quantize: { name: '퀀타이즈', rarity: 'epic', desc: '가장 가까운 적 1명만 공격 (데미지 ×0.6)', damageMult: 0.6 },
-    fermata: { name: '페르마타', rarity: 'epic', desc: '한 사이클 전부 Perfect면 적 1초 정지', freezeTime: 1 },
+    // 발동하면 모든 적을 freezeTime초 멈추고, 모든 적에게 무기 damages 합 x damageRatio 피해 (판정·HIT·유물 배율 없음)
+    fermata: { name: '페르마타', rarity: 'epic', desc: '한 사이클 전부 Perfect면 모든 적 3초 정지 + 피해', freezeTime: 3, damageRatio: 0.5 },
   },
   PARTICLES_RELIC: 4,           // 유물 효과(인접 피해, 추가 타격 등)로 맞은 적에게 튀는 입자 수
 

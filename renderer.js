@@ -509,13 +509,8 @@ class Renderer {
 
   drawHud(game) {
     const player = game.player;
-    // HP
-    this.text('HP', 8, 4, 8, COLORS.dim);
-    this.rect(24, 6, 60, 7, COLORS.gridLine);
-    this.rect(24, 6, 60 * player.hp / player.stats.maxHp, 7, COLORS.player);
-    this.text(`${player.hp}/${player.stats.maxHp}`, 88, 4, 8, COLORS.text);
+    this.drawHpBar(player);
     if (Sfx.muted) this.text('음소거', 8, 16, 7, COLORS.dim);
-    this.drawShield(player);
     // 웨이브
     this.text(`WAVE ${game.wave}`, 160, 3, 10, COLORS.text, 'center');
     this.drawRelicSlots(game);
@@ -560,20 +555,27 @@ class Renderer {
     }
   }
 
-  // HP 표시 옆의 실드 칸. 실드가 HUD_SHIELD_MAX_CELLS보다 많으면 칸 하나와 개수를 쓴다.
-  drawShield(player) {
+  // HP 바. 수치("현재/최대")는 바 안 가운데에 쓴다.
+  // 실드가 있으면 바 오른쪽 끝에 하늘색 칸을 이어 붙이고 그 안에 "+실드"를 쓴다.
+  // 실드 칸 길이는 HP 1점과 같은 비율이고, 글자가 들어가도록 최소 길이를, HUD가 겹치지 않도록 최대 길이를 둔다.
+  drawHpBar(player) {
+    const x = CONFIG.HUD_HP_BAR_X;
+    const y = CONFIG.HUD_HP_BAR_Y;
+    const w = CONFIG.HUD_HP_BAR_WIDTH;
+    const h = CONFIG.HUD_HP_BAR_HEIGHT;
+    const textSize = h - 2;
+    const textY = y + (h - textSize) / 2 - 0.5;
+    this.text('HP', 8, y - 1, 8, COLORS.dim);
+    this.rect(x, y, w, h, COLORS.gridLine);
+    this.rect(x, y, w * player.hp / player.stats.maxHp, h, COLORS.player);
+    this.text(`${player.hp}/${player.stats.maxHp}`, x + w / 2, textY, textSize, COLORS.text, 'center');
     if (player.shield <= 0) return;
-    const x = 112;
-    const cell = (i) => {
-      this.rect(x + i * 6, 6, 5, 7, COLORS.shield);
-      this.frame(x + i * 6, 6, 5, 7, COLORS.ringOutline);
-    };
-    if (player.shield <= CONFIG.HUD_SHIELD_MAX_CELLS) {
-      for (let i = 0; i < player.shield; i++) cell(i);
-    } else {
-      cell(0);
-      this.text(`x${player.shield}`, x + 7, 4, 8, COLORS.shield);
-    }
+    const perPoint = w / player.stats.maxHp;
+    const sw = Math.round(Math.max(CONFIG.HUD_SHIELD_BAR_MIN_WIDTH,
+      Math.min(CONFIG.HUD_SHIELD_BAR_MAX_WIDTH, player.shield * perPoint)));
+    this.rect(x + w, y, 1, h, COLORS.ringOutline);
+    this.rect(x + w + 1, y, sw, h, COLORS.shield);
+    this.text(`+${player.shield}`, x + w + 1 + sw / 2, textY, textSize, COLORS.text, 'center');
   }
 
   // 화면 오른쪽 위의 유물 칸. 빈 칸 RELIC_SLOTS개를 한 줄로 두고 왼쪽부터 채운다.
