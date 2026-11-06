@@ -70,20 +70,16 @@ class Player {
     this.weapon = CONFIG.WEAPONS[kind];
     this.ringActive = false;
     this.cooldown = 0;
-    this.cooldownTotal = this.weapon.cooldown; // HUD 막대용: 현재 쿨다운의 전체 길이
+    this.cooldownTotal = CONFIG.ATTACK_COOLDOWN; // HUD 막대용: 현재 쿨다운의 전체 길이
   }
 
-  // 판정 윈도우. 한 리듬에 두 번 성공하지 못하도록 쿨다운의 절반보다 작게 제한한다.
-  limitWindow(value) {
-    return Math.min(value, this.weapon.cooldown / 2 - CONFIG.WINDOW_MARGIN);
-  }
-
+  // 판정 윈도우. 모든 무기에 같다. 한 리듬에 두 번 성공하는 것은 tryAttack에서 막는다.
   get perfectWindow() {
-    return this.limitWindow(this.weapon.perfectWindow + this.stats.windowBonus);
+    return CONFIG.JUDGE.perfect.window + this.stats.windowBonus;
   }
 
   get goodWindow() {
-    return this.limitWindow(this.weapon.goodWindow + this.stats.windowBonus);
+    return CONFIG.JUDGE.good.window + this.stats.windowBonus;
   }
 
   // beat번 리듬의 그리드 안에 있는 공격 범위 칸들
@@ -199,12 +195,24 @@ class Player {
   // 가장 가까운 리듬과 부호 있는 오차. 음수면 이름, 양수면 늦음.
   // 늦은 입력은 다음 간격 초반에 들어오므로 지나간 리듬과도 비교한다.
   matchBeat(age) {
+    return this.beatCandidates(age)[0];
+  }
+
+  // 다음 리듬과 지나간 리듬을 오차가 작은 순서로 돌려준다. 같으면 다음 리듬이 먼저다.
+  beatCandidates(age) {
     const t = this.ringCycles > 0 ? this.ringTime - age : Math.max(0, this.ringTime - age);
-    const early = t - this.currentInterval;
-    if (this.ringCycles === 0 || Math.abs(early) <= Math.abs(t)) {
-      return { error: early, beat: this.beatIndex, ring: this.ringCycles };
-    }
-    return { error: t, beat: this.lastBeat, ring: this.ringCycles - 1 };
+    const candidates = [{ error: t - this.currentInterval, beat: this.beatIndex, ring: this.ringCycles }];
+    if (this.ringCycles > 0) candidates.push({ error: t, beat: this.lastBeat, ring: this.ringCycles - 1 });
+    return candidates.sort((a, b) => Math.abs(a.error) - Math.abs(b.error));
+  }
+
+  // 공격 입력이 노리는 리듬. 가장 가까운 리듬이 이미 성공한 리듬이면 다른 리듬이 Good 윈도우 안일 때만 그 리듬을 노리고,
+  // 아니면 null(입력 무시)이다. 윈도우가 쿨다운보다 길어 같은 리듬을 두 번 칠 수 있기 때문이다.
+  attackTarget(age) {
+    const [nearest, other] = this.beatCandidates(age);
+    if (nearest.ring !== this.clearedRing) return nearest;
+    if (other && other.ring !== this.clearedRing && Math.abs(other.error) <= this.goodWindow) return other;
+    return null;
   }
 
   gradeOf(error) {
@@ -215,13 +223,16 @@ class Player {
   }
 
   // 공격 키 입력 처리. age는 입력 후 경과 초, drum은 누른 키의 드럼('kick' 또는 'snare').
-  // 쿨다운 중이거나 링이 없으면 null(완전 무시). 가장 가까운 리듬과 드럼이 다르면 Miss다.
+  // 쿨다운 중이거나 링이 없거나 이미 성공한 리듬에 맞춘 입력이면 null(완전 무시). 노린 리듬과 드럼이 다르면 Miss다.
+  // 키를 누르고 있는 동안의 반복 입력은 Input에서 버리므로 꾹 누르기는 한 번 누른 것과 같다.
   tryAttack(age, drum) {
     if (this.cooldown > 0 || !this.ringActive) return null;
-    const { error, beat, ring } = this.matchBeat(age);
+    const target = this.attackTarget(age);
+    if (!target) return null;
+    const { error, beat, ring } = target;
     const grade = this.weapon.drums[beat] === drum ? this.gradeOf(error) : 'miss';
     if (grade !== 'miss') this.clearedRing = ring;
-    this.cooldownTotal = grade === 'miss' && this.weapon.missCooldown ? this.weapon.missCooldown : this.weapon.cooldown;
+    this.cooldownTotal = grade === 'miss' ? CONFIG.ATTACK_MISS_COOLDOWN : CONFIG.ATTACK_COOLDOWN;
     this.cooldown = this.cooldownTotal;
     this.lastError = error;
     return { grade, error, drum, beat, damage: this.weapon.damages[beat] };

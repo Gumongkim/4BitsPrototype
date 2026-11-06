@@ -1039,7 +1039,7 @@ function buildExport(works) {
       'range.firstTargetOnly: true면 범위 안에서 플레이어에게 가장 가까운 적 1명만 맞는다 (게임의 firstTargetOnly).',
       'range.map: 8열 x 4행 그리드 그림. P = 게임 시작 위치의 플레이어 (열 1, 행 1, 0부터 셈), # = 공격 범위, . = 빈 칸. 이 위치에서 그리드 밖으로 나가는 칸은 그림에는 없고 cells에만 있다.',
       'pattern: 1박씩 띄어 쓴 리듬 그림. 한 박은 두 글자로 앞 글자는 그 박의 절반(0.5박), 뒤 글자는 그 박 끝이다. A = 쿵, S = 짝, . = 쉼. 예: 한손검은 ".. .A .. .S .. .A .. .S"',
-      'gameConfig: 게임 config.js WEAPONS에 옮길 때 쓰는 값. intervals, startOffset, drums, damages는 게임과 같은 의미다. ranges는 노드별 공격 범위 배열(노드 순서)이며 게임 WEAPONS.ranges에 그대로 넣는다. 그 경우 range에는 ranges에 없는 리듬이 쓸 기본 범위를 둔다. 쿨다운과 판정 윈도우는 툴에서 정하지 않으므로 리듬 간격에 맞춰 정한다.',
+      'gameConfig: 게임 config.js WEAPONS에 옮길 때 쓰는 값. intervals, startOffset, drums, damages는 게임과 같은 의미다. ranges는 노드별 공격 범위 배열(노드 순서)이며 게임 WEAPONS.ranges에 그대로 넣는다. 그 경우 range에는 ranges에 없는 리듬이 쓸 기본 범위를 둔다. 쿨다운과 판정 윈도우는 모든 무기에 같은 게임 공통 값(ATTACK_COOLDOWN, ATTACK_MISS_COOLDOWN, JUDGE)이라 무기에 넣지 않는다.',
       'warnings: 비어 있는 범위 등 확인이 필요한 점. 비어 있으면 문제없다.',
     ],
     timing: {

@@ -276,7 +276,6 @@ class Renderer {
       this.drawRangePreview(weapon, x + (width - 56) / 2, top + 30);
       this.drawRhythmBar(x + 6, top + 68, width - 12, weapon);
       this.text(weaponDamageText(weapon), x + width / 2, top + 80, 6, COLORS.text, 'center');
-      this.text(`쿨다운 ${weapon.cooldown}초`, x + width / 2, top + 94, 7, COLORS.dim, 'center');
     });
     this.text('← → 선택     Enter 확정     1~4 바로 선택', cx, 158, 8, COLORS.ring, 'center');
   }
@@ -361,7 +360,7 @@ class Renderer {
       this.drawRangePreview(weapon, x + (width - 56) / 2, top + 32);
       this.drawRhythmBar(x + 6, top + 70, width - 12, weapon);
       this.text(weaponDamageText(weapon), x + width / 2, top + 82, 6, COLORS.text, 'center');
-      this.text(card.keep ? '지금 무기 유지' : `쿨다운 ${weapon.cooldown}초`, x + width / 2, top + 96, 7, COLORS.dim, 'center');
+      if (card.keep) this.text('지금 무기 유지', x + width / 2, top + 96, 7, COLORS.dim, 'center');
     });
     this.text(`← → 선택     Enter 확정     1~${cards.length} 바로 선택`, cx, 160, 8, COLORS.ring, 'center');
   }
