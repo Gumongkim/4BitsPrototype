@@ -60,11 +60,19 @@ class Game {
   startRun(weaponKind) {
     this.resetRun(weaponKind);
     this.state = 'play';
+    this.emit('runStart', {});
+    this.emit('weaponEquip', { kind: this.player.weaponKind, reason: 'start' });
     this.nextWave();
   }
 
   resetRun(weaponKind) {
     this.player = new Player(weaponKind);
+    this.relics = [];      // 보유 유물 키. 슬롯 순서(왼쪽부터)다.
+    this.relicState = {};  // 유물 키 -> 그 유물의 상태 객체
+    this.debugRelic = 0;   // 디버그 지급 커서 (CONFIG.RELICS 순서)
+    this.cycle = null;     // 진행 중인 사이클 요약 { id, nodes, hits, perfectHits }
+    this.freezeTimer = 0;  // 적과 텔레그래프를 멈추는 시간 (페르마타). 히트스톱과 별도다.
+    this.picker = null;    // 카드 선택 화면 (유물 선택, 유물 교체, 무기 교체)
     this.popups = [];
     this.enemies = [];
     this.telegraphs = [];
@@ -82,13 +90,39 @@ class Game {
     this.rewardCards = [];
     this.rewardIndex = 0;
     this.rewardLock = 0;
+    this.connectPlayer();
+  }
+
+  // 플레이어의 훅을 유물 시스템에 연결한다
+  connectPlayer() {
+    const player = this.player;
+    player.emit = (name, data) => this.onPlayerEvent(name, data);
+    player.rangeOverride = (beat) => Relics.first(this, 'attackCells', { beat });
+    player.keepRingOnMove = (onBeat) => Relics.any(this, 'keepRingOnMove', { onBeat });
+  }
+
+  onPlayerEvent(name, data) {
+    if (name === 'ringRestart' || name === 'ringStop') this.endCycle(true);
+    this.emit(name, data);
+  }
+
+  // 보유 유물에 이벤트를 전달한다. 이벤트와 질의 목록은 relics.js 맨 위에 있다.
+  emit(name, data) {
+    Relics.emit(this, name, data);
+  }
+
+  // 무기 슬롯 수. 턴테이블이 있으면 2다.
+  get weaponSlotCount() {
+    return Relics.max(this, 'weaponSlots', {}, 1);
   }
 
   nextWave() {
     this.wave++;
     this.waveStats = { perfect: 0, good: 0, miss: 0 };
     this.telegraphs = [];
+    this.freezeTimer = 0;
     this.enemies = spawnWave(this.wave, (c, r) => this.isOccupied(c, r));
+    this.emit('waveStart', { wave: this.wave });
   }
 
   enemyAt(col, row) {
@@ -107,6 +141,7 @@ class Game {
       case 'weaponSelect': this.updateWeaponSelect(); break;
       case 'play': this.updatePlay(dt); break;
       case 'reward': this.updateReward(dt); break;
+      case 'pick': this.updatePick(dt); break;
       case 'gameover': this.updateGameOver(); break;
     }
   }
@@ -155,8 +190,66 @@ class Game {
     if (Input.wasPressed('Enter')) this.selectReward(this.rewardIndex);
   }
 
+  // 무기 카드를 고르면 무기 슬롯에 넣는다. 슬롯이 하나면 교체, 빈 슬롯이 있으면 추가(장착 무기는 그대로),
+  // 슬롯이 가득 찼으면 교체할 무기를 고르는 화면으로 간다.
   selectReward(index) {
-    Rewards.apply(this.rewardCards[index], this.player);
+    const card = this.rewardCards[index];
+    const player = this.player;
+    if (card.weapon) {
+      const slots = this.weaponSlotCount;
+      if (slots > 1 && player.weapons.length < slots) {
+        player.weapons.push(card.weapon);
+      } else if (slots > 1) {
+        this.openWeaponReplace(card);
+        return;
+      } else {
+        this.replaceWeapon(0, card.weapon);
+      }
+    }
+    Rewards.apply(card, player);
+    this.startNextWave();
+  }
+
+  // slot번 슬롯의 무기를 kind로 바꾼다. 장착 중이던 슬롯이면 새 무기를 장착한다.
+  replaceWeapon(slot, kind) {
+    const player = this.player;
+    const from = player.weapons[slot];
+    player.weapons[slot] = kind;
+    this.emit('weaponRemove', { kind: from });
+    this.emit('weaponReplace', { from, to: kind });
+    if (player.weaponKind === from) {
+      player.setWeapon(kind);
+      this.emit('weaponEquip', { kind, reason: 'replace' });
+    }
+  }
+
+  // 턴테이블 슬롯이 가득 찼을 때 새 무기와 바꿀 슬롯을 고른다
+  openWeaponReplace(card) {
+    const player = this.player;
+    const cards = player.weapons.map((kind, i) => ({
+      name: CONFIG.WEAPONS[kind].name,
+      desc: `${i + 1}번 슬롯${kind === player.weaponKind ? ' · 장착 중' : ''}`,
+      color: TIER_COLORS[CONFIG.WEAPONS[kind].tier],
+      label: `${CONFIG.WEAPONS[kind].tier}티어`,
+    }));
+    cards.push({ name: '취소', desc: '무기 보상으로 돌아간다', color: COLORS.dim });
+    this.openPicker({
+      title: `${CONFIG.WEAPONS[card.weapon].name}와 바꿀 무기`,
+      subtitle: '고른 슬롯의 무기가 새 무기로 바뀐다',
+      cards,
+      onPick: (i) => {
+        if (i >= player.weapons.length) {
+          this.state = 'reward';
+          this.rewardLock = CONFIG.REWARD_INPUT_LOCK;
+          return;
+        }
+        this.replaceWeapon(i, card.weapon);
+        this.startNextWave();
+      },
+    });
+  }
+
+  startNextWave() {
     this.player.ringActive = false;
     this.player.cooldown = 0;
     this.popups = [];
@@ -165,23 +258,166 @@ class Game {
     this.nextWave();
   }
 
+  // 웨이브 클리어. RELIC_ENCOUNTER_EVERY의 배수 웨이브면 유물 선택 화면을 먼저 연다.
   enterReward() {
     Sfx.play('clear');
-    this.player.resetHit();
+    this.player.stopRing();
+    this.emit('waveClear', { wave: this.wave });
+    if (this.wave % CONFIG.RELIC_ENCOUNTER_EVERY === 0) {
+      const choices = Relics.draw(this);
+      if (choices.length) {
+        this.openRelicSelect(choices);
+        return;
+      }
+    }
+    this.enterWeaponReward();
+  }
+
+  enterWeaponReward() {
     this.state = 'reward';
     this.rewardCards = Rewards.draw(this.player, this.wave);
     this.rewardIndex = 0;
     this.rewardLock = CONFIG.REWARD_INPUT_LOCK;
   }
 
+  relicCard(id) {
+    const def = CONFIG.RELICS[id];
+    return { name: def.name, desc: def.desc, color: RELIC_COLORS[def.rarity], label: CONFIG.RELIC_RARITY_NAMES[def.rarity], relic: id };
+  }
+
+  // 유물 선택 화면: 보유하지 않은 유물 카드들과 '건너뛰기'. 슬롯이 가득 찼으면 고른 뒤 교체할 유물을 고른다.
+  openRelicSelect(choices) {
+    const cards = choices.map((id) => this.relicCard(id));
+    cards.push({ name: '건너뛰기', desc: '유물을 받지 않는다', color: COLORS.dim, skip: true });
+    this.openPicker({
+      kind: 'relic',
+      title: `WAVE ${this.wave} 클리어`,
+      subtitle: `유물 선택  (보유 ${this.relics.length}/${CONFIG.RELIC_SLOTS})`,
+      cards,
+      onPick: (i) => {
+        const card = cards[i];
+        if (card.skip) {
+          this.enterWeaponReward();
+        } else if (this.relics.length < CONFIG.RELIC_SLOTS) {
+          Relics.add(this, card.relic);
+          this.enterWeaponReward();
+        } else {
+          this.openRelicReplace(card.relic, choices);
+        }
+      },
+    });
+  }
+
+  openRelicReplace(id, choices) {
+    const cards = this.relics.map((owned) => this.relicCard(owned));
+    cards.push({ name: '취소', desc: '유물 선택으로 돌아간다', color: COLORS.dim });
+    this.openPicker({
+      title: `${CONFIG.RELICS[id].name}와 바꿀 유물`,
+      subtitle: '고른 유물은 사라지고 그 칸에 새 유물이 들어간다',
+      cards,
+      onPick: (i) => {
+        if (i >= this.relics.length) {
+          this.openRelicSelect(choices);
+        } else {
+          Relics.add(this, id, i);
+          this.enterWeaponReward();
+        }
+      },
+    });
+  }
+
+  // 카드 선택 화면. 조작은 무기 보상 화면과 같다 (← →, 숫자키, Enter, 진입 직후 입력 잠금).
+  // cards: [{ name, desc, color, label }], onPick(번호)
+  openPicker({ kind = 'pick', title, subtitle, cards, onPick }) {
+    this.picker = { kind, title, subtitle, cards, onPick, index: 0 };
+    this.state = 'pick';
+    this.rewardLock = CONFIG.REWARD_INPUT_LOCK;
+  }
+
+  updatePick(dt) {
+    if (this.rewardLock > 0) {
+      this.rewardLock -= dt;
+      return;
+    }
+    const picker = this.picker;
+    const count = picker.cards.length;
+    if (Input.wasPressed('ArrowLeft')) picker.index = (picker.index + count - 1) % count;
+    if (Input.wasPressed('ArrowRight')) picker.index = (picker.index + 1) % count;
+    for (let i = 0; i < count; i++) {
+      if (Input.wasPressed(`Digit${i + 1}`)) {
+        this.pickCard(i);
+        return;
+      }
+    }
+    if (Input.wasPressed('Enter')) this.pickCard(picker.index);
+  }
+
+  pickCard(index) {
+    this.picker.index = index;
+    this.picker.onPick(index);
+  }
+
+  // 사이클 요약. 사이클은 마지막 노드의 늦은 입력 윈도우가 닫히면 끝난다.
+  beginCycle(id) {
+    this.cycle = { id, nodes: this.player.weapon.intervals.length, hits: 0, perfectHits: 0 };
+    this.emit('cycleStart', { cycle: id });
+  }
+
+  endCycle(interrupted) {
+    if (!this.cycle) return;
+    const c = this.cycle;
+    this.cycle = null;
+    this.emit('cycleEnd', {
+      cycle: c.id, nodes: c.nodes, hits: c.hits, perfectHits: c.perfectHits,
+      allPerfect: c.perfectHits === c.nodes, interrupted,
+    });
+  }
+
+  updateCycle() {
+    const player = this.player;
+    if (!player.ringActive) {
+      this.endCycle(true);
+      return;
+    }
+    if (this.cycle) {
+      const boundary = (this.cycle.id + 1) * this.cycle.nodes;
+      const closed = player.ringCycles > boundary
+        || (player.ringCycles === boundary && player.ringTime > player.goodWindow);
+      if (closed) this.endCycle(false);
+    }
+    if (!this.cycle) this.beginCycle(player.currentCycle);
+  }
+
+  // ring번 노드를 HIT로 센다. 이 노드를 포함한 HIT를 돌려준다.
+  // perfectHit: 적을 맞힌 Perfect라 사이클 요약의 perfectHits에 센다.
+  countHit(ring, perfectHit) {
+    const player = this.player;
+    const hits = player.registerHit(ring);
+    this.bestHit = Math.max(this.bestHit, hits);
+    const id = Math.floor(ring / player.weapon.intervals.length);
+    if (this.cycle && id > this.cycle.id) this.endCycle(false);
+    if (!this.cycle) this.beginCycle(id);
+    if (id === this.cycle.id) {
+      this.cycle.hits = hits;
+      if (perfectHit) this.cycle.perfectHits++;
+    }
+    return hits;
+  }
+
   updatePlay(dt) {
     const player = this.player;
+    if (this.debug) this.updateDebugRelics();
+    this.updateWeaponSwitch();
     player.updateMovement(dt, (c, r) => !!this.enemyAt(c, r));
     player.updateRing(dt);
+    this.updateCycle();
     player.updateHitUi(dt);
+    this.emit('update', { dt });
     if (player.justMatched) Sfx.play(player.isSnare(player.lastBeat) ? 'tickStrong' : 'tick');
     for (const [drum, code] of Object.entries(CONFIG.DRUM_KEYS)) {
       if (!Input.wasPressed(code)) continue;
+      // 유물이 공격 입력을 대신 처리하면(프리스타일 모드) 리듬 판정을 하지 않는다
+      if (Relics.any(this, 'attackInput', { drum, age: Input.pressAge(code) })) continue;
       // 누른 순간 그 리듬의 공격 범위 테두리가 하얗게 보인다
       player.goalFlash = CONFIG.RING_GOAL_PRESS_TIME;
       player.goalFlashBeat = player.targetBeat;
@@ -191,22 +427,49 @@ class Game {
         this.resolveAttack(result);
       }
     }
-    // 히트스톱은 적과 텔레그래프만 멈춘다. 링 박자와 플레이어 입력은 멈추지 않는다.
+    // 히트스톱과 정지(페르마타)는 적과 텔레그래프만 멈춘다. 링 박자와 플레이어 입력은 멈추지 않는다.
+    const frozen = this.freezeTimer > 0;
+    this.freezeTimer = tickDown(this.freezeTimer, dt);
     if (this.hitStop > 0) {
       this.hitStop -= dt;
-    } else {
+    } else if (!frozen) {
       for (const enemy of this.enemies) enemy.update(dt, this);
       this.updateTelegraphs(dt);
     }
     this.updateEffects(dt);
-    this.updateWaveProgress(dt);
+    if (this.state === 'play') this.updateWaveProgress(dt);
+  }
+
+  // 턴테이블: 숫자키로 슬롯의 무기를 장착한다. 전환은 교체가 아니며 링을 다시 시작한다.
+  updateWeaponSwitch() {
+    const player = this.player;
+    if (player.weapons.length < 2) return;
+    player.weapons.forEach((kind, i) => {
+      if (!Input.wasPressed(`Digit${i + 1}`) || kind === player.weaponKind) return;
+      const from = player.weaponKind;
+      player.setWeapon(kind);
+      this.emit('weaponSwitch', { from, to: kind });
+      this.emit('weaponEquip', { kind, reason: 'switch' });
+    });
+  }
+
+  // 디버그 전용 유물 지급: [ ] 로 커서를 옮기고 P로 그 유물을 지급하거나 회수한다.
+  // 슬롯이 가득 찼으면 맨 왼쪽 유물과 바꾼다.
+  updateDebugRelics() {
+    const ids = Object.keys(CONFIG.RELICS);
+    if (Input.wasPressed('BracketLeft')) this.debugRelic = (this.debugRelic + ids.length - 1) % ids.length;
+    if (Input.wasPressed('BracketRight')) this.debugRelic = (this.debugRelic + 1) % ids.length;
+    if (!Input.wasPressed('KeyP')) return;
+    const id = ids[this.debugRelic];
+    if (Relics.has(this, id)) Relics.remove(this, id);
+    else Relics.add(this, id, this.relics.length >= CONFIG.RELIC_SLOTS ? 0 : null);
   }
 
   resolveAttack(result) {
     const player = this.player;
     const cells = player.attackCells(result.beat);
     let targets = cells.map((c) => this.enemyAt(c.col, c.row)).filter(Boolean);
-    if (weaponFirstTargetOnly(player.weapon, result.beat)) {
+    if (!player.rangeOverride(result.beat) && weaponFirstTargetOnly(player.weapon, result.beat)) {
       targets = targets.sort((a, b) => a.col - b.col).slice(0, 1);
     }
     // 이 리듬 범위가 그리드 밖이면 플레이어 칸 위에 판정을 띄운다
@@ -218,14 +481,28 @@ class Game {
       const gap = Math.round(CONFIG.RING_SPEED * -result.error);
       this.ringBursts.push({ cells, gap, grade: result.grade, drum: result.drum, age: 0 });
     }
+    const node = {
+      grade: result.grade, drum: result.drum, beat: result.beat, ring: result.ring,
+      targets, damage: 0, hits: 0, whiff: false,
+    };
     // 빈 칸을 친 입력은 판정만 표시하고 통계와 HIT에 넣지 않는다.
-    // 적이 없는 곳에서 친 판정으로 HIT와 통계가 부풀려지는 것을 막기 위해서다.
-    if (!targets.length) return;
+    // 적이 없는 곳에서 친 판정으로 HIT와 통계가 부풀려지는 것을 막기 위해서다. 에어 드럼이 있으면 HIT로 센다.
+    if (!targets.length) {
+      if (result.grade !== 'miss' && Relics.any(this, 'whiffHits')) {
+        node.hits = this.countHit(result.ring, false);
+        node.whiff = true;
+        this.emit('node', node);
+      }
+      return;
+    }
 
     this.waveStats[result.grade]++;
     this.totalStats[result.grade]++;
     // Miss는 HIT를 올리지도 초기화하지도 않는다
-    if (result.grade === 'miss') return;
+    if (result.grade === 'miss') {
+      this.emit('node', node);
+      return;
+    }
     let damage = result.damage;
     if (result.grade === 'perfect') {
       damage *= player.stats.perfectMult;
@@ -237,12 +514,35 @@ class Game {
       this.hitStop = CONFIG.HITSTOP_GOOD;
     }
     // HIT: 이번 노드를 포함한 사이클 안의 성공 횟수만큼 추가 배율이 붙는다. 여러 적을 맞혀도 배율은 같다.
-    const hits = player.registerHit(result.ring);
-    this.bestHit = Math.max(this.bestHit, hits);
+    const hits = this.countHit(result.ring, result.grade === 'perfect');
     damage *= 1 + player.hitBonus(hits, result.beat);
-    for (const target of targets) {
-      if (target.takeDamage(damage)) this.killEnemy(target);
-    }
+    damage *= this.relicDamageFactor({
+      drum: result.drum, beat: result.beat, weaponKind: player.weaponKind, grade: result.grade, hits, freestyle: false,
+    });
+    node.hits = hits;
+    node.damage = damage;
+    for (const target of targets) this.damageEnemy(target, damage, 'node');
+    this.emit('node', node);
+  }
+
+  // 유물이 데미지에 곱하는 값: (1 + 유물 % 풀) x 따로 곱하는 배율들
+  relicDamageFactor(ctx) {
+    return (1 + Relics.sum(this, 'damagePct', ctx)) * Relics.product(this, 'damageMult', ctx);
+  }
+
+  // 적에게 데미지를 준다. 이미 처치된 적은 무시한다.
+  damageEnemy(enemy, amount, source) {
+    if (enemy.dead) return;
+    const killed = enemy.takeDamage(amount);
+    this.emit('enemyHit', { enemy, damage: amount, source });
+    if (killed) this.killEnemy(enemy, source);
+  }
+
+  // (col, row) 상하좌우 칸의 살아 있는 적
+  adjacentEnemies(col, row) {
+    return [[-1, 0], [1, 0], [0, -1], [0, 1]]
+      .map(([dc, dr]) => this.enemyAt(col + dc, row + dr))
+      .filter(Boolean);
   }
 
   shake(power) {
@@ -260,17 +560,29 @@ class Game {
     }
   }
 
-  killEnemy(enemy) {
+  killEnemy(enemy, source = 'node') {
+    if (enemy.dead) return;
+    enemy.dead = true;
     Sfx.play('kill');
     this.burst(enemy.col, enemy.row, CONFIG.PARTICLES_KILL);
     this.enemies = this.enemies.filter((e) => e !== enemy);
     // 죽은 적의 예고 공격은 함께 사라진다
     this.telegraphs = this.telegraphs.filter((t) => t.owner !== enemy);
+    this.emit('enemyKill', { enemy, source });
   }
 
   startEnemyAttack(enemy, cells) {
     Sfx.play('telegraph');
-    this.telegraphs.push(new EnemyTelegraph(enemy, cells, enemy.telegraphTime, enemy.def.damage));
+    const telegraph = new EnemyTelegraph(enemy, cells, enemy.telegraphTime, enemy.def.damage);
+    this.telegraphs.push(telegraph);
+    this.emit('telegraphStart', { enemy, telegraph });
+  }
+
+  // enemy의 진행 중인 공격 예고를 지우고 적을 복귀 단계로 보낸다 (카운터포인트)
+  cancelEnemyAttack(enemy) {
+    const before = this.telegraphs.length;
+    this.telegraphs = this.telegraphs.filter((t) => t.owner !== enemy);
+    if (this.telegraphs.length !== before) enemy.onAttackFinished();
   }
 
   updateTelegraphs(dt) {
@@ -287,12 +599,23 @@ class Game {
     this.telegraphs = this.telegraphs.filter((t) => !t.finished);
   }
 
+  // 실드가 있으면 피해 1점당 실드 1점이 먼저 막는다
   hurtPlayer(amount) {
-    this.player.hp = Math.max(0, this.player.hp - amount);
-    this.player.hurtFlash = CONFIG.HURT_FLASH_TIME;
+    const player = this.player;
+    const absorbed = Math.min(player.shield, amount);
+    player.shield -= absorbed;
+    amount -= absorbed;
+    this.emit('playerHurt', { amount, absorbed });
+    if (amount <= 0) {
+      this.shake(CONFIG.SHAKE_PERFECT);
+      Sfx.play('miss');
+      return;
+    }
+    player.hp = Math.max(0, player.hp - amount);
+    player.hurtFlash = CONFIG.HURT_FLASH_TIME;
     this.shake(CONFIG.SHAKE_HURT);
     Sfx.play('hurt');
-    if (this.player.hp === 0) {
+    if (player.hp === 0) {
       Sfx.play('gameover');
       this.state = 'gameover';
     }

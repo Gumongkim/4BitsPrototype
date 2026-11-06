@@ -1,6 +1,7 @@
 // 보상 추첨과 적용. 지금 보상은 무기 교체뿐이다.
 // 웨이브를 클리어하면 무기 카드 REWARD_WEAPON_CARDS장과 '지금 무기 유지' 카드가 나온다.
-// 능력치 효과(effects, heal)를 적용하는 코드는 추후 유물 시스템에서 쓰려고 남겨 두었다.
+// 능력치 효과(effects, heal)를 적용하는 코드는 능력치 유물이 생기면 쓰려고 남겨 두었다.
+// 유물 보상은 relics.js에 있다.
 
 const Rewards = {
   clampStat(stat, value) {
@@ -46,9 +47,9 @@ const Rewards = {
     return pickRandom(kinds.filter((kind) => CONFIG.WEAPONS[kind].tier === chosen));
   },
 
-  // 서로 다르고 지금 무기가 아닌 무기 카드들, 맨 끝에 유지 카드
+  // 서로 다르고 무기 슬롯에 없는 무기 카드들, 맨 끝에 유지 카드
   draw(player, wave) {
-    const excluded = [player.weaponKind];
+    const excluded = [...player.weapons];
     const cards = [];
     while (cards.length < CONFIG.REWARD_WEAPON_CARDS) {
       const kind = this.drawWeaponKind(wave, excluded);
@@ -60,8 +61,8 @@ const Rewards = {
     return cards;
   },
 
+  // 능력치 효과와 회복을 적용한다. 무기 카드를 슬롯에 넣는 일은 game.selectReward가 한다.
   apply(reward, player) {
-    if (reward.weapon) player.setWeapon(reward.weapon);
     for (const effect of reward.effects || []) {
       player.stats[effect.stat] = this.clampStat(effect.stat, player.stats[effect.stat] + effect.add);
     }

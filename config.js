@@ -51,6 +51,12 @@ const CONFIG = {
   ATTACK_COOLDOWN: 0.1,
   ATTACK_MISS_COOLDOWN: 0.6,    // Miss를 냈을 때의 쿨다운. 막 누르기로 맞히는 것을 막는다.
 
+  // HUD
+  HUD_RELIC_SLOT_SIZE: 12,      // 오른쪽 위 유물 칸 한 변 (내부 해상도 픽셀)
+  HUD_RELIC_SLOT_GAP: 2,
+  HUD_SHIELD_MAX_CELLS: 4,      // HP 옆에 칸으로 그리는 실드 수. 넘으면 칸 하나와 개수를 쓴다.
+  HUD_FREESTYLE_GAUGE_HEIGHT: 2, // 리듬 막대 아래(화면 맨 아래) 프리스타일 게이지 높이
+
   // 화면 아래 리듬 막대
   BEAT_BAR_STEPS: 8,            // 무기 패턴 한 바퀴를 나누는 칸 수 (4칸 + 4칸)
   BEAT_BAR_WIDTH: 100,          // 막대 길이 (내부 해상도 픽셀)
@@ -511,12 +517,54 @@ const CONFIG = {
 
   // 보상: 웨이브를 클리어하면 무기 카드와 '지금 무기 유지' 카드 중 하나를 고른다.
   REWARD_WEAPON_CARDS: 3,       // 무기 카드 수. 서로 다르고 지금 무기는 나오지 않는다.
-  REWARD_INPUT_LOCK: 0.4,       // 보상 화면 진입 직후 입력을 막는 시간
+  REWARD_INPUT_LOCK: 0.4,       // 보상·유물·교체 선택 화면 진입 직후 입력을 막는 시간
   // 무기 티어별 봇 시뮬레이션 목표: 웨이브당 처치 시간(초). 무기 데미지를 맞출 때 쓴 기준이며 게임 중에는 쓰지 않는다.
   WEAPON_TIER_CLEAR_TARGET: { 1: 9, 2: 7.5, 3: 6, 4: 4.5 },
   WEAPON_TIER_UNLOCK_WAVE: { 1: 1, 2: 1, 3: 4, 4: 8 }, // 이 웨이브를 클리어하면 그 티어 무기 카드가 나올 수 있다
   // 무기 카드의 티어 가중치. 판정 결과와 상관없이 고정이며, 지금 웨이브까지 열린 티어 사이에서만 쓴다.
   WEAPON_TIER_WEIGHTS: { 1: 17.5, 2: 37.5, 3: 30, 4: 15 },
+  // 유물. 웨이브 RELIC_ENCOUNTER_EVERY의 배수를 클리어하면 무기 보상 화면 앞에 유물 선택 화면이 나온다.
+  RELIC_SLOTS: 5,               // 소지 상한. 같은 유물은 중복 소지할 수 없다.
+  RELIC_ENCOUNTER_EVERY: 3,
+  RELIC_CHOICES: 3,             // 선택 화면의 유물 카드 수. 맨 끝에 '건너뛰기' 카드가 붙는다.
+  RELIC_RARITY_WEIGHTS: { common: 60, rare: 30, epic: 10 }, // 카드마다 등급을 먼저 뽑는다
+  RELIC_EPIC_UNLOCK_WAVE: 9,    // 이 웨이브를 클리어한 선택 화면부터 에픽이 나온다
+  RELIC_RARITY_NAMES: { common: '일반', rare: '희귀', epic: '에픽' },
+  // 유물 정의. 효과 로직은 relics.js의 RELIC_LOGIC에 같은 키로 둔다. 순서는 디버그 지급 순서다.
+  //   name: 이름 (보유 칸에는 첫 글자), rarity: common / rare / epic, desc: 카드 설명 한 줄. 나머지는 수치다.
+  RELICS: {
+    // 일반
+    kick_solo: { name: '킥 솔로', rarity: 'common', desc: '쿵 노드 데미지 +20%', pct: 0.2 },
+    snare_solo: { name: '스네어 솔로', rarity: 'common', desc: '짝 노드 데미지 +20%', pct: 0.2 },
+    subwoofer: { name: '서브우퍼', rarity: 'common', desc: '쿵 Perfect 시 맞은 적을 오른쪽으로 1칸 밀침', push: 1 },
+    crash_cymbal: { name: '크래시 심벌', rarity: 'common', desc: '짝 Perfect 시 인접한 적에게 데미지 50%', splash: 0.5 },
+    rehearsal: { name: '리허설', rarity: 'common', desc: '같은 무기로 연속 클리어한 웨이브당 데미지 +6% (최대 +36%)', pctPerWave: 0.06, maxPct: 0.36 },
+    repertoire: { name: '레퍼토리', rarity: 'common', desc: '써 본 무기 1종당 데미지 +5% (최대 +30%)', pctPerWeapon: 0.05, maxPct: 0.3 },
+    air_drum: { name: '에어 드럼', rarity: 'common', desc: '빈 범위를 쳐도 HIT가 쌓임' },
+    // 희귀
+    metronome: { name: '메트로놈', rarity: 'rare', desc: 'Perfect 8회마다 실드 +1', perfectsPerShield: 8 },
+    sforzando: { name: '스포르찬도', rarity: 'rare', desc: '적 처치 시 인접 적에게 그 적 최대 HP의 25%', maxHpRatio: 0.25 },
+    tap_dance: { name: '탭 댄스', rarity: 'rare', desc: '이동할 때마다 인접한 적에게 0.5', damage: 0.5 },
+    // 가장 가까운 노드 시점의 Perfect 윈도우 안에 누른 이동은 링을 유지한다. 그 뒤 첫 성공 노드 데미지 x nextAttackMult
+    walking_bass: { name: '워킹 베이스', rarity: 'rare', desc: '박자에 맞춰 이동하면 리듬이 유지됨', nextAttackMult: 1.25 },
+    counterpoint: { name: '카운터포인트', rarity: 'rare', desc: 'Perfect로 맞은 적의 공격 예고를 취소' },
+    // 게이지 0~gaugeMax. 적을 맞힌 Good 이상 노드마다 gaugeMax / (노드 수 x chargeCycles) 충전. 가득 차면 모드 시작,
+    // 모드 중에는 초당 drainPerSec씩 줄고 A/S마다 cells를 공격한다 (쿨다운 cooldown).
+    // 데미지 = 무기 damages 합 / damageDivisor x damageMult (판정·HIT 배율 없음)
+    freestyle: {
+      name: '프리스타일', rarity: 'rare', desc: '게이지가 차면 박자 없이 앞 3칸 연타',
+      gaugeMax: 100, chargeCycles: 2, drainPerSec: 20, cooldown: 0.3,
+      cells: [[1, 0], [2, 0], [3, 0]], damageDivisor: 8, damageMult: 1.5,
+    },
+    // 무기 슬롯 slots개. 숫자키로 전환하면 전환 후 첫 성공 노드 데미지 x switchMult
+    turntable: { name: '턴테이블', rarity: 'rare', desc: '무기 2개 보유, 1·2키로 전환', slots: 2, switchMult: 1.5 },
+    // 에픽
+    crescendo: { name: '크레센도', rarity: 'epic', desc: 'HIT 4 이상부터 성공마다 무작위 적 1마리 추가 타격', minHit: 4, damageRatio: 0.5 },
+    quantize: { name: '퀀타이즈', rarity: 'epic', desc: '가장 가까운 적 1명만 공격 (데미지 ×0.6)', damageMult: 0.6 },
+    fermata: { name: '페르마타', rarity: 'epic', desc: '한 사이클 전부 Perfect면 적 1초 정지', freezeTime: 1 },
+  },
+  PARTICLES_RELIC: 4,           // 유물 효과(인접 피해, 추가 타격 등)로 맞은 적에게 튀는 입자 수
+
   // player.stats가 효과로 도달할 수 있는 수치의 한계. 지금은 능력치를 바꾸는 보상이 없고, 추후 유물에서 쓴다.
   STAT_LIMITS: {
     windowBonus: { max: 0.03 },

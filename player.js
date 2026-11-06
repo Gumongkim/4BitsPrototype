@@ -55,6 +55,7 @@ class Player {
     this.prevRow = this.row;
     this.moveTimer = 0;
     this.bufferedMove = null;
+    this.bufferedOnBeat = false; // 버퍼된 이동 키를 누른 순간이 가장 가까운 노드의 Perfect 윈도우 안이었는지
     this.stats = {
       maxHp: CONFIG.PLAYER_MAX_HP,
       moveTick: CONFIG.MOVE_TICK,
@@ -63,6 +64,7 @@ class Player {
       goodMult: CONFIG.JUDGE.good.damageMult,
     };
     this.hp = this.stats.maxHp;
+    this.shield = 0;       // 피해를 1점씩 먼저 흡수한다 (메트로놈)
     this.hurtFlash = 0;    // 시각 효과일 뿐 판정에 영향을 주지 않는다
     this.goalFlash = 0;    // 공격 키를 누른 뒤 공격 범위 테두리가 하얗게 보이는 남은 시간. 역시 시각 효과다.
     this.goalFlashBeat = 0; // 그 테두리를 그릴 리듬 번호
@@ -74,16 +76,24 @@ class Player {
     this.lastBeat = 0;     // 마지막으로 지나간 리듬 번호
     this.justMatched = false;
     this.lastError = null; // 디버그용: 마지막 입력의 매치 시점 오차
+    this.ringPaused = false; // true면 링이 멈춰 있고 다시 시작하지 않는다 (프리스타일 모드)
+
+    // 게임이 연결하는 훅. 유물이 규칙을 바꾸는 확장 지점이다.
+    this.emit = () => {};          // (이벤트 이름, data): 링 재시작·멈춤, 이동
+    this.rangeOverride = null;     // (beat) => 공격 범위를 대신할 칸 목록, 없으면 null
+    this.keepRingOnMove = null;    // (onBeat) => true면 이동해도 링을 유지한다
+
+    this.weapons = [weaponKind];   // 무기 슬롯. 턴테이블이 있으면 2개까지다.
     this.setWeapon(weaponKind);
   }
 
+  // 장착 무기를 바꾼다. 링과 HIT는 다시 시작한다. 슬롯은 바꾸지 않는다.
   setWeapon(kind) {
     this.weaponKind = kind;
     this.weapon = CONFIG.WEAPONS[kind];
     this.hitDifficulty = weaponHitDifficulty(this.weapon); // 노드별 난이도 d_i
     this.ringActive = false;
     this.cooldown = 0;
-    this.cooldownTotal = CONFIG.ATTACK_COOLDOWN; // HUD 막대용: 현재 쿨다운의 전체 길이
     this.resetHit();
   }
 
@@ -150,10 +160,11 @@ class Player {
     return CONFIG.JUDGE.good.window + this.stats.windowBonus;
   }
 
-  // beat번 리듬의 그리드 안에 있는 공격 범위 칸들
+  // beat번 리듬의 그리드 안에 있는 공격 범위 칸들. 유물이 범위를 대신하면(퀀타이즈) 그 칸들이다.
   attackCells(beat) {
-    return weaponRangeCells(this.weapon, beat, this.col, this.row, CONFIG.GRID_COLS - 1)
-      .filter((c) => Grid.inBounds(c.col, c.row));
+    const override = this.rangeOverride && this.rangeOverride(beat);
+    const cells = override || weaponRangeCells(this.weapon, beat, this.col, this.row, CONFIG.GRID_COLS - 1);
+    return cells.filter((c) => Grid.inBounds(c.col, c.row));
   }
 
   // 어느 리듬이든 그리드 안에 공격 범위가 있는지
@@ -165,7 +176,10 @@ class Player {
   // 막혀서 이동하지 못한 입력은 정지 상태를 깨지 않는다.
   updateMovement(dt, isBlocked) {
     for (const code of MOVE_KEYS) {
-      if (Input.wasPressed(code)) this.bufferedMove = code;
+      if (!Input.wasPressed(code)) continue;
+      this.bufferedMove = code;
+      // 박자 이동 판정은 누른 순간 기준이다 (워킹 베이스)
+      this.bufferedOnBeat = this.ringActive && Math.abs(this.matchBeat(Input.pressAge(code)).error) <= this.perfectWindow;
     }
     this.moveTimer = tickDown(this.moveTimer, dt);
     if (this.moveTimer > 0) return;
@@ -177,20 +191,42 @@ class Player {
     const col = this.col + MOVE_DIRS[code].col;
     const row = this.row + MOVE_DIRS[code].row;
     if (!Grid.inBounds(col, row) || isBlocked(col, row)) return;
+    const from = { col: this.col, row: this.row };
+    const onBeat = this.bufferedOnBeat;
     this.prevCol = this.col;
     this.prevRow = this.row;
     this.col = col;
     this.row = row;
     this.moveTimer = this.stats.moveTick;
+    // 이동하면 링과 함께 HIT도 사라진다. 유물(워킹 베이스)이 링을 유지하면 그대로 간다.
+    const kept = this.ringActive && !!this.keepRingOnMove && this.keepRingOnMove(onBeat);
+    if (!kept) this.stopRing();
+    this.emit('playerMove', { from, to: { col, row }, onBeat, kept });
+  }
+
+  // 링을 멈추고 HIT를 지운다. 이동 틱이 끝나면 새 링이 시작된다.
+  stopRing() {
+    const wasActive = this.ringActive;
     this.ringActive = false;
-    this.resetHit(); // 이동하면 링과 함께 HIT도 사라진다
+    this.resetHit();
+    if (wasActive) this.emit('ringStop', {});
+  }
+
+  // 프리스타일 모드: 링을 멈추고 다시 시작하지 않는다. resumeRing으로 풀면 새 링이 시작된다.
+  pauseRing() {
+    this.ringPaused = true;
+    this.stopRing();
+  }
+
+  resumeRing() {
+    this.ringPaused = false;
   }
 
   // 리듬은 입력과 상관없이 무기의 간격대로 계속 진행한다.
   updateRing(dt) {
     this.justMatched = false;
     this.cooldown = tickDown(this.cooldown, dt);
-    if (!this.ringActive && this.moveTimer <= 0 && this.hasAttackCells) this.restartRing();
+    if (!this.ringActive && !this.ringPaused && this.moveTimer <= 0 && this.hasAttackCells) this.restartRing();
     if (!this.ringActive) return;
     this.ringTime += dt;
     if (this.ringTime >= this.currentInterval) {
@@ -211,6 +247,7 @@ class Player {
     this.beatIndex = 0;
     this.clearedRing = -1;
     this.resetHit(); // 새 링은 HIT 0, 사이클 0부터
+    this.emit('ringRestart', {});
   }
 
   get currentInterval() {
@@ -304,8 +341,7 @@ class Player {
     const { error, beat, ring } = target;
     const grade = this.weapon.drums[beat] === drum ? this.gradeOf(error) : 'miss';
     if (grade !== 'miss') this.clearedRing = ring;
-    this.cooldownTotal = grade === 'miss' ? CONFIG.ATTACK_MISS_COOLDOWN : CONFIG.ATTACK_COOLDOWN;
-    this.cooldown = this.cooldownTotal;
+    this.cooldown = grade === 'miss' ? CONFIG.ATTACK_MISS_COOLDOWN : CONFIG.ATTACK_COOLDOWN;
     this.lastError = error;
     return { grade, error, drum, beat, ring, damage: this.weapon.damages[beat] };
   }

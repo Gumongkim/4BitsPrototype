@@ -24,7 +24,11 @@ const COLORS = {
   particle: '#ffe066',
   debugGood: '#2f8a58',
   debugPerfect: '#c9a93a',
+  shield: '#7fd8ff',            // 메트로놈 실드 칸
 };
+
+// 유물 등급별 카드와 보유 칸 테두리 색
+const RELIC_COLORS = { common: '#c8cfdf', rare: '#4aa8ff', epic: '#c77dff' };
 
 // marks는 몸통 위에 dark 색으로 그리는 무기 표시. [x, y, 너비, 높이]는 칸 안의 위치.
 const ENEMY_LOOKS = {
@@ -168,6 +172,7 @@ class Renderer {
         if (game.debug) this.drawDebug(game);
       }
       if (game.state === 'reward') this.drawRewardScreen(game);
+      if (game.state === 'pick') this.drawPickScreen(game);
       if (game.state === 'gameover') this.drawGameOver(game);
     }
     this.present(game);
@@ -177,8 +182,15 @@ class Renderer {
     this.drawGrid();
     this.drawTelegraphs(game);
     for (const enemy of game.enemies) this.drawEnemy(enemy);
+    // 페르마타 정지 중에는 적에 하늘색 테두리를 두른다
+    if (game.freezeTimer > 0) {
+      for (const enemy of game.enemies) {
+        this.frame(CONFIG.GRID_X + enemy.drawCol * CONFIG.CELL_SIZE + 5, CONFIG.GRID_Y + enemy.drawRow * CONFIG.CELL_SIZE + 4, 22, 24, COLORS.shield);
+      }
+    }
     this.drawPlayer(game.player);
     this.drawRing(game.player);
+    this.drawFreestyleRange(game);
     this.drawRingBursts(game);
     this.drawImpacts(game);
     for (const p of game.particles) this.rect(p.x - 1, p.y - 1, 2, 2, COLORS.particle);
@@ -209,6 +221,13 @@ class Renderer {
     const bonus = player.hitBonus(hits + 1, target);
     this.text(`HIT ${hits}/${nodes}   노드 ${target + 1} d=${player.hitDifficulty[target].toFixed(2)}   맞히면 추가 +${Math.round(bonus * 100)}%`,
       4, 27, 6, COLORS.text);
+
+    // 유물 디버그 지급: [ ] 커서, P 지급/회수
+    const ids = Object.keys(CONFIG.RELICS);
+    const cursor = ids[game.debugRelic];
+    const owned = Relics.has(game, cursor);
+    this.text(`유물 [ ] ${game.debugRelic + 1}/${ids.length} ${CONFIG.RELICS[cursor].name}   P ${owned ? '회수' : '지급'}`,
+      4, 158, 6, COLORS.text);
 
     // 매치 시점을 가운데로 둔 타임라인 (폭은 고정 시간)
     const span = 0.6;
@@ -374,6 +393,61 @@ class Renderer {
     this.text(`← → 선택     Enter 확정     1~${cards.length} 바로 선택`, cx, 160, 8, COLORS.ring, 'center');
   }
 
+  // 글자를 maxWidth(내부 해상도 픽셀) 안에 들어가게 줄로 나눈다. 띄어쓰기에서 나누고, 한 단어가 길면 글자 단위로 나눈다.
+  wrapText(str, maxWidth, size) {
+    const lines = [];
+    let line = '';
+    const push = (word) => {
+      const next = line ? `${line} ${word}` : word;
+      if (this.measureText(next, size) <= maxWidth) {
+        line = next;
+        return;
+      }
+      if (line) lines.push(line);
+      line = '';
+      for (const ch of word) {
+        if (line && this.measureText(line + ch, size) > maxWidth) {
+          lines.push(line);
+          line = '';
+        }
+        line += ch;
+      }
+    };
+    for (const word of str.split(' ')) push(word);
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  // 카드 선택 화면 (유물 선택, 유물 교체, 무기 교체). 카드는 이름, 설명, 색 테두리다.
+  drawPickScreen(game) {
+    this.drawOverlay();
+    const picker = game.picker;
+    const cx = CONFIG.VIEW_WIDTH / 2;
+    this.text(picker.title, cx, 8, 13, COLORS.text, 'center');
+    if (picker.subtitle) this.text(picker.subtitle, cx, 24, 8, COLORS.dim, 'center');
+    const cards = picker.cards;
+    const gap = 4;
+    const width = Math.min(74, Math.floor((CONFIG.VIEW_WIDTH - 12 - (cards.length - 1) * gap) / cards.length));
+    const left = (CONFIG.VIEW_WIDTH - (cards.length * width + (cards.length - 1) * gap)) / 2;
+    const top = 40;
+    const height = 112;
+    const descSize = width >= 60 ? 7 : 6;
+    cards.forEach((card, i) => {
+      const x = left + i * (width + gap);
+      const selected = i === picker.index;
+      this.rect(x, top, width, height, COLORS.cellB);
+      this.frame(x, top, width, height, card.color, 1);
+      if (selected) this.frame(x - 2, top - 2, width + 4, height + 4, COLORS.text, 1);
+      this.text(`${i + 1}`, x + 4, top + 4, 7, COLORS.dim);
+      if (card.label) this.text(card.label, x + width - 4, top + 4, 7, card.color, 'right');
+      this.text(card.name, x + width / 2, top + 18, this.fitTextSize(card.name, width - 6, 9), COLORS.text, 'center');
+      this.wrapText(card.desc || '', width - 8, descSize).forEach((line, j) => {
+        this.text(line, x + width / 2, top + 36 + j * (descSize + 3), descSize, COLORS.dim, 'center');
+      });
+    });
+    this.text(`← → 선택     Enter 확정     1~${cards.length} 바로 선택`, cx, 160, 8, COLORS.ring, 'center');
+  }
+
   drawGameOver(game) {
     this.drawOverlay();
     const cx = CONFIG.VIEW_WIDTH / 2;
@@ -441,17 +515,86 @@ class Renderer {
     this.rect(24, 6, 60 * player.hp / player.stats.maxHp, 7, COLORS.player);
     this.text(`${player.hp}/${player.stats.maxHp}`, 88, 4, 8, COLORS.text);
     if (Sfx.muted) this.text('음소거', 8, 16, 7, COLORS.dim);
+    this.drawShield(player);
     // 웨이브
     this.text(`WAVE ${game.wave}`, 160, 3, 10, COLORS.text, 'center');
-    // 공격 쿨다운
-    const ready = player.cooldown <= 0;
-    this.text('A / S', 232, 4, 8, ready ? COLORS.ring : COLORS.dim);
-    this.rect(262, 6, 50, 7, COLORS.gridLine);
-    const charge = 1 - player.cooldown / player.cooldownTotal;
-    this.rect(262, 6, 50 * charge, 7, ready ? COLORS.ring : COLORS.ringTarget);
-    // 무기와 리듬 패턴
-    this.text(player.weapon.name, 232, 16, 7, COLORS.text);
+    this.drawRelicSlots(game);
+    // 무기 이름. 무기 슬롯이 둘이면(턴테이블) 번호와 함께 두 줄로 쓰고 장착 무기만 선명하다.
+    const right = CONFIG.VIEW_WIDTH - 8;
+    if (player.weapons.length > 1) {
+      player.weapons.forEach((kind, i) => {
+        const equipped = kind === player.weaponKind;
+        this.text(`${i + 1} ${CONFIG.WEAPONS[kind].name}`, right, 18 + i * 8, 7, equipped ? COLORS.text : COLORS.dim, 'right');
+      });
+    } else {
+      this.text(player.weapon.name, right, 18, 7, COLORS.text, 'right');
+    }
     this.drawBeatBar(player);
+    this.drawFreestyleGauge(game);
+  }
+
+  // 프리스타일 게이지: 리듬 막대 바로 아래의 가는 막대. 모드 중에는 노란색으로 줄어든다.
+  drawFreestyleGauge(game) {
+    const state = game.relicState.freestyle;
+    if (!state) return;
+    const def = CONFIG.RELICS.freestyle;
+    const width = CONFIG.BEAT_BAR_WIDTH;
+    const left = (CONFIG.VIEW_WIDTH - width) / 2;
+    const y = CONFIG.VIEW_HEIGHT - CONFIG.HUD_FREESTYLE_GAUGE_HEIGHT;
+    this.rect(left, y, width, CONFIG.HUD_FREESTYLE_GAUGE_HEIGHT, COLORS.gridLine);
+    this.rect(left, y, width * state.gauge / def.gaugeMax, CONFIG.HUD_FREESTYLE_GAUGE_HEIGHT,
+      state.active ? COLORS.particle : COLORS.ring);
+  }
+
+  // 프리스타일 모드 중에는 링 대신 공격 칸을 노란 테두리로 보여준다
+  drawFreestyleRange(game) {
+    const state = game.relicState.freestyle;
+    if (!state || !state.active) return;
+    const player = game.player;
+    const size = CONFIG.CELL_SIZE;
+    for (const [dc, dr] of CONFIG.RELICS.freestyle.cells) {
+      const col = player.col + dc;
+      const row = player.row + dr;
+      if (!Grid.inBounds(col, row)) continue;
+      this.frame(Grid.cellX(col) + 1, Grid.cellY(row) + 1, size - 2, size - 2, COLORS.particle, state.cooldown > 0 ? 1 : 2);
+    }
+  }
+
+  // HP 표시 옆의 실드 칸. 실드가 HUD_SHIELD_MAX_CELLS보다 많으면 칸 하나와 개수를 쓴다.
+  drawShield(player) {
+    if (player.shield <= 0) return;
+    const x = 112;
+    const cell = (i) => {
+      this.rect(x + i * 6, 6, 5, 7, COLORS.shield);
+      this.frame(x + i * 6, 6, 5, 7, COLORS.ringOutline);
+    };
+    if (player.shield <= CONFIG.HUD_SHIELD_MAX_CELLS) {
+      for (let i = 0; i < player.shield; i++) cell(i);
+    } else {
+      cell(0);
+      this.text(`x${player.shield}`, x + 7, 4, 8, COLORS.shield);
+    }
+  }
+
+  // 화면 오른쪽 위의 유물 칸. 빈 칸 RELIC_SLOTS개를 한 줄로 두고 왼쪽부터 채운다.
+  // 아이콘 대신 등급 색 테두리와 이름 첫 글자를 그린다.
+  drawRelicSlots(game) {
+    const size = CONFIG.HUD_RELIC_SLOT_SIZE;
+    const gap = CONFIG.HUD_RELIC_SLOT_GAP;
+    const count = CONFIG.RELIC_SLOTS;
+    const left = CONFIG.VIEW_WIDTH - 8 - (count * size + (count - 1) * gap);
+    for (let i = 0; i < count; i++) {
+      const x = left + i * (size + gap);
+      const id = game.relics[i];
+      if (!id) {
+        this.frame(x, 3, size, size, COLORS.gridLine);
+        continue;
+      }
+      const def = CONFIG.RELICS[id];
+      this.rect(x, 3, size, size, COLORS.cellB);
+      this.frame(x, 3, size, size, RELIC_COLORS[def.rarity]);
+      this.text(def.name[0], x + size / 2, 4.5, 7, COLORS.text, 'center');
+    }
   }
 
   // (x, y) 모서리에서 안쪽으로 뻗는 록온 ㄱ자. dirX, dirY는 안쪽 방향(1 또는 -1).
