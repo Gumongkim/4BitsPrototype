@@ -268,7 +268,7 @@ class Renderer {
 
   drawTitle() {
     const cx = CONFIG.VIEW_WIDTH / 2;
-    this.text('타이밍 그리드', cx, 36, 24, COLORS.text, 'center');
+    this.text('4Bit_Prototype', cx, 36, 24, COLORS.text, 'center');
     this.text('링이 공격 범위에 맞는 순간 키를 눌러라. 움직이면 리듬이 처음부터 다시 시작된다.', cx, 72, 7, COLORS.dim, 'center');
     this.text('방향키  이동', cx, 94, 8, COLORS.text, 'center');
     this.text('A  쿵 (초록 링)', cx - 44, 106, 8, COLORS.ringKick, 'center');
