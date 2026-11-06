@@ -75,8 +75,7 @@ class Game {
     this.shakeTime = 0;
     this.shakePower = 0;
     this.wave = 0;
-    this.combo = 0;
-    this.bestCombo = 0;
+    this.bestHit = 0;  // 사이클 하나에서 달성한 최대 HIT
     this.totalStats = { perfect: 0, good: 0, miss: 0 };
     this.waveStats = { perfect: 0, good: 0, miss: 0 };
     this.clearTimer = 0;
@@ -168,6 +167,7 @@ class Game {
 
   enterReward() {
     Sfx.play('clear');
+    this.player.resetHit();
     this.state = 'reward';
     this.rewardCards = Rewards.draw(this.player, this.wave);
     this.rewardIndex = 0;
@@ -178,6 +178,7 @@ class Game {
     const player = this.player;
     player.updateMovement(dt, (c, r) => !!this.enemyAt(c, r));
     player.updateRing(dt);
+    player.updateHitUi(dt);
     if (player.justMatched) Sfx.play(player.isSnare(player.lastBeat) ? 'tickStrong' : 'tick');
     for (const [drum, code] of Object.entries(CONFIG.DRUM_KEYS)) {
       if (!Input.wasPressed(code)) continue;
@@ -217,32 +218,28 @@ class Game {
       const gap = Math.round(CONFIG.RING_SPEED * -result.error);
       this.ringBursts.push({ cells, gap, grade: result.grade, drum: result.drum, age: 0 });
     }
-    // 빈 칸을 친 입력은 판정만 표시하고 통계와 콤보에 넣지 않는다.
-    // 적이 없는 곳에서 친 판정으로 콤보와 통계가 부풀려지는 것을 막기 위해서다.
+    // 빈 칸을 친 입력은 판정만 표시하고 통계와 HIT에 넣지 않는다.
+    // 적이 없는 곳에서 친 판정으로 HIT와 통계가 부풀려지는 것을 막기 위해서다.
     if (!targets.length) return;
 
     this.waveStats[result.grade]++;
     this.totalStats[result.grade]++;
-    if (result.grade === 'miss') {
-      this.combo = 0;
-      return;
-    }
+    // Miss는 HIT를 올리지도 초기화하지도 않는다
+    if (result.grade === 'miss') return;
     let damage = result.damage;
     if (result.grade === 'perfect') {
-      this.combo++;
-      this.bestCombo = Math.max(this.bestCombo, this.combo);
       damage *= player.stats.perfectMult;
-      if (player.stats.comboBonusDamage && this.combo % CONFIG.COMBO_BONUS_EVERY === 0) {
-        damage += player.stats.comboBonusDamage;
-      }
       this.hitStop = CONFIG.HITSTOP_PERFECT;
       this.shake(CONFIG.SHAKE_PERFECT);
       for (const target of targets) this.burst(target.col, target.row, CONFIG.PARTICLES_PERFECT);
     } else {
-      this.combo = 0;
       damage *= player.stats.goodMult;
       this.hitStop = CONFIG.HITSTOP_GOOD;
     }
+    // HIT: 이번 노드를 포함한 사이클 안의 성공 횟수만큼 추가 배율이 붙는다. 여러 적을 맞혀도 배율은 같다.
+    const hits = player.registerHit(result.ring);
+    this.bestHit = Math.max(this.bestHit, hits);
+    damage *= 1 + player.hitBonus(hits, result.beat);
     for (const target of targets) {
       if (target.takeDamage(damage)) this.killEnemy(target);
     }
@@ -293,7 +290,6 @@ class Game {
   hurtPlayer(amount) {
     this.player.hp = Math.max(0, this.player.hp - amount);
     this.player.hurtFlash = CONFIG.HURT_FLASH_TIME;
-    this.combo = 0;
     this.shake(CONFIG.SHAKE_HURT);
     Sfx.play('hurt');
     if (this.player.hp === 0) {

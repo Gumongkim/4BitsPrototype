@@ -29,6 +29,19 @@ function weaponRangeCells(weapon, beat, col, row, lastCol) {
   return result;
 }
 
+// 노드별 HIT 난이도 d_i. 원값은 간격 계수 x (직전 노드와 드럼이 다르면 HIT_KEY_CHANGE_MULT)이고,
+// 무기 평균으로 나눠 평균이 1이 되게 한다. 직전 노드는 순환해서 잡는다 (0번 노드의 직전은 마지막 노드).
+function weaponHitDifficulty(weapon) {
+  const { intervals, drums } = weapon;
+  const raw = intervals.map((gap, i) => {
+    const gapValue = CONFIG.HIT_GAP_DIFFICULTY.find((g) => gap <= g.maxGap + 1e-9).value;
+    const prev = drums[(i - 1 + drums.length) % drums.length];
+    return gapValue * (prev !== drums[i] ? CONFIG.HIT_KEY_CHANGE_MULT : 1);
+  });
+  const mean = raw.reduce((sum, v) => sum + v, 0) / raw.length;
+  return raw.map((v) => v / mean);
+}
+
 // 카드에 표시할 데미지. 박자가 많은 무기도 한 줄에 들어가도록 같은 값은 한 번만 쓴다.
 function weaponDamageText(weapon) {
   return `데미지 ${[...new Set(weapon.damages)].join(' / ')}`;
@@ -48,7 +61,6 @@ class Player {
       windowBonus: 0,
       perfectMult: CONFIG.JUDGE.perfect.damageMult,
       goodMult: CONFIG.JUDGE.good.damageMult,
-      comboBonusDamage: 0,
     };
     this.hp = this.stats.maxHp;
     this.hurtFlash = 0;    // 시각 효과일 뿐 판정에 영향을 주지 않는다
@@ -68,9 +80,65 @@ class Player {
   setWeapon(kind) {
     this.weaponKind = kind;
     this.weapon = CONFIG.WEAPONS[kind];
+    this.hitDifficulty = weaponHitDifficulty(this.weapon); // 노드별 난이도 d_i
     this.ringActive = false;
     this.cooldown = 0;
     this.cooldownTotal = CONFIG.ATTACK_COOLDOWN; // HUD 막대용: 현재 쿨다운의 전체 길이
+    this.resetHit();
+  }
+
+  // HIT 상태와 표시를 지운다. 링이 (재)시작되거나 멈추면 부른다.
+  resetHit() {
+    this.hitCycle = -1;    // HIT를 세고 있는 사이클 id. 링 시작부터 센 사이클 번호다.
+    this.hitCount = 0;     // 그 사이클의 HIT
+    this.hitShown = false; // "n HIT" 표시 여부
+    this.hitValue = 0;     // 표시 중인 숫자
+    this.hitPrevValue = null; // 굴러 올라가며 사라지는 이전 숫자
+    this.hitRoll = 0;      // 숫자가 바뀌는 연출의 남은 시간
+    this.hitPop = 0;       // 팝 연출의 남은 시간
+    this.hitFade = 0;      // 사라지는 연출의 남은 시간. 0이면 사라지는 중이 아니다.
+  }
+
+  // 다음에 올 리듬이 속한 사이클 id
+  get currentCycle() {
+    return Math.floor(this.ringCycles / this.weapon.intervals.length);
+  }
+
+  // ring번 리듬(matchBeat의 ring) 공격이 적을 맞혀 성공했을 때 부른다. 그 노드를 포함한 HIT를 돌려준다.
+  // 사이클 경계에서 늦게 들어온 입력은 이전 사이클의 HIT로 센다.
+  registerHit(ring) {
+    const cycle = Math.floor(ring / this.weapon.intervals.length);
+    // 이미 다음 사이클을 세기 시작한 뒤 이전 사이클 입력이 오는 경우는 순서상 생기지 않는다. 생기면 첫 HIT로 본다.
+    if (cycle < this.hitCycle) return 1;
+    if (cycle > this.hitCycle) {
+      this.hitCycle = cycle;
+      this.hitCount = 0;
+    }
+    this.hitCount++;
+    this.hitPrevValue = this.hitShown ? this.hitValue : null;
+    this.hitValue = this.hitCount;
+    this.hitShown = true;
+    this.hitRoll = CONFIG.HIT_UI_ROLL_TIME;
+    this.hitPop = CONFIG.HIT_UI_POP_TIME;
+    // 지나간 사이클의 늦은 입력이면 사라지는 연출을 처음부터 다시 한다
+    this.hitFade = cycle < this.currentCycle ? CONFIG.HIT_UI_FADE_TIME : 0;
+    return this.hitCount;
+  }
+
+  // n번째 HIT로 beat번 노드를 맞혔을 때의 추가 배율
+  hitBonus(n, beat) {
+    const nodes = this.weapon.intervals.length;
+    const progress = (n - 1) / Math.max(1, nodes - 1);
+    return Math.min(CONFIG.HIT_BONUS_CAP, CONFIG.HIT_MAX_BONUS * progress * this.hitDifficulty[beat]);
+  }
+
+  updateHitUi(dt) {
+    this.hitRoll = tickDown(this.hitRoll, dt);
+    this.hitPop = tickDown(this.hitPop, dt);
+    if (this.hitFade > 0) {
+      this.hitFade = tickDown(this.hitFade, dt);
+      if (this.hitFade === 0) this.hitShown = false;
+    }
   }
 
   // 판정 윈도우. 모든 무기에 같다. 한 리듬에 두 번 성공하는 것은 tryAttack에서 막는다.
@@ -115,6 +183,7 @@ class Player {
     this.row = row;
     this.moveTimer = this.stats.moveTick;
     this.ringActive = false;
+    this.resetHit(); // 이동하면 링과 함께 HIT도 사라진다
   }
 
   // 리듬은 입력과 상관없이 무기의 간격대로 계속 진행한다.
@@ -130,6 +199,8 @@ class Player {
       this.beatIndex = (this.beatIndex + 1) % this.weapon.intervals.length;
       this.ringCycles++;
       this.justMatched = true;
+      // 사이클이 바뀌는 순간부터 지난 사이클의 HIT 표시가 사라지기 시작한다
+      if (this.hitShown && this.hitCycle < this.currentCycle && this.hitFade === 0) this.hitFade = CONFIG.HIT_UI_FADE_TIME;
     }
   }
 
@@ -139,6 +210,7 @@ class Player {
     this.ringCycles = 0;
     this.beatIndex = 0;
     this.clearedRing = -1;
+    this.resetHit(); // 새 링은 HIT 0, 사이클 0부터
   }
 
   get currentInterval() {
@@ -235,7 +307,7 @@ class Player {
     this.cooldownTotal = grade === 'miss' ? CONFIG.ATTACK_MISS_COOLDOWN : CONFIG.ATTACK_COOLDOWN;
     this.cooldown = this.cooldownTotal;
     this.lastError = error;
-    return { grade, error, drum, beat, damage: this.weapon.damages[beat] };
+    return { grade, error, drum, beat, ring, damage: this.weapon.damages[beat] };
   }
 
   // 화면상 이동 진행도. 틱의 앞부분 MOVE_ANIM_TIME 동안 새 칸에 도착하고, 남은 틱 동안은 멈춰 있다.

@@ -401,8 +401,28 @@ const CONFIG = {
     },
   },
 
-  // 연속 Perfect 보너스 (보상으로 활성화)
-  COMBO_BONUS_EVERY: 3,         // N연속 Perfect마다 보너스 발동
+  // HIT: 한 사이클(무기 intervals 한 바퀴) 안에서 적을 맞힌 Good 이상 공격 횟수.
+  // 링이 (재)시작되면 0이 된다. HIT가 쌓일수록 노드 데미지에 추가 배율이 붙는다.
+  //   추가 배율 = min(HIT_BONUS_CAP, HIT_MAX_BONUS x (n - 1) / (N - 1) x d_i)
+  //   n: 이번 노드를 포함한 HIT, N: 무기 노드 수, d_i: 노드 난이도(무기 평균이 1인 상대값)
+  HIT_MAX_BONUS: 0.5,           // 한 사이클을 전부 성공했을 때 마지막 노드의 추가 배율 (d_i가 1일 때)
+  HIT_BONUS_CAP: 0.75,          // 추가 배율 상한
+  // 노드 난이도 원값의 간격 계수. 노드 간격(intervals[i])이 maxGap 이하인 첫 항목의 value를 쓴다.
+  HIT_GAP_DIFFICULTY: [
+    { maxGap: 0.15, value: 2.0 },
+    { maxGap: 0.3, value: 1.5 },
+    { maxGap: 0.45, value: 1.2 },
+    { maxGap: Infinity, value: 1.0 },
+  ],
+  HIT_KEY_CHANGE_MULT: 1.15,    // 직전 노드(순환)와 드럼이 다르면 난이도 원값에 곱한다
+  // HIT 표시: 플레이어 왼쪽에 흰색 "n HIT" (내부 해상도 픽셀, 초)
+  HIT_UI_BASE_SIZE: 8,          // 첫 HIT의 글자 크기. (n - 1) / (N - 1)에 비례해 MAX까지 커진다.
+  HIT_UI_MAX_SIZE: 12,
+  HIT_UI_GAP: 4,                // 플레이어 몸통 왼쪽 가장자리와 글자 사이 간격
+  HIT_UI_POP_SCALE: 1.4,        // 숫자가 오를 때 이 배율에서 1로 줄어든다
+  HIT_UI_POP_TIME: 0.15,
+  HIT_UI_ROLL_TIME: 0.12,       // 이전 숫자가 위로 밀려나고 새 숫자가 아래에서 올라오는 시간
+  HIT_UI_FADE_TIME: 0.4,        // 사이클이 바뀐 뒤 사라지는 시간
 
   // 적 공통 행동
   ENEMY_HOME_COLS: 4,           // idle 구역: 오른쪽에서 몇 개 열인지
@@ -502,7 +522,6 @@ const CONFIG = {
     windowBonus: { max: 0.03 },
     perfectMult: { max: 5 },
     moveTick: { min: 0.09 },
-    comboBonusDamage: { max: 3 },
   },
 
   // 연출

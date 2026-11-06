@@ -162,6 +162,7 @@ class Renderer {
       this.drawWorld(game);
       if (game.state === 'play') {
         this.drawRingKeys(game.player);
+        this.drawHit(game.player);
         this.drawPopups(game);
         this.drawHud(game);
         if (game.debug) this.drawDebug(game);
@@ -200,6 +201,14 @@ class Renderer {
       4, 165, 6, COLORS.text);
     this.text(`최근 입력 오차 ${fmtMs(player.lastError)}   윈도우 P ±${Math.round(player.perfectWindow * 1000)} / G ±${Math.round(player.goodWindow * 1000)}ms`,
       4, 172, 6, COLORS.text);
+
+    // HIT: 지금 사이클의 HIT, 다음에 칠 노드의 난이도 d_i와 그 노드를 맞혔을 때의 추가 배율
+    const nodes = player.weapon.intervals.length;
+    const hits = player.ringActive && player.hitCycle === player.currentCycle ? player.hitCount : 0;
+    const target = player.targetBeat;
+    const bonus = player.hitBonus(hits + 1, target);
+    this.text(`HIT ${hits}/${nodes}   노드 ${target + 1} d=${player.hitDifficulty[target].toFixed(2)}   맞히면 추가 +${Math.round(bonus * 100)}%`,
+      4, 27, 6, COLORS.text);
 
     // 매치 시점을 가운데로 둔 타임라인 (폭은 고정 시간)
     const span = 0.6;
@@ -371,7 +380,7 @@ class Renderer {
     this.text('GAME OVER', cx, 30, 22, COLORS.telegraphEdge, 'center');
     this.text(`도달 웨이브 ${game.wave}`, cx, 66, 12, COLORS.text, 'center');
     this.text(this.statLine(game.totalStats), cx, 88, 9, COLORS.dim, 'center');
-    this.text(`최고 연속 Perfect ${game.bestCombo}`, cx, 102, 9, POPUP_STYLES.perfect.color, 'center');
+    this.text(`최고 HIT ${game.bestHit}`, cx, 102, 9, POPUP_STYLES.perfect.color, 'center');
     this.text('Enter 또는 R  재시작     T  타이틀', cx, 136, 9, COLORS.ring, 'center');
   }
 
@@ -432,9 +441,8 @@ class Renderer {
     this.rect(24, 6, 60 * player.hp / player.stats.maxHp, 7, COLORS.player);
     this.text(`${player.hp}/${player.stats.maxHp}`, 88, 4, 8, COLORS.text);
     if (Sfx.muted) this.text('음소거', 8, 16, 7, COLORS.dim);
-    // 웨이브와 콤보
+    // 웨이브
     this.text(`WAVE ${game.wave}`, 160, 3, 10, COLORS.text, 'center');
-    this.text(`연속 Perfect ${game.combo}`, 160, 15, 7, game.combo ? POPUP_STYLES.perfect.color : COLORS.dim, 'center');
     // 공격 쿨다운
     const ready = player.cooldown <= 0;
     this.text('A / S', 232, 4, 8, ready ? COLORS.ring : COLORS.dim);
@@ -555,6 +563,38 @@ class Renderer {
       const alpha = drum === target ? 1 : CONFIG.RING_KEY_DIM_ALPHA;
       this.text(code.replace('Key', ''), x + (i - 0.5) * CONFIG.RING_KEY_GAP, y, CONFIG.RING_KEY_SIZE, color, 'center', alpha);
     });
+  }
+
+  // 글자 폭 (내부 해상도 픽셀)
+  measureText(str, size) {
+    const ctx = this.screenCtx;
+    ctx.font = `bold ${size * this.scale}px ${FONT_FAMILY}`;
+    return ctx.measureText(str).width / this.scale;
+  }
+
+  // 플레이어 몸통 왼쪽에 흰색 "n HIT"를 칸 높이 가운데로 오른쪽 정렬해 그린다.
+  // 글자는 사이클 진행((n - 1) / (N - 1))에 비례해 커지고, 숫자가 오를 때 팝하며
+  // 이전 숫자는 위로 밀려나며 흐려지고 새 숫자는 아래에서 올라온다. 사이클이 바뀌면 흐려지며 사라진다.
+  drawHit(player) {
+    if (!player.hitShown) return;
+    const nodes = player.weapon.intervals.length;
+    const sizeOf = (n) => CONFIG.HIT_UI_BASE_SIZE
+      + (CONFIG.HIT_UI_MAX_SIZE - CONFIG.HIT_UI_BASE_SIZE) * Math.min(1, (n - 1) / Math.max(1, nodes - 1));
+    const right = CONFIG.GRID_X + player.drawCol * CONFIG.CELL_SIZE + 7 - CONFIG.HIT_UI_GAP;
+    const midY = CONFIG.GRID_Y + player.drawRow * CONFIG.CELL_SIZE + CONFIG.CELL_SIZE / 2;
+    const fade = player.hitFade > 0 ? player.hitFade / CONFIG.HIT_UI_FADE_TIME : 1;
+    const roll = player.hitRoll / CONFIG.HIT_UI_ROLL_TIME;  // 1에서 0으로
+    const pop = player.hitPop / CONFIG.HIT_UI_POP_TIME;     // 1에서 0으로
+    const size = sizeOf(player.hitValue) * (1 + (CONFIG.HIT_UI_POP_SCALE - 1) * pop);
+    const top = midY - size / 2;
+    this.text('HIT', right, top, size, COLORS.text, 'right', fade);
+    const numRight = right - this.measureText(' HIT', size);
+    // 새 숫자는 아래에서 올라오며 진해진다
+    this.text(`${player.hitValue}`, numRight, top + roll * size * 0.6, size, COLORS.text, 'right', fade * (1 - roll * 0.6));
+    // 이전 숫자는 위로 밀려나며 흐려진다
+    if (player.hitPrevValue !== null && roll > 0) {
+      this.text(`${player.hitPrevValue}`, numRight, top - (1 - roll) * size * 0.6, size, COLORS.text, 'right', fade * roll);
+    }
   }
 
   drawPopups(game) {
