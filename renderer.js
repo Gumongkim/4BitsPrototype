@@ -348,6 +348,17 @@ class Renderer {
     this.text('S  짝 (보라 링)', cx + 44, 106, 8, COLORS.ringSnare, 'center');
     this.text('M  음소거      D  디버그', cx, 118, 8, COLORS.text, 'center');
     this.text('Enter로 시작', cx, 144, 10, COLORS.ring, 'center');
+    this.drawLogLine(false);
+  }
+
+  // 타이틀·게임오버 화면 아래의 로그 안내와 내보내기 결과 알림 (작은 글씨)
+  drawLogLine(gameover) {
+    const cx = CONFIG.VIEW_WIDTH / 2;
+    const core = Logger.core;
+    const count = Logger.count() ?? 0;
+    this.text(`저장된 로그 ${count}판 · E: JSON · Shift+E: CSV${gameover ? ' · Y: 이번 판 복사' : ''}`,
+      cx, 166, 6, COLORS.dim, 'center');
+    if (core.noticeTimer > 0) this.text(core.notice, cx, 157, 7, COLORS.particle, 'center');
   }
 
   drawOverlay() {
@@ -456,6 +467,7 @@ class Renderer {
     this.text(this.statLine(game.totalStats), cx, 88, 9, COLORS.dim, 'center');
     this.text(`최고 HIT ${game.bestHit}`, cx, 102, 9, POPUP_STYLES.perfect.color, 'center');
     this.text('Enter 또는 R  재시작     T  타이틀', cx, 136, 9, COLORS.ring, 'center');
+    this.drawLogLine(true);
   }
 
   drawTelegraphs(game) {

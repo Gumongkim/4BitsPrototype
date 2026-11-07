@@ -17,10 +17,11 @@
 
 ## 파일
 
-- 스크립트 11개: `config.js`, `input.js`, `grid.js`, `telegraph.js`, `player.js`, `enemy.js`, `rewards.js`, `relics.js`, `renderer.js`, `game.js`, `main.js`
+- 스크립트 12개: `config.js`, `input.js`, `grid.js`, `telegraph.js`, `player.js`, `enemy.js`, `rewards.js`, `relics.js`, `logger.js`, `renderer.js`, `game.js`, `main.js`
 - `index.html`: 로컬 실행용 페이지
 - `timing-grid-web.html`: 웹 링크(Artifact) 게시용 페이지
 - 스크립트를 추가·삭제하면 두 HTML의 `<script>` 목록을 함께 고친다.
+- `tools/log-webhook.gs`: 로그 웹훅용 구글 시트 Apps Script 예시. 게임 스크립트가 아니므로 HTML과 웹 링크(Artifact)에 넣지 않는다.
 - `weapon-tool/`: 무기 제작 웹 툴 (`index.html`, `tool.css`, `tool.js`). 게임과 독립이며 웹 링크(Artifact)에 포함하지 않는다. 같은 기술 제약(바닐라 JS, file:// 실행)을 따른다. 툴에서 내보낸 JSON을 받으면 `howToRead`와 `gameConfig`를 보고 `config.js` `WEAPONS`에 옮긴다.
 
 ## 웹 링크 (Artifact)
@@ -28,7 +29,7 @@
 - 주소: https://claude.ai/artifact/SiCzBWw2wejRL34sd368U6
 - 웹 링크는 이 폴더 밖(다른 세션·직접 편집)에서도 수정된다.
   - **수정 전:** Artifact `list`(scope `files`)/`read`로 최신본을 확인하고, 로컬과 다르면 웹 버전을 먼저 로컬로 받아 맞춘다.
-  - **수정 후:** 확인을 묻지 않고 바로 다시 게시한다. `file_path`는 `timing-grid-web.html`, 스크립트 11개는 `files`로 함께 올리고 `url`에 위 주소를 넣는다. 게시했다고 답변에 알린다.
+  - **수정 후:** 확인을 묻지 않고 바로 다시 게시한다. `file_path`는 `timing-grid-web.html`, 스크립트 12개는 `files`로 함께 올리고 `url`에 위 주소를 넣는다. `capabilities`는 생략해 기존 선언(`downloads: true`, 로그 내보내기용)을 유지한다. 게시했다고 답변에 알린다.
 - 게임 동작·수치를 바꾸면 `README.md`도 현재 상태에 맞게 고친다.
 
 ## 검증

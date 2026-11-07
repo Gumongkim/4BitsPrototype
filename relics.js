@@ -349,6 +349,7 @@ const Relics = {
     if (this.has(game, id)) return;
     if (slot !== null && game.relics[slot]) this.remove(game, game.relics[slot], true);
     game.relicState[id] = {};
+    Logger.relicAcquired(game, id);
     if (slot !== null && slot <= game.relics.length) game.relics.splice(slot, 0, id);
     else game.relics.push(id);
     const handler = RELIC_LOGIC[id] && RELIC_LOGIC[id].acquire;

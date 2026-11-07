@@ -584,6 +584,17 @@ const CONFIG = {
     moveTick: { min: 0.09 },
   },
 
+  // 게임오버 로그 (logger.js). 밸런스 분석용이며 게임 규칙에는 영향이 없다.
+  // BUILD_VERSION: 밸런스(무기·적·유물 수치, 판정 등)를 바꿀 때마다 손으로 올린다. 로그를 빌드별로 나눠 볼 때 쓴다.
+  BUILD_VERSION: '2026.11.07-1',
+  LOG_MAX_RUNS: 500,            // 저장소에 남기는 최근 판 수. 넘치면 오래된 것부터 지운다.
+  LOG_STORAGE_KEY: '4bit_prototype_logs',
+  LOG_BACKUP_KEY: '4bit_prototype_logs_backup', // 직전 내보내기 묶음 1회분 (Shift+L 복구용)
+  LOG_WEBHOOK_URL: '',          // 구글 시트 Apps Script 웹훅 주소. 빈 문자열이면 보내지 않는다. 예시: tools/log-webhook.gs
+  LOG_DOWNLOAD_GAP_MS: 400,     // 파일 여러 개를 내려받을 때 사이 간격(밀리초)
+  LOG_PICKER_ID: '4bit-logs',   // 저장 위치 선택 창이 지난번 위치를 기억하는 데 쓰는 이름
+  LOG_NOTICE_TIME: 2.5,         // 내보내기 결과 알림을 화면에 보여주는 시간
+
   // 연출
   HITSTOP_PERFECT: 0.07,
   HITSTOP_GOOD: 0.03,

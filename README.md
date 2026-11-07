@@ -25,6 +25,9 @@
 | M | 음소거 |
 | D | 디버그 오버레이 (판정 윈도우, 리듬 번호, 매치 시점 오차, FPS, 그리드 좌표, 적 이름, HIT n/N과 다음 노드의 난이도 d_i·추가 배율, 유물 지급 커서) |
 | [ ] / P | 디버그 모드에서만: 유물 지급 커서를 옮기고 / 그 유물을 지급하거나 회수한다. 슬롯이 가득 찼으면 맨 왼쪽 유물과 바꾼다 |
+| E / Shift+E | 타이틀·게임오버 화면에서만: 저장된 로그를 JSON / CSV로 내려받고 저장소에서 지운다 |
+| Shift+L | 타이틀·게임오버 화면에서만: 직전에 내보낸 로그 묶음을 다시 내려받는다 (복구용) |
+| Y | 게임오버 화면에서만: 방금 판의 로그 JSON을 클립보드로 복사한다 |
 
 화면 표시:
 
@@ -50,6 +53,8 @@
 | `telegraph.js` | 적 공격 예고 |
 | `rewards.js` | 무기 보상 추첨과 적용 |
 | `relics.js` | 유물 효과 로직(`RELIC_LOGIC`), 이벤트·질의 훅 전달, 보유·교체, 유물 추첨 |
+| `logger.js` | 게임오버 로그: 플레이 중 집계, 런 기록 생성, `localStorage` 누적, JSON·CSV 내보내기, 백업 복구, 웹훅 전송 |
+| `tools/log-webhook.gs` | 로그 웹훅용 구글 시트 Apps Script 예시. 게임 스크립트가 아니며 HTML과 웹 링크에 넣지 않는다 |
 | `renderer.js` | 모든 그리기 코드. 스프라이트로 바꿀 때는 이 파일만 고치면 된다 |
 | `game.js` | 상태 머신, 웨이브 진행, 공격 처리(HIT·유물 반영 데미지), 사이클 요약, 유물 이벤트 발생, 카드 선택 화면, 연출 타이머, 효과음 |
 | `main.js` | 60Hz 고정 타임스텝 루프 |
@@ -323,6 +328,64 @@ HP와 데미지는 계열별로 같다. 근접은 HP 4.5, 데미지 2이고 원�
 | `STAT_LIMITS` | `player.stats`가 효과로 도달할 수 있는 수치 한계. 지금은 쓰는 곳이 없고 유물용으로 남겨 두었다 |
 
 `rewards.js`의 `apply`는 카드의 `effects: [{ stat, add }]`와 `heal`도 적용한다. 지금 카드는 효과가 없지만 유물에서 같은 형식을 쓸 수 있게 남겨 두었다. `stat`에는 `player.js`의 `stats` 키(`maxHp`, `moveTick`, `windowBonus`, `perfectMult`, `goodMult`)를 쓴다. `windowBonus`는 판정 윈도우에 더해진다 (`STAT_LIMITS`로 최대 0.03).
+
+### 게임오버 로그
+밸런스 분석용으로 한 판의 요약과 웨이브별 기록을 남긴다 (`logger.js`). 읽기 전용 집계라 게임 규칙에는 영향이 없다. 게임 코드는 `Logger.*`만 부르고, 모든 진입점은 `try/catch`로 감싸 로거 오류가 게임을 멈추지 않는다 (오류는 콘솔 경고만 남긴다).
+
+- **수집:** 플레이 중 가볍게 집계하고, 게임오버(`hurtPlayer`에서 HP가 0이 되는 순간)에 `Logger.finishRun()`이 한 번 런 기록 1건을 만든다. 새 런을 시작하면 집계를 초기화한다. 수집 지점: `startRun`(런 시작), `nextWave`(웨이브 시작), `updatePlay`(play 시간), `resolveAttack`(적을 맞힌 공격의 판정과 오차), `updateTelegraphs` → `hurtPlayer(피해, 적 종류)`(피격), `enterReward`(웨이브 종료), 무기·유물 보상 화면(제시 카드와 선택), 무기 슬롯 변경, 턴테이블 전환, `Relics.add`(유물 획득 웨이브).
+- **누적:** 런 기록 배열을 `localStorage`의 `LOG_STORAGE_KEY`에 JSON으로 쌓는다. 최근 `LOG_MAX_RUNS`(500)판만 남기고 넘치면 오래된 것부터 지운다. 용량이 넘치면(`QuotaExceededError`) 오래된 기록을 10%씩 지우며 다시 시도하고, 그래도 안 되거나 저장소를 쓸 수 없으면 메모리에만 보관한다 (페이지를 닫으면 사라진다). 웹 링크처럼 저장소가 유지되지 않는 곳에서도 메모리 보관분으로 내보낼 수 있다.
+- **화면:** 타이틀과 게임오버 화면 아래에 작은 글씨로 `저장된 로그 N판 · E: JSON · Shift+E: CSV`가 나온다 (게임오버에서는 `· Y: 이번 판 복사`가 붙는다). 내보내기 결과는 그 위에 2.5초 동안 노란 글씨로 나온다. 플레이 중에는 로그 키가 동작하지 않는다.
+- **내보내기와 삭제:** E는 `logs-날짜-시각.json` 하나, Shift+E는 `runs-날짜-시각.csv`와 `waves-날짜-시각.csv` 두 파일을 내려받는다. 내려받기를 실행한 직후 저장소와 메모리 보관분을 지우므로 같은 판이 두 번 내려가지 않는다. JSON 파일에는 `exportedAt`, `build`, `count`, `firstRunId`, `lastRunId` 메타 정보와 `runs` 배열이 들어 있다. CSV는 런 요약의 중첩 필드를 `death.enemyKind`처럼 펼쳐 한 줄로 쓰고, 배열·객체 필드(`weapons`, `relics`, `rewards`, `hits.damageByEnemy`)는 셀 안에 JSON 문자열로 넣는다. 웨이브 행은 `runId`로 런과 연결한다. 엑셀에서 한글이 깨지지 않도록 UTF-8 BOM을 붙인다. 내보낼 기록이 없으면 파일을 만들지 않고 화면에 알린다.
+- **저장 위치:** 크롬·엣지에서 `index.html`을 직접 열면 내보낼 때 저장 위치를 고르는 창이 뜬다. JSON(파일 하나)은 '다른 이름으로 저장' 창, CSV(파일 두 개)는 폴더 선택 창 한 번으로 고른 폴더에 두 파일을 함께 쓴다. 창은 지난번 위치를 기억한다(`LOG_PICKER_ID`). 창에서 취소하면 로그를 지우지 않는다. 이 창을 쓸 수 없는 브라우저(파이어폭스·사파리 등)나 권한이 거부되면 브라우저 기본 다운로드 폴더로 내려받는다. 웹 링크 안에서는 페이지가 위치를 고를 수 없고 저장 확인 창 뒤 브라우저 설정을 따른다 (크롬 설정 > 다운로드 > '다운로드 전에 각 파일의 저장 위치 확인'을 켜면 매번 위치를 고를 수 있다).
+- **웹 링크에서 내보내기:** claude.ai 웹 링크(Artifact) 안에서는 페이지가 직접 파일을 내려받을 수 없어 Artifact의 `downloads` 기능(`claude.use('downloads')`)으로 저장 확인 창을 띄운다. 파일이 여러 개면(CSV) 확인 창이 차례로 하나씩 뜬다. 모든 파일을 저장해야 저장소에서 지우고, 뷰어가 취소하거나 저장할 수 없으면 로그를 그대로 두고 화면에 알린다. 게시할 때 `capabilities: { downloads: true }`를 선언해야 한다. 그 밖(`index.html` 직접 실행 등)에서는 `<a download>`로 바로 내려받고 실행 직후 지운다. 저장 확인 창이 열려 있는 동안 다시 누른 내보내기 키는 무시한다.
+- **복구용 백업:** 내보낸 파일 묶음 1회분을 `LOG_BACKUP_KEY`에 보관하고 다음 내보내기 때 덮어쓴다 (저장소를 쓸 수 없으면 메모리). Shift+L로 그 묶음을 다시 내려받는다. 백업은 지우지 않는다.
+- **참고 출력 (삭제 안 함):** 게임오버 때 `console.table`로 요약과 웨이브 행을 출력한다. Y는 방금 판의 JSON을 클립보드로 복사하고, 클립보드를 쓸 수 없으면 조용히 무시한다.
+- **원격 수집 (선택):** `LOG_WEBHOOK_URL`이 빈 문자열이 아니면 게임오버 때 런 기록 JSON을 `fetch`로 POST한다 (`mode: 'no-cors'`, `Content-Type: text/plain`, `keepalive: true`). 실패는 조용히 무시하고 재시도하지 않는다. 설정 방법은 `tools/log-webhook.gs` 맨 위 주석에 있다: 구글 시트의 Apps Script에 붙여 넣고 웹 앱(액세스 '모든 사용자')으로 배포한 뒤 그 URL을 `LOG_WEBHOOK_URL`에 넣는다. 스크립트는 `runs` 시트에 한 판을 한 줄로, `waves` 시트에 웨이브 행을 추가하고 이미 있는 `runId`는 건너뛴다.
+- **`BUILD_VERSION`:** 무기·적·유물 수치, 판정, 규칙 등 밸런스에 영향을 주는 변경을 할 때마다 손으로 올린다 (형식 `연.월.일-번호`, 같은 날 여러 번이면 번호를 올린다). 연출이나 로그만 바꿨을 때는 올리지 않는다. 로그를 빌드별로 나눠 비교할 때 쓴다.
+
+런 기록 (한 판 1건). 저장할 때는 웨이브 행을 `waves` 배열로 중첩한다.
+
+| 필드 | 내용 |
+|---|---|
+| `schema` | 로그 형식 버전 (1) |
+| `runId` | 시각 + 난수로 만든 고유 ID (중복 제거용) |
+| `sessionId` | 페이지를 연 뒤 한 번 만든 익명 ID. 개인 정보는 없다 |
+| `build` | `BUILD_VERSION` |
+| `endedAt` | 게임오버 시각 (ISO 문자열) |
+| `playSeconds` | `play` 상태에서 흐른 게임 시간(초). 보상 화면 시간은 빠진다 |
+| `weapons` | 무기 슬롯에 들어온 순서 `[{ kind, tier, fromWave }]`. 시작 무기와 보상으로 받은(교체·턴테이블 추가) 무기다. `fromWave`는 그 무기를 처음 쓸 수 있는 웨이브다 |
+| `weaponSwitches` | 턴테이블 전환 횟수 |
+| `relics` | 게임오버 시점의 보유 유물 `[{ id, name, fromWave }]`. `fromWave`는 효과가 처음 적용되는 웨이브(보상 화면에서 얻으면 다음 웨이브, 디버그 지급이면 그 웨이브) |
+| `reachedWave` | 도달 웨이브 |
+| `death` | `{ enemyKind, wave }` 마지막으로 HP를 깎은(사망을 일으킨) 공격의 적 종류와 웨이브 |
+| `judge` | `{ perfect, good, miss }` 적을 맞힌 공격의 판정 횟수 (게임오버 화면의 통계와 같다. 빈 범위를 친 입력은 빠진다) |
+| `timing` | `{ meanError, meanAbsError }` `judge`에 센 공격 중 Miss가 아닌 판정의 입력 오차 평균과 절대값 평균(초). 이름 음수, 늦음 양수. 없으면 null |
+| `hits` | `{ taken, shieldAbsorbed, damageByEnemy }` 적 공격에 맞은 횟수(실드가 다 막은 것 포함), 실드가 막은 피해 합, 적 종류별로 실제로 깎인 HP 합 |
+| `bestHit` | 최고 HIT |
+| `rewards` | 보상 화면 기록 `[{ wave, kind, offered, chosen }]`. `kind`는 `weapon` 또는 `relic`, `offered`는 제시된 카드(무기 키·`keep`, 유물 키·`skip`), `chosen`은 고른 카드다. 턴테이블 빈 슬롯에 넣으면 `added: true`, 슬롯을 바꾸면 `replacedSlot`(1부터), 유물을 바꾸면 `replaced`(빠진 유물 키)가 붙는다. 교체 선택에서 취소하면 같은 항목을 이어서 쓴다 |
+| `waves` | 웨이브 행 배열 |
+
+웨이브 행 (한 웨이브 1건)
+
+| 필드 | 내용 |
+|---|---|
+| `runId`, `wave` | 런 기록과 연결 |
+| `weaponKind` | 그 웨이브를 마칠 때 장착 중이던 무기 |
+| `cleared` | 클리어 여부. 사망한 마지막 웨이브는 false |
+| `seconds` | 웨이브 시작부터 보상 화면이 뜰 때까지(마지막 처치 후 대기 `WAVE_CLEAR_DELAY` 포함, 봇 시뮬레이션 처치 시간과 같은 기준) 또는 사망까지의 게임 시간 |
+| `damageTaken` | 그 웨이브에서 실제로 깎인 HP 합 (실드가 막은 양 제외) |
+| `perfectRate` | `perfect / (perfect + good + miss)`, 판정이 없으면 null |
+
+| 상수 | 기본값 | 설명 |
+|---|---|---|
+| `BUILD_VERSION` | `'2026.11.07-1'` | 빌드 버전. 밸런스를 바꿀 때 손으로 올린다 |
+| `LOG_MAX_RUNS` | 500 | 저장소에 남기는 최근 판 수 |
+| `LOG_STORAGE_KEY` | `'4bit_prototype_logs'` | 로그 저장 키 |
+| `LOG_BACKUP_KEY` | `'4bit_prototype_logs_backup'` | 직전 내보내기 백업 키 |
+| `LOG_WEBHOOK_URL` | `''` | Apps Script 웹훅 주소. 빈 문자열이면 보내지 않는다 |
+| `LOG_DOWNLOAD_GAP_MS` | 400 | 파일 여러 개를 내려받을 때 사이 간격(밀리초) |
+| `LOG_PICKER_ID` | `'4bit-logs'` | 저장 위치 선택 창이 지난번 위치를 기억하는 데 쓰는 이름 |
+| `LOG_NOTICE_TIME` | 2.5 | 내보내기 결과 알림 표시 시간 |
 
 ### 연출
 `HITSTOP_PERFECT`, `HITSTOP_GOOD`, `SHAKE_PERFECT`, `SHAKE_HURT`, `SHAKE_DURATION`, `HURT_FLASH_TIME`, `ENEMY_FLASH_TIME`, `POPUP_TIME`, `IMPACT_TIME`, `MATCH_FLASH_TIME`, `RING_BURST_TIME`, `RING_BURST_SPREAD`, `RING_BURST_ALPHA`, `PARTICLES_PERFECT`, `PARTICLES_KILL`, `PARTICLE_SPEED`, `PARTICLE_TIME`, `SFX_VOLUME`

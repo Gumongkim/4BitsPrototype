@@ -61,6 +61,7 @@ class Game {
   startRun(weaponKind) {
     this.resetRun(weaponKind);
     this.state = 'play';
+    Logger.startRun(this);
     this.emit('runStart', {});
     this.emit('weaponEquip', { kind: this.player.weaponKind, reason: 'start' });
     this.nextWave();
@@ -124,6 +125,7 @@ class Game {
     this.telegraphs = [];
     this.freezeTimer = 0;
     this.enemies = spawnWave(this.wave, (c, r) => this.isOccupied(c, r));
+    Logger.startWave(this);
     this.emit('waveStart', { wave: this.wave });
   }
 
@@ -139,16 +141,18 @@ class Game {
     if (Input.wasPressed('KeyD')) this.debug = !this.debug;
     if (Input.wasPressed('KeyM')) Sfx.muted = !Sfx.muted;
     switch (this.state) {
-      case 'title': this.updateTitle(); break;
+      case 'title': this.updateTitle(dt); break;
       case 'weaponSelect': this.updateWeaponSelect(); break;
       case 'play': this.updatePlay(dt); break;
       case 'reward': this.updateReward(dt); break;
       case 'pick': this.updatePick(dt); break;
-      case 'gameover': this.updateGameOver(); break;
+      case 'gameover': this.updateGameOver(dt); break;
     }
   }
 
-  updateTitle() {
+  // 타이틀과 게임오버 화면에서만 로그 내보내기 키(E, Shift+E, Shift+L, Y)가 동작한다
+  updateTitle(dt) {
+    Logger.handleKeys(this, dt);
     if (Input.wasPressed('Enter')) this.enterWeaponSelect();
   }
 
@@ -166,7 +170,8 @@ class Game {
     if (Input.wasPressed('Enter')) this.startRun(this.weaponKinds[this.weaponIndex]);
   }
 
-  updateGameOver() {
+  updateGameOver(dt) {
+    Logger.handleKeys(this, dt);
     if (Input.wasPressed('Enter') || Input.wasPressed('KeyR')) this.enterWeaponSelect();
     else if (Input.wasPressed('KeyT')) {
       this.resetRun();
@@ -201,12 +206,17 @@ class Game {
       const slots = this.weaponSlotCount;
       if (slots > 1 && player.weapons.length < slots) {
         player.weapons.push(card.weapon);
+        Logger.weaponAcquired(this, card.weapon);
+        Logger.rewardChosen('weapon', card.weapon, { added: true });
       } else if (slots > 1) {
         this.openWeaponReplace(card);
         return;
       } else {
         this.replaceWeapon(0, card.weapon);
+        Logger.rewardChosen('weapon', card.weapon);
       }
+    } else {
+      Logger.rewardChosen('weapon', 'keep');
     }
     Rewards.apply(card, player);
     this.startNextWave();
@@ -217,6 +227,7 @@ class Game {
     const player = this.player;
     const from = player.weapons[slot];
     player.weapons[slot] = kind;
+    Logger.weaponAcquired(this, kind);
     this.emit('weaponRemove', { kind: from });
     this.emit('weaponReplace', { from, to: kind });
     if (player.weaponKind === from) {
@@ -246,6 +257,7 @@ class Game {
           return;
         }
         this.replaceWeapon(i, card.weapon);
+        Logger.rewardChosen('weapon', card.weapon, { replacedSlot: i + 1 });
         this.startNextWave();
       },
     });
@@ -263,6 +275,7 @@ class Game {
   // 웨이브 클리어. RELIC_ENCOUNTER_EVERY의 배수 웨이브면 유물 선택 화면을 먼저 연다.
   enterReward() {
     Sfx.play('clear');
+    Logger.closeWave(this, true);
     this.player.stopRing();
     this.emit('waveClear', { wave: this.wave });
     if (this.wave % CONFIG.RELIC_ENCOUNTER_EVERY === 0) {
@@ -278,6 +291,7 @@ class Game {
   enterWeaponReward() {
     this.state = 'reward';
     this.rewardCards = Rewards.draw(this.player, this.wave);
+    Logger.rewardOffered(this, 'weapon', this.rewardCards.map((c) => c.weapon || 'keep'));
     this.rewardIndex = 0;
     this.rewardLock = CONFIG.REWARD_INPUT_LOCK;
   }
@@ -291,6 +305,7 @@ class Game {
   openRelicSelect(choices) {
     const cards = choices.map((id) => this.relicCard(id));
     cards.push({ name: '건너뛰기', desc: '유물을 받지 않는다', color: COLORS.dim, skip: true });
+    Logger.rewardOffered(this, 'relic', [...choices, 'skip']);
     this.openPicker({
       kind: 'relic',
       title: `WAVE ${this.wave} 클리어`,
@@ -299,9 +314,11 @@ class Game {
       onPick: (i) => {
         const card = cards[i];
         if (card.skip) {
+          Logger.rewardChosen('relic', 'skip');
           this.enterWeaponReward();
         } else if (this.relics.length < CONFIG.RELIC_SLOTS) {
           Relics.add(this, card.relic);
+          Logger.rewardChosen('relic', card.relic);
           this.enterWeaponReward();
         } else {
           this.openRelicReplace(card.relic, choices);
@@ -321,7 +338,9 @@ class Game {
         if (i >= this.relics.length) {
           this.openRelicSelect(choices);
         } else {
+          const replaced = this.relics[i];
           Relics.add(this, id, i);
+          Logger.rewardChosen('relic', id, { replaced });
           this.enterWeaponReward();
         }
       },
@@ -408,6 +427,7 @@ class Game {
 
   updatePlay(dt) {
     const player = this.player;
+    Logger.tick(dt);
     if (this.debug) this.updateDebugRelics();
     this.updateWeaponSwitch();
     player.updateMovement(dt, (c, r) => !!this.enemyAt(c, r));
@@ -450,6 +470,7 @@ class Game {
       if (!Input.wasPressed(`Digit${i + 1}`) || kind === player.weaponKind) return;
       const from = player.weaponKind;
       player.setWeapon(kind);
+      Logger.weaponSwitch();
       this.emit('weaponSwitch', { from, to: kind });
       this.emit('weaponEquip', { kind, reason: 'switch' });
     });
@@ -500,6 +521,7 @@ class Game {
 
     this.waveStats[result.grade]++;
     this.totalStats[result.grade]++;
+    Logger.judge(result.grade, result.error);
     // Miss는 HIT를 올리지도 초기화하지도 않는다
     if (result.grade === 'miss') {
       this.emit('node', node);
@@ -612,17 +634,19 @@ class Game {
       for (const cell of telegraph.cells) {
         this.impacts.push({ col: cell.col, row: cell.row, age: 0 });
       }
-      if (telegraph.covers(player.col, player.row)) this.hurtPlayer(telegraph.damage);
+      if (telegraph.covers(player.col, player.row)) this.hurtPlayer(telegraph.damage, telegraph.owner.kind);
     }
     this.telegraphs = this.telegraphs.filter((t) => !t.finished);
   }
 
   // 실드가 있으면 피해 1점당 실드 1점이 먼저 막는다
-  hurtPlayer(amount) {
+  // enemyKind: 공격한 적의 종류. 로그(피격·사망 원인)에만 쓴다.
+  hurtPlayer(amount, enemyKind = null) {
     const player = this.player;
     const absorbed = Math.min(player.shield, amount);
     player.shield -= absorbed;
     amount -= absorbed;
+    Logger.hurt(enemyKind, Math.min(player.hp, Math.max(0, amount)), absorbed);
     this.emit('playerHurt', { amount, absorbed });
     if (amount <= 0) {
       this.shake(CONFIG.SHAKE_PERFECT);
@@ -636,6 +660,7 @@ class Game {
     if (player.hp === 0) {
       Sfx.play('gameover');
       this.state = 'gameover';
+      Logger.finishRun(this);
     }
   }
 
