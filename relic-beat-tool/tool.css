@@ -76,7 +76,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
   background: var(--panel);
   border-bottom: 1px solid var(--edge);
 }
-.top-title { display: grid; gap: 6px; min-width: 210px; }
+.top-title { display: grid; grid-template-columns: auto auto; gap: 6px 10px; align-items: center; min-width: 210px; }
+.top-title h1 { grid-column: 1 / -1; }
 .scale-pick { display: flex; align-items: center; gap: 6px; color: var(--dim); font-size: 12px; }
 #mix-bar { flex: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 .mix-slot {
@@ -218,13 +219,13 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 }
 .editor-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
 .editor-title { font-weight: bold; font-size: 15px; margin-right: 8px; }
-#editor-wrap { position: relative; user-select: none; }
+#editor-wrap { position: relative; user-select: none; overflow-x: auto; }
 #editor {
   display: grid;
   grid-template-columns: 44px repeat(32, minmax(16px, 1fr));
   border-right: 1px solid var(--edge-strong);
 }
-#editor .beat-num { height: 20px; color: var(--dim); font-size: 11px; text-align: left; padding-left: 3px; border-left: 2px solid var(--edge-strong); }
+#editor .beat-num { white-space: nowrap; overflow: visible; height: 20px; color: var(--dim); font-size: 11px; text-align: left; padding-left: 3px; border-left: 2px solid var(--edge-strong); }
 #editor .beat-num.half { border-left: 1px solid var(--edge); }
 #editor .corner { height: 20px; }
 #editor .row-label {
@@ -246,6 +247,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 }
 #editor .cell.beat { border-left: 2px solid var(--edge-strong); }
 #editor .cell.bar { border-left: 2px solid #7380b8; }
+#editor .cell.eighth { border-left: 1px solid #343b58; }
 #editor .cell.alt { background: #1b1f30; }
 #editor .cell:hover { background: #2a3150; }
 #editor .cell.on { background: var(--note); }
@@ -331,3 +333,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .modal-body { font-size: 13px; line-height: 1.6; color: var(--text); white-space: pre-line; overflow-wrap: anywhere; }
 .modal-body ul { margin: 6px 0; padding-left: 18px; }
 .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+#globals input[type="number"] { width: 56px; }
+/* 15행 편집기: 행 높이를 줄여 한 화면에 들어오게 한다 */
+#editor.rows15 .cell, #editor.rows15 .row-label { height: 18px; font-size: 10px; }
+#relic-settings select { margin-left: auto; }

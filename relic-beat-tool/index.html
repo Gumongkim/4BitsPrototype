@@ -10,8 +10,17 @@
 <header id="top">
   <div class="top-title">
     <h1>유물 비트 메이커</h1>
+    <label class="scale-pick" title="모든 음을 C에서 이만큼 올린다 (스케일 이름은 C 기준 그대로)">키
+      <select id="root"></select>
+    </label>
     <label class="scale-pick">스케일
       <select id="scale"></select>
+    </label>
+    <label class="scale-pick" title="음높이 악기의 행 수. 15행이면 스케일 음을 두 옥타브 남짓 쌓는다">행
+      <select id="pitch-rows">
+        <option value="8">8행</option>
+        <option value="15">15행</option>
+      </select>
     </label>
   </div>
   <div id="mix-bar"></div>
@@ -20,16 +29,48 @@
     <button id="mix-random" title="전체 유물 중에서 무작위로 골라 5칸을 새로 채운다">랜덤 믹스</button>
   </div>
   <div id="globals">
+    <label class="g-item" title="4분음표 기준 템포 (60~180). 재생 중에 바꾸면 처음부터 다시 재생한다">템포
+      <input type="number" id="bpm" min="60" max="180" step="1" value="130">
+      <span class="g-value">BPM</span>
+    </label>
+    <label class="g-item" title="1칸의 길이. 8분 = 32칸, 16분 = 64칸 (루프는 둘 다 4마디)">격자
+      <select id="grid">
+        <option value="8">8분 (32칸)</option>
+        <option value="16">16분 (64칸)</option>
+      </select>
+    </label>
+    <label class="g-item" title="홀수 칸 시작을 swing x 1칸 늦춘다. 8분 격자는 8분 스윙, 16분 격자는 16분 스윙. 33% 근처가 셔플">스윙
+      <input type="range" id="swing" min="0" max="50" step="1" value="0">
+      <span id="swing-label" class="g-value">0%</span>
+    </label>
+    <label class="g-item" title="공통 딜레이 시간 (음표 길이 x 60 / BPM초)">딜레이
+      <select id="delay-note">
+        <option value="1/8">8분</option>
+        <option value="3/16">점8분</option>
+        <option value="1/4">4분</option>
+        <option value="3/8">점4분</option>
+      </select>
+    </label>
     <label class="g-item" title="미리듣기 전용 킥·스네어. 설계서에는 들어가지 않는다">데모 드럼
       <select id="demo-drum"></select>
     </label>
+    <label class="g-item check" title="데모 드럼 킥 소리"><input type="checkbox" id="drum-kick"> 킥</label>
+    <label class="g-item" title="데모 드럼 킥 음색">
+      <select id="kick-sound">
+        <option value="kick">기본 킥</option>
+        <option value="kick909">909 킥</option>
+      </select>
+    </label>
+    <label class="g-item check" title="데모 드럼 스네어·클랩 소리"><input type="checkbox" id="drum-snare"> 스네어</label>
     <label class="g-item">드럼 볼륨
       <input type="range" id="drum-volume" min="0" max="150" step="5" value="100">
       <span id="drum-volume-label" class="g-value">100%</span>
     </label>
-    <label class="g-item" title="홀수 칸(뒤 반박) 시작을 swing x 0.15초 늦춘다. 33% 근처가 셔플">스윙
-      <input type="range" id="swing" min="0" max="50" step="1" value="0">
-      <span id="swing-label" class="g-value">0%</span>
+    <label class="g-item" title="사이드체인(펌핑)을 거는 시각. 데모 킥 = 데모 드럼 킥이 울릴 때, 4분 정박 = 소리 없이 매 박 머리">펌핑 기준
+      <select id="pump-source">
+        <option value="demo">데모 킥</option>
+        <option value="quarter">4분 정박 (소리 없음)</option>
+      </select>
     </label>
     <label class="g-item check" title="재생에만 얹는 아주 작은 노이즈와 크랙. 설계서·WAV에는 없다">
       <input type="checkbox" id="vinyl"> 바이닐 노이즈
@@ -77,7 +118,7 @@
       <span id="editor-title" class="editor-title"></span>
       <span id="editor-meta" class="hint inline"></span>
     </div>
-    <span class="hint inline">칸 클릭: 찍기 / 지우기 · 드래그: 연속 입력 · Shift+클릭 또는 우클릭: 세기 바꾸기 · 노트 오른쪽 끝 끌기: 길이 · 1칸 = 0.5박(0.15초)</span>
+    <span class="hint inline">칸 클릭: 찍기 / 지우기 · 드래그: 연속 입력 · Shift+클릭 또는 우클릭: 세기 바꾸기 · 노트 오른쪽 끝 끌기: 길이 · <span id="step-hint"></span></span>
   </div>
   <div class="editor-tools">
     <span class="tool-label">입력 세기</span>
@@ -85,8 +126,11 @@
     <label class="tool-label">새 노트 길이
       <select id="new-length"></select>
     </label>
-    <label class="tool-label" title="한 칸(0.15초) 안에서 같은 노트를 N번 나눠 친다 (하이햇·스네어 롤)">롤
+    <label class="tool-label" title="한 칸 안에서 같은 노트를 N번 나눠 친다 (하이햇·스네어 롤)">롤
       <select id="new-repeat"></select>
+    </label>
+    <label class="tool-label" title="칸을 누르면 그 행을 근음으로 스케일 위에 쌓은 음들을 한 번에 찍는다 (음높이 악기만, 행 범위를 넘는 음은 뺀다)">코드
+      <select id="chord-mode"></select>
     </label>
     <span id="length-note" class="hint inline"></span>
   </div>
@@ -112,12 +156,16 @@
     <div id="mix-settings"></div>
   </section>
   <section>
+    <h2 class="section-title">유물 설정</h2>
+    <div id="relic-settings"></div>
+  </section>
+  <section>
     <h2 class="section-title">정보</h2>
     <dl id="info" class="info"></dl>
   </section>
   <section>
     <h2 class="section-title">시간 기준</h2>
-    <p class="hint">1박 0.3초 (게임의 링 박자와 같음), 노트 단위 0.5박 = 0.15초. 16박 = 32칸 = 4.8초 루프를 반복한다.<br>
+    <p class="hint">템포는 위 '템포'(기본 130BPM, 4분음표 기준)를 따른다. 1박 = 4분음표, 루프 = 16박 = 4마디를 반복한다. 격자 8분이면 1칸 = 8분음표(32칸), 16분이면 1칸 = 16분음표(64칸)다.<br>
     스케일은 모든 유물에 하나다. 음높이 악기는 스케일 음 8행, 타악·노이즈 악기는 1행이다.</p>
   </section>
 </aside>

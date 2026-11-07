@@ -1,16 +1,22 @@
-// 유물 비트 메이커. 유물마다 악기 하나로 16박 비트를 찍고, 최대 5개를 겹쳐 들어 보고,
+// 유물 비트 메이커. 유물마다 악기 하나로 16박(130BPM 4마디) 비트를 찍고, 최대 5개를 겹쳐 들어 보고,
 // 설계서(.md)와 WAV로 내보낸다. 게임 코드와 독립이다. 소리는 Web Audio API로 합성한다.
 
 // ---------------------------------------------------------------------------
 // 상수
 // ---------------------------------------------------------------------------
 const TOOL = {
-  BEAT_SECONDS: 0.3,            // 1박. 게임의 링 박자와 같다.
-  STEP_SECONDS: 0.15,           // 노트 입력 단위 0.5박
-  BEATS: 16,
-  STEPS: 32,                    // 16박 = 32칸
-  LOOP_SECONDS: 4.8,            // 32칸 x 0.15초
-  PITCH_ROWS: 8,                // 음높이 악기의 행 수 (스케일 음 8개)
+  // 템포와 격자는 전체 설정(state.bpm, state.grid)이다. 칸 수·칸 시간·루프 길이는 gridSteps(), stepSeconds(), loopSeconds()로 계산한다.
+  DEFAULT_BPM: 130,             // 4분음표 기준
+  BPM_MIN: 60,
+  BPM_MAX: 180,
+  DEFAULT_GRID: 8,              // 8 = 1칸이 8분음표(32칸), 16 = 1칸이 16분음표(64칸)
+  GRIDS: [8, 16],
+  BEATS: 16,                    // 루프 = 16박 = 4마디 (4/4), 1박 = 4분음표
+  PITCH_ROWS: 8,                // 음높이 악기의 기본 행 수 (스케일 음 8개)
+  PITCH_ROW_CHOICES: [8, 15],   // 행 수 선택 (15행이면 스케일 음을 두 옥타브 남짓 쌓는다)
+  ROOT_MAX: 11,                 // 키: C에서 올린 반음 수 0~11
+  OCTAVE_SHIFT_MIN: -2,         // 유물별 옥타브 이동
+  OCTAVE_SHIFT_MAX: 2,
   MIX_SLOTS: 5,                 // 믹스 바 칸 수. 게임의 유물 소지 상한과 같다.
   NAME_MAX: 30,
   DEFAULT_SCALE: 'C 마이너 펜타토닉',
@@ -34,11 +40,15 @@ const TOOL = {
   VELOCITY_STRONG_MIN: 0.85,    // 설계서 표기: 이상이면 표기 없음(강), VELOCITY_MEDIUM_MIN 이상이면 @m(중), 그 아래는 @w(약)
   VELOCITY_MEDIUM_MIN: 0.55,
   // 노트 길이(칸 수). 음높이 악기만 쓴다. 루프 끝을 넘으면 루프 끝에서 자른다.
-  NOTE_LENGTHS: [1, 2, 4, 8],
+  NOTE_LENGTHS: { 8: [1, 2, 4, 8], 16: [1, 2, 4, 8, 16] }, // 격자별 '새 노트 길이' 선택지 (칸)
   // 노트 롤(repeat): 한 칸 안에서 같은 노트를 균등하게 나눠 치는 횟수. 롤 노트는 길이를 쓰지 않는다(1칸).
   NOTE_REPEATS: [1, 2, 3, 4],
   REPEAT_MAX: 4,
   RESIZE_HANDLE_PX: 7,          // 노트 오른쪽 끝에서 이 폭 안을 끌면 길이를 바꾼다
+  CELL_MIN_PX_8: 16,            // 편집기 칸 최소 너비 (8분 격자 32칸)
+  CELL_MIN_PX_16: 14,           // 편집기 칸 최소 너비 (16분 격자 64칸). 화면이 좁으면 가로 스크롤
+  SWEEP_DEFAULT_FROM: 0.8,      // 필터 스윕을 켤 때 시작값 (약 1.5kHz)
+  SWEEP_DEFAULT_TO: 0,          // 필터 스윕을 켤 때 끝값 (20kHz, 빌드업처럼 열린다)
   // 데모 드럼(미리듣기 전용, 설계서에 없음)
   DEMO_DRUM_VOLUME_MAX: 1.5,
   // 사이드체인: 데모 드럼 킥마다 유물 소리를 (1 - sidechain)까지 ATTACK초 동안 눌렀다가 RELEASE초 동안 되돌린다
@@ -50,8 +60,10 @@ const TOOL = {
   REVERB_SECONDS: 1.6,
   REVERB_DECAY_POWER: 3,        // 임펄스 감쇠 곡선 (1 - t/길이)^이 값
   REVERB_SEED: 20261107,
-  // 공통 딜레이: 1.5박(점8분) 피드백 딜레이, 피드백 경로에 로우패스
-  DELAY_TIME: 0.45,
+  // 공통 딜레이: 피드백 딜레이, 피드백 경로에 로우패스. 시간 = 음표 길이(박) x 60 / bpm초.
+  DELAY_NOTES: { '1/8': 0.5, '3/16': 0.75, '1/4': 1, '3/8': 1.5 }, // 음표 -> 박 수 (3/16 = 점8분, 3/8 = 점4분)
+  DEFAULT_DELAY_NOTE: '3/8',    // 130BPM에서 90/130초 = 이전 고정값과 같다
+  DELAY_MAX_SECONDS: 2,         // 딜레이가 1초를 넘을 때의 createDelay 최대 시간 (60BPM 점4분 1.5초보다 크게). 1초 이하면 1
   DELAY_FEEDBACK: 0.35,
   DELAY_FEEDBACK_LOWPASS: 3000,
   // 로파이: 계단 곡선(비트 감소 느낌) + 로우패스. lofi 0~1에 따라 비트와 컷오프가 줄어든다.
@@ -86,7 +98,13 @@ const SCALES = {
   'C 장음계': [0, 2, 4, 5, 7, 9, 11],
   'C 도리안': [0, 2, 3, 5, 7, 9, 10],
   'C 블루스': [0, 3, 5, 6, 7, 10],
+  'C 프리지안': [0, 1, 3, 5, 7, 8, 10],
+  'C 믹솔리디안': [0, 2, 4, 5, 7, 9, 10],
+  'C 하모닉 마이너': [0, 2, 3, 5, 7, 8, 11],
+  'C 리디안': [0, 2, 4, 6, 7, 9, 11],
+  'C 반음계': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
 };
+// 키(root)는 스케일 전체를 C에서 root 반음 올린다. 스케일 이름은 C 기준 그대로 둔다.
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
@@ -107,6 +125,8 @@ const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 
 //   params.hold: 초. 게이트의 하한이다. 게이트 = max(노트 길이, attack + decay, hold).
 //   params.filterLfo: { rate, depth } 사인 LFO가 메인 필터 주파수에 ±depth Hz를 더한다 (rate Hz). 메인 필터가 있어야 하고
 //     주파수가 0 이하로 내려가지 않게 depth < filter.freq로 정한다.
+//   params.spread: 0~1. 오실레이터들을 좌우로 벌린다(첫 오실레이터 -spread, 마지막 +spread, 사이는 고르게).
+//   params.formants: [{ freq, Q, gain }] 있으면 메인 필터 대신 병렬 밴드패스들을 지나 합친다(보컬 모음). filter보다 우선한다.
 //   category: 프리셋 목록의 묶음 (drums, bass, guitar, keys, synth, fx). 없으면 '기존 악기'.
 const PRESETS = [
   { id: 'low_tom', name: '로우 톰', pitched: false, params: {
@@ -265,10 +285,10 @@ const PRESETS = [
     oscs: [{ type: 'sawtooth', detune: -10, gain: 1 }, { type: 'sawtooth', gain: 1 }, { type: 'sawtooth', detune: 10, gain: 1 }],
     filter: { type: 'lowpass', freq: 3000, Q: 1.5, from: 6500, sweep: 0.05 },
     env: { attack: 0.003, decay: 0.14, sustain: 0.2, release: 0.06 }, gain: 0.25 } },
-  // 워블 베이스: 베이스 뮤직용. 필터 LFO가 1박(0.3초)에 한 번(3.33Hz) 필터를 열고 닫는다.
+  // 워블 베이스: 베이스 뮤직용. 필터 LFO가 1박(130BPM 4분음표)에 한 번(130 / 60 = 약 2.17Hz) 필터를 열고 닫는다.
   { id: 'wobble_bass', name: '워블 베이스', pitched: true, octave: 2, category: 'synth', params: {
     oscs: [{ type: 'sawtooth', detune: -12, gain: 1 }, { type: 'sawtooth', detune: 12, gain: 1 }, { type: 'square', gain: 0.5 }],
-    filter: { type: 'lowpass', freq: 700, Q: 5 }, filterLfo: { rate: 3.33, depth: 500 },
+    filter: { type: 'lowpass', freq: 700, Q: 5 }, filterLfo: { rate: 130 / 60, depth: 500 },
     distortion: { drive: 4 },
     env: { attack: 0.004, decay: 0.2, sustain: 0.7, release: 0.06 }, hold: 0.3, gain: 0.22 } },
   // 효과음
@@ -283,7 +303,7 @@ const PRESETS = [
     filter: { type: 'lowpass', freq: 5000, Q: 1 },
     env: { attack: 0.001, decay: 0.16, sustain: 0, release: 0.02 }, gain: 0.3 } },
   // 하우스·딥하우스용 (맨 뒤에 붙인다)
-  // 하우스 오르간 스탭: 짧고 밝은 사각파 스탭. 1칸(0.15초)으로 끊어 치면 M1 오르간 스탭 느낌.
+  // 하우스 오르간 스탭: 짧고 밝은 사각파 스탭. 1칸(8분음표)으로 끊어 치면 M1 오르간 스탭 느낌.
   { id: 'house_organ', name: '하우스 오르간', pitched: true, octave: 3, category: 'keys', params: {
     oscs: [{ type: 'square', gain: 1 }, { type: 'square', ratio: 2, gain: 0.45 }, { type: 'triangle', ratio: 0.5, gain: 0.5 }],
     filter: { type: 'lowpass', freq: 3200, Q: 1.2, from: 5200, sweep: 0.05 },
@@ -308,6 +328,44 @@ const PRESETS = [
   { id: 'clave', name: '클라베', pitched: false, category: 'drums', params: {
     oscs: [{ type: 'sine', fixed: 2400, gain: 1 }, { type: 'triangle', fixed: 3600, gain: 0.3 }],
     env: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.02 }, gain: 0.4 } },
+  // 하우스·일렉트로닉 팝용 2차 (맨 뒤에 붙인다)
+  // 보컬 챱: 톱니파 둘이 '아' 모음 포먼트 밴드패스 3개를 지난다. 짧게 끊어 치면 보컬 샘플 조각처럼 들린다.
+  { id: 'vocal_chop', name: '보컬 챱', pitched: true, octave: 3, category: 'synth', params: {
+    oscs: [{ type: 'sawtooth', gain: 1 }, { type: 'sawtooth', detune: 6, gain: 0.6 }],
+    formants: [{ freq: 730, Q: 8, gain: 1 }, { freq: 1090, Q: 10, gain: 0.7 }, { freq: 2440, Q: 12, gain: 0.3 }],
+    vibrato: { rate: 5, depth: 10, delay: 0.1 },
+    env: { attack: 0.01, decay: 0.15, sustain: 0.45, release: 0.08 }, gain: 0.7 } }, // 포먼트 밴드패스가 대부분을 깎아 초안 0.3은 피크 0.25라 올렸다
+  // 하우스 피아노: M1 계열 피아노 스탭. 밝은 FM 어택과 배음, 필터가 빠르게 닫힌다. 코드로 끊어 친다.
+  { id: 'house_piano', name: '하우스 피아노', pitched: true, octave: 3, category: 'keys', params: {
+    oscs: [{ type: 'triangle', gain: 1 }, { type: 'sine', ratio: 2, gain: 0.5 }, { type: 'square', ratio: 4, gain: 0.08 }],
+    fm: { ratio: 3, index: 1.2, decay: 0.08 },
+    filter: { type: 'lowpass', freq: 3500, Q: 0.8, from: 7000, sweep: 0.08 },
+    env: { attack: 0.002, decay: 0.45, sustain: 0.15, release: 0.15 }, gain: 0.3 } },
+  // 퓨처 코드: 디튠 톱니 3개 + 한 옥타브 아래 사각파. 필터 엔벨로프가 열렸다 닫히고 좌우로 넓다(spread).
+  { id: 'future_chord', name: '퓨처 코드', pitched: true, octave: 3, category: 'synth', params: {
+    oscs: [{ type: 'sawtooth', detune: -15, gain: 1 }, { type: 'square', ratio: 0.5, gain: 0.3 }, { type: 'sawtooth', gain: 1 }, { type: 'sawtooth', detune: 15, gain: 1 }],
+    filter: { type: 'lowpass', freq: 1800, Q: 3, from: 6000, sweep: 0.18 }, spread: 0.6,
+    env: { attack: 0.005, decay: 0.25, sustain: 0.4, release: 0.12 }, gain: 0.2 } },
+  // 리스 베이스: 디튠 톱니 2개의 느린 맥놀이(위상 흔들림)와 서브. 드럼앤베이스·딥하우스 저음.
+  { id: 'reese_bass', name: '리스 베이스', pitched: true, octave: 2, category: 'bass', params: {
+    oscs: [{ type: 'sawtooth', detune: -18, gain: 1 }, { type: 'sawtooth', detune: 18, gain: 1 }, { type: 'sine', ratio: 0.5, gain: 0.6 }],
+    filter: { type: 'lowpass', freq: 900, Q: 1 }, distortion: { drive: 2 },
+    env: { attack: 0.01, decay: 0.3, sustain: 0.8, release: 0.1 }, gain: 0.25 } },
+  // 핑거 스냅: 밴드패스 노이즈의 짧은 딱 소리와 약한 사인.
+  { id: 'finger_snap', name: '핑거 스냅', pitched: false, category: 'drums', params: {
+    oscs: [{ type: 'sine', fixed: 1800, gain: 0.2 }],
+    noise: { gain: 1, filter: { type: 'bandpass', freq: 2600, Q: 3 } },
+    env: { attack: 0.001, decay: 0.06, sustain: 0, release: 0.02 }, gain: 1.5 } }, // 초안 0.6은 피크 0.17로 너무 작아 올렸다
+  // 노이즈 다운리프터: 노이즈 전용 밴드패스가 9kHz에서 300Hz로 내려간다. 드롭 직후·전환용.
+  { id: 'noise_down', name: '노이즈 다운리프터', pitched: false, category: 'fx', params: {
+    noise: { gain: 1, filter: { type: 'bandpass', freq: 300, Q: 1.2, from: 9000, sweep: 1 } },
+    env: { attack: 0.005, decay: 0.95, sustain: 0, release: 0.1 }, gain: 0.35 } },
+  // 슈퍼소 패드: 디튠 톱니 5개를 좌우로 넓게 벌린(spread) 느린 패드.
+  { id: 'supersaw_pad', name: '슈퍼소 패드', pitched: true, octave: 3, category: 'synth', params: {
+    oscs: [{ type: 'sawtooth', detune: -24, gain: 0.7 }, { type: 'sawtooth', detune: -12, gain: 0.9 }, { type: 'sawtooth', gain: 1 },
+      { type: 'sawtooth', detune: 12, gain: 0.9 }, { type: 'sawtooth', detune: 24, gain: 0.7 }],
+    filter: { type: 'lowpass', freq: 2500, Q: 0.7 }, spread: 0.9,
+    env: { attack: 0.25, decay: 0.5, sustain: 0.7, release: 0.6 }, gain: 0.14 } },
 ];
 
 // 프리셋 목록의 묶음 순서. category가 없는 프리셋(처음 15종)은 '기존 악기'로 원래 순서대로 맨 뒤에 둔다.
@@ -331,22 +389,29 @@ const DEMO_DRUM_SOUNDS = {
     oscs: [{ type: 'triangle', fixed: 185, gain: 0.5 }],
     noise: { gain: 1, filter: { type: 'bandpass', freq: 2000, Q: 0.8 } },
     env: { attack: 0.001, decay: 0.16, sustain: 0, release: 0.03 }, gain: 0.55 } },
+  // 909 계열 킥: 더 길고 둥근 몸통, 짧은 고음 클릭 노이즈, 약한 포화. '킥 음색'에서 고른다.
+  kick909: { name: '데모 909 킥', pitched: false, params: {
+    oscs: [{ type: 'sine', fixed: 55, gain: 1 }], pitchSlide: { semis: 30, time: 0.05 },
+    noise: { gain: 0.15, filter: { type: 'highpass', freq: 3000, Q: 0.7 } }, distortion: { drive: 1.5 },
+    env: { attack: 0.001, decay: 0.45, sustain: 0, release: 0.05 }, gain: 0.85 } }, // 0.95는 포화 때문에 피크 1.03이라 낮췄다
   clap: { name: '데모 클랩', pitched: false, params: {
     noise: { gain: 1 }, filter: { type: 'bandpass', freq: 1300, Q: 1.2 },
     bursts: { count: 3, gap: 0.01 }, env: { attack: 0.001, decay: 0.18, sustain: 0, release: 0.03 }, gain: 0.7 } },
 };
 
-// 데모 드럼 패턴. 박 번호 표기(1 = 1박 앞, 15.5 = 15박 뒤 반박)이고 칸 번호로 바꿔 쓴다.
+// 데모 드럼 패턴. 한 마디의 16분 칸(0~15, 0 = 1박, 4 = 2박, 8 = 3박, 12 = 4박)이고 4마디에 반복한다.
+// 8분 격자에서는 짝수 16분 칸만 울린다(홀수 16분 칸 타격은 빠진다). snareSounds는 겹쳐 내는 소리들이다.
 const DEMO_DRUMS = {
   none: { name: '없음' },
-  rock: { name: '록/J-pop', kick: [1, 4, 5, 8, 9, 12, 13, 15.5], snare: [3, 7, 11, 15], snareSound: 'snare' },
-  boombap: { name: '붐뱁', kick: [1, 4, 6.5, 9, 12, 14.5], snare: [3, 7, 11, 15], snareSound: 'snare' },
-  house: { name: '하우스/EDM', kick: [1, 3, 5, 7, 9, 11, 13, 15], snare: [3, 7, 11, 15], snareSound: 'clap' },
+  rock: { name: '록/J-pop', kick: [0, 7, 8, 10], snare: [4, 12], snareSounds: ['snare'] },
+  boombap: { name: '붐뱁', kick: [0, 7, 10], snare: [4, 12], snareSounds: ['snare'] },
+  house: { name: '하우스/EDM', kick: [0, 4, 8, 12], snare: [4, 12], snareSounds: ['clap'] },
+  electropop: { name: '일렉트로닉 팝', kick: [0, 6, 8, 11], snare: [4, 12], snareSounds: ['clap', 'snare'] },
+  twostep: { name: '투스텝/UK 개러지', kick: [0, 7, 10], snare: [4, 12], snareSounds: ['snare'] },
 };
-const beatToStep = (beat) => Math.round((beat - 1) * 2);
 for (const p of Object.values(DEMO_DRUMS)) {
-  p.kickSteps = new Set((p.kick || []).map(beatToStep));
-  p.snareSteps = new Set((p.snare || []).map(beatToStep));
+  p.kickSet = new Set(p.kick || []);
+  p.snareSet = new Set(p.snare || []);
 }
 const PRESET_BY_ID = Object.fromEntries(PRESETS.map((p) => [p.id, p]));
 
@@ -362,26 +427,49 @@ function midiToFreq(midi) {
 }
 
 // 음높이 악기 row행의 MIDI 번호. 타악은 null.
-function rowMidi(preset, row, scaleName) {
+// 키(state.root 반음)와 유물의 옥타브 이동(relic.octaveShift x 12)을 더한다. 0~127을 벗어나면 옥타브 단위로 안으로 접는다.
+function rowMidi(preset, row, scaleName, relic = null) {
   if (!preset.pitched) return null;
   const scale = SCALES[scaleName];
-  return 12 * (preset.octave + 1) + scale[row % scale.length] + 12 * Math.floor(row / scale.length);
+  let midi = 12 * (preset.octave + 1) + scale[row % scale.length] + 12 * Math.floor(row / scale.length);
+  midi += state.root + 12 * octaveShift(relic);
+  while (midi > 127) midi -= 12;
+  while (midi < 0) midi += 12;
+  return midi;
+}
+// 키를 반영한 스케일 이름. root 0이면 스케일 이름 그대로, 아니면 "A 자연 단음계 (C 자연 단음계 + root 9)".
+const keyScaleName = (scale = state.scale, root = state.root) => (root ? `${NOTE_NAMES[root]}${scale.slice(1)} (${scale} + root ${root})` : scale);
+const octaveShift = (relic) => (relic && Number.isInteger(relic.octaveShift) ? clamp(relic.octaveShift, TOOL.OCTAVE_SHIFT_MIN, TOOL.OCTAVE_SHIFT_MAX) : 0);
+
+// 음높이 악기의 행 수는 전체 설정 pitchRows(8 또는 15)다. 타악은 1행.
+function rowCount(preset, pitchRows = state.pitchRows) {
+  return preset.pitched ? pitchRows : 1;
 }
 
-function rowCount(preset) {
-  return preset.pitched ? TOOL.PITCH_ROWS : 1;
+// 칸 번호 -> "박.위치". 8분 격자: 0 -> 1.0, 1 -> 1.5. 16분 격자: 0 -> 1.0, 1 -> 1.25, 2 -> 1.5, 3 -> 1.75.
+const STEP_FRACTIONS = { 8: ['0', '5'], 16: ['0', '25', '5', '75'] };
+function stepLabel(step, grid = state.grid) {
+  const per = grid / 4;
+  return `${Math.floor(step / per) + 1}.${STEP_FRACTIONS[grid][step % per]}`;
 }
 
-// 칸 번호 -> "박.위치" (0 -> 1.0, 1 -> 1.5)
-function stepLabel(step) {
-  return `${Math.floor(step / 2) + 1}.${step % 2 ? 5 : 0}`;
-}
+// 격자와 템포에서 계산하는 시간 값. 루프는 항상 16박(4마디)이다.
+const gridSteps = (grid = state.grid) => (grid === 16 ? 64 : 32);
+const stepsPerBeat = (grid = state.grid) => grid / 4;
+// 1칸 시간(초). 8분 격자 30 / bpm, 16분 격자 15 / bpm (나눗셈 한 번이라 130BPM 8분은 이전 상수 30 / 130과 같다)
+const stepSeconds = () => (state.grid === 16 ? 15 : 30) / state.bpm;
+const loopSeconds = () => gridSteps() * stepSeconds();
+const delaySeconds = () => TOOL.DELAY_NOTES[state.delayNote] * 60 / state.bpm;
+const noteLengthChoices = () => TOOL.NOTE_LENGTHS[state.grid];
+// 칸의 한 마디 안 16분 위치(0~15). 데모 드럼 패턴을 찾을 때 쓴다.
+const sixteenthInBar = (step) => (state.grid === 16 ? step % 16 : (step % 8) * 2);
 
 // ---------------------------------------------------------------------------
 // 상태와 저장
 // ---------------------------------------------------------------------------
 // relic: { id, name, preset, notes: [{ step, row, velocity?, length? }], volume, checked,
-//          sidechain?, reverbSend?, delaySend?, lofi?, lowCut?, highCut? }  (?는 없으면 기본값: velocity 1, length 1, 나머지 0)
+//          sidechain?, reverbSend?, delaySend?, lofi?, lowCut?, highCut?,   (?는 없으면 기본값: velocity 1, length 1, 나머지 0)
+//          swing?(없으면 전체 스윙), octaveShift?(0), pan?(0), filterSweep?({ from, to }, 없으면 없음) }
 // mix: 칸마다 { relicId, volume } 또는 null
 function defaultState() {
   return {
@@ -390,7 +478,17 @@ function defaultState() {
     selectedId: null,
     mix: Array(TOOL.MIX_SLOTS).fill(null),
     nextId: 1,
+    bpm: TOOL.DEFAULT_BPM, // 템포 (4분음표 기준, 정수 BPM_MIN ~ BPM_MAX)
+    grid: TOOL.DEFAULT_GRID, // 8 (32칸) 또는 16 (64칸)
+    delayNote: TOOL.DEFAULT_DELAY_NOTE, // 공통 딜레이 음표 (DELAY_NOTES 키)
+    root: 0,               // 키: C에서 올린 반음 수 (0~11)
+    pitchRows: TOOL.PITCH_ROWS, // 음높이 악기 행 수 (8 또는 15)
     drum: 'none',          // 데모 드럼 패턴 (DEMO_DRUMS 키)
+    drumKick: true,        // 데모 드럼 킥 소리 켜기
+    kickSound: 'kick',     // 데모 드럼 킥 음색 ('kick' 기본 / 'kick909')
+    chordMode: 'none',     // 코드 찍기 도우미 (CHORD_SHAPES 키)
+    drumSnare: true,       // 데모 드럼 스네어·클랩 소리 켜기
+    pumpSource: 'demo',    // 사이드체인 기준: 'demo'(데모 드럼 킥) 또는 'quarter'(소리 없이 4분음표마다)
     drumVolume: 1,
     swing: 0,              // 0 ~ SWING_MAX
     vinyl: false,          // 바이닐 노이즈 (재생 전용)
@@ -403,6 +501,40 @@ function defaultState() {
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const num = (v, fallback) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
+const clampBpm = (v) => clamp(Math.round(num(v, TOOL.DEFAULT_BPM)), TOOL.BPM_MIN, TOOL.BPM_MAX);
+const clampRoot = (v) => clamp(Math.round(num(v, 0)), 0, TOOL.ROOT_MAX);
+
+// 코드 찍기 도우미: 누른 행을 근음으로 스케일 위에 쌓는 행 간격 (행 = 스케일 음 한 칸)
+const CHORD_SHAPES = {
+  none: { name: '없음', rows: [0] },
+  triad: { name: '3화음', rows: [0, 2, 4] },
+  seventh: { name: '7화음', rows: [0, 2, 4, 6] },
+  sus4: { name: 'sus4', rows: [0, 3, 4] },
+  add9: { name: 'add9', rows: [0, 2, 4, 8] },
+};
+
+// 유물의 단계 2·3 선택 항목을 정리한다. 기본값이면 지운다(없으면 기본값으로 읽는다).
+//   swing: 0~SWING_MAX (없으면 전체 스윙), octaveShift: 정수 -2~2, pan: -1~1, filterSweep: { from, to } 각 0~1
+const RELIC_EXTRA_FIELDS = ['swing', 'octaveShift', 'pan', 'filterSweep'];
+function normalizeRelicExtras(r) {
+  if (typeof r.swing === 'number' && Number.isFinite(r.swing)) r.swing = clamp(r.swing, 0, TOOL.SWING_MAX);
+  else delete r.swing;
+  const shift = clamp(Math.round(num(r.octaveShift, 0)), TOOL.OCTAVE_SHIFT_MIN, TOOL.OCTAVE_SHIFT_MAX);
+  if (shift) r.octaveShift = shift;
+  else delete r.octaveShift;
+  const pan = clamp(num(r.pan, 0), -1, 1);
+  if (pan) r.pan = pan;
+  else delete r.pan;
+  const fs = r.filterSweep;
+  if (fs && typeof fs === 'object' && (num(fs.from, 0) > 0 || num(fs.to, 0) > 0)) {
+    r.filterSweep = { from: clamp(num(fs.from, 0), 0, 1), to: clamp(num(fs.to, 0), 0, 1) };
+  } else {
+    delete r.filterSweep;
+  }
+  return r;
+}
+// 유물이 쓰는 스윙: 자기 값이 있으면 그 값, 없으면 전체 스윙
+const relicSwing = (relic) => (relic && typeof relic.swing === 'number' ? relic.swing : state.swing);
 
 // 이전 버전에서 저장한 작업도 열리도록 없는 항목은 기본값으로 채우고 범위를 맞춘다
 function loadState() {
@@ -416,12 +548,26 @@ function loadState() {
     s.mix = Array.from({ length: TOOL.MIX_SLOTS }, (_, i) => (s.mix && s.mix[i]) || null);
     s.relics = s.relics.filter((r) => r && typeof r.name === 'string' && PRESET_BY_ID[r.preset]);
     if (!DEMO_DRUMS[s.drum]) s.drum = 'none';
+    if (!TOOL.GRIDS.includes(s.grid)) s.grid = TOOL.DEFAULT_GRID;
+    s.bpm = clampBpm(s.bpm);
+    if (!TOOL.DELAY_NOTES[s.delayNote]) s.delayNote = TOOL.DEFAULT_DELAY_NOTE;
+    if (s.pumpSource !== 'quarter') s.pumpSource = 'demo';
+    s.drumKick = s.drumKick !== false;
+    s.drumSnare = s.drumSnare !== false;
     s.drumVolume = clamp(num(s.drumVolume, 1), 0, TOOL.DEMO_DRUM_VOLUME_MAX);
     s.swing = clamp(num(s.swing, 0), 0, TOOL.SWING_MAX);
     s.inputVelocity = clamp(num(s.inputVelocity, 1), 0, 1);
-    if (!TOOL.NOTE_LENGTHS.includes(s.newLength)) s.newLength = 1;
+    if (!TOOL.NOTE_LENGTHS[s.grid].includes(s.newLength)) s.newLength = 1;
     if (!TOOL.NOTE_REPEATS.includes(s.newRepeat)) s.newRepeat = 1;
-    for (const r of s.relics) normalizeNotes(r);
+    s.root = clampRoot(s.root);
+    if (!TOOL.PITCH_ROW_CHOICES.includes(s.pitchRows)) s.pitchRows = TOOL.PITCH_ROWS;
+    if (s.kickSound !== 'kick909') s.kickSound = 'kick';
+    if (!CHORD_SHAPES[s.chordMode]) s.chordMode = 'none';
+    // 여기서는 아직 전역 state가 없으므로 칸 수와 행 수를 저장된 값으로 넘긴다
+    for (const r of s.relics) {
+      normalizeRelicExtras(r);
+      normalizeNotes(r, gridSteps(s.grid), s.pitchRows);
+    }
     return s;
   } catch (e) {
     return null;
@@ -443,17 +589,26 @@ function relicMix(relic) {
 // 저음 깎기·고음 깎기 값(0~1)의 필터 주파수(Hz)
 const lowCutFreq = (v) => TOOL.LOW_CUT_MIN * Math.pow(TOOL.CUT_FULL / TOOL.LOW_CUT_MIN, v);
 const highCutFreq = (v) => TOOL.HIGH_CUT_MAX * Math.pow(TOOL.CUT_FULL / TOOL.HIGH_CUT_MAX, v);
-// 체인 구조를 정하는 값(로파이 값, 필터·센드 유무). 바뀌면 실시간 재생에서 체인을 새로 만든다.
-const chainKey = (m) => `${m.lofi}|${m.lowCut > 0}|${m.highCut > 0}|${m.reverbSend > 0}|${m.delaySend > 0}`;
+// 체인 구조를 정하는 값(로파이 값, 필터·센드·팬·필터 스윕 유무). 바뀌면 실시간 재생에서 체인을 새로 만든다.
+const chainKey = (m, relic) => `${m.lofi}|${m.lowCut > 0}|${m.highCut > 0}|${m.reverbSend > 0}|${m.delaySend > 0}|${!!relic.pan}|${!!relic.filterSweep}`;
+
+// 필터 스윕: 루프 머리 t에서 로우패스 컷오프를 from에서 to로 한 바퀴 동안 지수 램프로 움직인다 (0~1 -> Hz는 고음 깎기와 같다)
+function sweepAt(chain, relic, t) {
+  if (!chain.sweep || !relic.filterSweep) return;
+  const f = chain.sweep.frequency;
+  f.setValueAtTime(highCutFreq(relic.filterSweep.from), t);
+  f.exponentialRampToValueAtTime(highCutFreq(relic.filterSweep.to), t + loopSeconds());
+}
 
 // 노트를 정리한다: 기본값 항목은 지우고, 같은 칸·행 중복을 지우고, 음높이 악기는 같은 행에서 겹치지 않게
-// 길이를 다음 노트 직전과 루프 끝까지로 자른다. 타악은 길이를 쓰지 않는다.
-function normalizeNotes(relic) {
+// 길이를 다음 노트 직전과 루프 끝까지로 자른다. 타악은 길이를 쓰지 않는다. 칸 범위(0 ~ steps-1)를 벗어난 노트는 지운다.
+function normalizeNotes(relic, steps = gridSteps(), pitchRows = state.pitchRows) {
   const preset = PRESET_BY_ID[relic.preset];
-  const rows = rowCount(preset);
+  const rows = rowCount(preset, pitchRows);
   const seen = new Set();
   const notes = [];
   for (const n of relic.notes) {
+    if (!Number.isInteger(n.step) || n.step < 0 || n.step >= steps) continue;
     const note = { step: n.step, row: Math.min(n.row, rows - 1) };
     const key = `${note.step},${note.row}`;
     if (seen.has(key)) continue;
@@ -471,13 +626,38 @@ function normalizeNotes(relic) {
     for (const n of notes) {
       if (!n.length) continue;
       const next = notes.find((o) => o.row === n.row && o.step > n.step);
-      const limit = (next ? next.step : TOOL.STEPS) - n.step;
+      const limit = (next ? next.step : steps) - n.step;
       n.length = Math.min(n.length, limit);
       if (n.length <= 1) delete n.length;
     }
   }
   relic.notes = notes;
 }
+
+// 격자를 바꿀 때 유물 하나의 노트를 옮긴다. 시각(소리)이 같게 유지된다.
+// 8 -> 16: step과 length를 2배. 16 -> 8: 홀수 칸에서 시작하는 노트는 지우고, 나머지는 반으로(length는 올림).
+// 롤(repeat)은 그대로 둔다. 지운 노트 수를 돌려준다.
+function convertRelicGrid(relic, from, to) {
+  if (from === to) return 0;
+  let dropped = 0;
+  const notes = [];
+  for (const n of relic.notes) {
+    const note = { ...n };
+    if (to === 16) {
+      note.step = n.step * 2;
+      if (n.length > 1) note.length = n.length * 2;
+    } else {
+      if (n.step % 2) { dropped++; continue; }
+      note.step = n.step / 2;
+      if (n.length > 1) note.length = Math.ceil(n.length / 2);
+    }
+    notes.push(note);
+  }
+  relic.notes = notes;
+  normalizeNotes(relic, gridSteps(to));
+  return dropped;
+}
+const oddStepNotes = (relics) => relics.reduce((sum, r) => sum + r.notes.filter((n) => n.step % 2).length, 0);
 
 let state = loadState() || defaultState();
 let saveTimer = null;
@@ -571,7 +751,7 @@ function distortionCurve(drive) {
 // 노트 하나를 t초에 예약한다. midi는 음높이 악기만 쓴다. 노트가 끝나는 시각을 돌려준다.
 // volume은 노트 게인 배율(벨로시티 등), gate는 노트 길이(초)다. 게이트 = max(gate, attack + decay, hold).
 // 노트마다 만든 노드는 소리가 끝나면 연결을 끊어 쌓이지 않게 한다.
-function scheduleNote(ctx, out, preset, midi, t, volume = 1, gate = TOOL.STEP_SECONDS) {
+function scheduleNote(ctx, out, preset, midi, t, volume = 1, gate = stepSeconds()) {
   const p = preset.params;
   const env = p.env;
   const peak = p.gain * volume;
@@ -605,9 +785,25 @@ function scheduleNote(ctx, out, preset, midi, t, volume = 1, gate = TOOL.STEP_SE
   }
   amp.connect(out);
 
-  const main = p.filter ? track(makeFilter(ctx, p.filter, t)) : null;
+  // 포먼트(보컬 챱): 있으면 메인 필터 대신 병렬 밴드패스 여러 개를 지나 합친다 (formants가 filter보다 우선)
+  let formantBank = null;
+  if (p.formants) {
+    formantBank = track(ctx.createGain());
+    for (const fm of p.formants) {
+      const bp = track(ctx.createBiquadFilter());
+      bp.type = 'bandpass';
+      bp.frequency.value = fm.freq;
+      bp.Q.value = fm.Q;
+      const g = track(ctx.createGain());
+      g.gain.value = fm.gain;
+      formantBank.connect(bp);
+      bp.connect(g);
+      g.connect(amp);
+    }
+  }
+  const main = p.filter && !formantBank ? track(makeFilter(ctx, p.filter, t)) : null;
   if (main) main.connect(amp);
-  const into = main || amp;
+  const into = formantBank || main || amp;
   const sources = [];
 
   // 필터 LFO: 사인 LFO가 메인 필터 주파수에 ±depth Hz를 더한다 (from/sweep 스윕 위에 얹힌다).
@@ -659,6 +855,9 @@ function scheduleNote(ctx, out, preset, midi, t, volume = 1, gate = TOOL.STEP_SE
     sources.push(lfo);
   }
 
+  // spread: 오실레이터들을 좌우로 벌린다 (첫 오실레이터 -spread, 마지막 +spread, 사이는 고르게)
+  const oscCount = (p.oscs || []).length;
+  let oscIndex = 0;
   for (const o of p.oscs || []) {
     const osc = track(ctx.createOscillator());
     osc.type = o.type;
@@ -675,7 +874,15 @@ function scheduleNote(ctx, out, preset, midi, t, volume = 1, gate = TOOL.STEP_SE
     const g = track(ctx.createGain());
     g.gain.value = o.gain ?? 1;
     osc.connect(g);
-    g.connect(oscInto);
+    if (p.spread && oscCount > 1) {
+      const pan = track(ctx.createStereoPanner());
+      pan.pan.value = p.spread * (-1 + (2 * oscIndex) / (oscCount - 1));
+      g.connect(pan);
+      pan.connect(oscInto);
+    } else {
+      g.connect(oscInto);
+    }
+    oscIndex++;
     sources.push(osc);
   }
   if (p.noise) {
@@ -761,8 +968,10 @@ function makeBus(ctx, dynamics = true) {
   convolver.connect(gain);
 
   const delayIn = ctx.createGain();
-  const delay = ctx.createDelay(1);
-  delay.delayTime.value = TOOL.DELAY_TIME;
+  // 최대 지연 시간이 달라지면 렌더가 아주 조금(상대 5e-5) 달라지므로, 1초 이하면 이전과 같은 1초로 만든다
+  const delayMax = delaySeconds() <= 1 ? 1 : TOOL.DELAY_MAX_SECONDS;
+  const delay = ctx.createDelay(delayMax);
+  delay.delayTime.value = delaySeconds();
   const feedbackFilter = ctx.createBiquadFilter();
   feedbackFilter.type = 'lowpass';
   feedbackFilter.frequency.value = TOOL.DELAY_FEEDBACK_LOWPASS;
@@ -774,7 +983,7 @@ function makeBus(ctx, dynamics = true) {
   feedback.connect(delay);
   delay.connect(gain);
 
-  return { input: gain, reverb, delay: delayIn };
+  return { input: gain, reverb, delay: delayIn, delayNode: delay, delayMax };
 }
 
 // 압축기 -> 리미터 -> 출력. 들어갈 노드를 돌려준다.
@@ -822,6 +1031,9 @@ function makeChain(ctx, bus, relic, volume) {
   };
   const lowCut = cut(m.lowCut, 'highpass', lowCutFreq(m.lowCut));
   const highCut = cut(m.highCut, 'lowpass', highCutFreq(m.highCut));
+  // 필터 스윕: 고음 깎기와 따로(직렬로) 거는 로우패스. 루프 머리마다 sweepAt이 from -> to 램프를 건다.
+  const fs = relic.filterSweep;
+  const sweep = fs ? cut(1, 'lowpass', highCutFreq(fs.from)) : null;
   if (m.lofi > 0) {
     const shaper = ctx.createWaveShaper();
     shaper.curve = lofiCurve(m.lofi);
@@ -833,7 +1045,17 @@ function makeChain(ctx, bus, relic, volume) {
     nodes.push(shaper, lowpass);
     out = lowpass;
   }
-  out.connect(bus.input);
+  // 팬: 0이 아니면 마스터로 가는 소리만 좌우로 보낸다. 리버브·딜레이 센드는 팬 앞(가운데)에서 뽑는다.
+  let panner = null;
+  if (relic.pan) {
+    panner = ctx.createStereoPanner();
+    panner.pan.value = relic.pan;
+    out.connect(panner);
+    panner.connect(bus.input);
+    nodes.push(panner);
+  } else {
+    out.connect(bus.input);
+  }
   const send = (amount, target) => {
     if (amount <= 0) return null;
     const g = ctx.createGain();
@@ -844,41 +1066,47 @@ function makeChain(ctx, bus, relic, volume) {
     return g;
   };
   return {
-    input, duck, nodes, lowCut, highCut,
+    input, duck, nodes, lowCut, highCut, sweep, panner,
     sidechain: m.sidechain,
     reverbSend: send(m.reverbSend, bus.reverb),
     delaySend: send(m.delaySend, bus.delay),
-    key: chainKey(m),
+    key: chainKey(m, relic),
   };
 }
 
 // 재생 시작부터 센 g번째 칸(루프를 돌아도 계속 증가)의 시각(초). 홀수 칸은 스윙만큼 늦다.
-// 스윙이 0이면 이전과 똑같이 g x 칸 시간이다 (부동소수 반올림까지 같게 하려고 곱셈 하나로 계산한다).
-function stepTime(g) {
-  return g * TOOL.STEP_SECONDS + (g % 2 ? state.swing * TOOL.STEP_SECONDS : 0);
+// 부동소수 반올림까지 같게 하려고 곱셈 하나로 계산한다 (g x 칸 시간).
+// swing을 넘기면 그 값(유물별 스윙)을, 없으면 전체 스윙을 쓴다.
+function stepTime(g, swing = state.swing) {
+  const s = stepSeconds();
+  return g * s + (g % 2 ? swing * s : 0);
 }
 
 // 칸 step에서 시작해 length칸 이어지는 노트의 게이트(초). 끝 칸 경계도 스윙 규칙을 따른다.
-function noteGate(step, length) {
-  const swing = state.swing * TOOL.STEP_SECONDS;
-  return length * TOOL.STEP_SECONDS + ((step + length) % 2 ? swing : 0) - (step % 2 ? swing : 0);
+function noteGate(step, length, swing = state.swing) {
+  const s = stepSeconds();
+  const sw = swing * s;
+  return length * s + ((step + length) % 2 ? sw : 0) - (step % 2 ? sw : 0);
 }
 
-// 유물 하나의 step칸 노트를 t초에 예약한다. 길이는 루프 끝에서 자른다.
-// 롤 노트(repeat k)는 그 칸(스윙 반영)을 k등분해 같은 세기로 k번 치고, 한 번의 게이트는 그 간격이다.
-function scheduleRelicStep(ctx, out, relic, step, t) {
+// 유물 하나의 g번째 칸(재생 시작부터 센 칸, step = g % 칸 수) 노트를 base + stepTime(g, 유물 스윙)초에 예약한다.
+// 길이는 루프 끝에서 자른다. 롤 노트(repeat k)는 그 칸(스윙 반영)을 k등분해 같은 세기로 k번 치고, 한 번의 게이트는 그 간격이다.
+function scheduleRelicStep(ctx, out, relic, step, base, g) {
   const preset = PRESET_BY_ID[relic.preset];
+  const steps = gridSteps();
+  const swing = relicSwing(relic);
+  const t = base + stepTime(g, swing);
   for (const n of relic.notes) {
     if (n.step !== step) continue;
-    const midi = rowMidi(preset, n.row, state.scale);
+    const midi = rowMidi(preset, n.row, state.scale, relic);
     const repeat = noteRepeat(n);
     if (repeat > 1) {
-      const interval = noteGate(step, 1) / repeat;
+      const interval = noteGate(step, 1, swing) / repeat;
       for (let i = 0; i < repeat; i++) scheduleNote(ctx, out, preset, midi, t + i * interval, noteVelocity(n), interval);
       continue;
     }
-    const length = Math.min(noteLength(n, preset), TOOL.STEPS - step);
-    scheduleNote(ctx, out, preset, midi, t, noteVelocity(n), noteGate(step, length));
+    const length = Math.min(noteLength(n, preset), steps - step);
+    scheduleNote(ctx, out, preset, midi, t, noteVelocity(n), noteGate(step, length, swing));
   }
 }
 
@@ -891,17 +1119,32 @@ function duckAt(chain, t) {
   g.linearRampToValueAtTime(1, t + TOOL.SIDECHAIN_ATTACK + TOOL.SIDECHAIN_RELEASE);
 }
 
-// 데모 드럼의 step칸. drumOut이 있으면 소리를 내고, 킥이면 체인들을 덕킹한다.
+// 데모 드럼의 step칸이 울리는 소리. 꺼 둔 소리(drumKick/drumSnare)는 빠진다.
+function drumHits(step) {
+  const pattern = state.drum !== 'none' && DEMO_DRUMS[state.drum];
+  if (!pattern) return { kick: false, snares: [] };
+  const pos = sixteenthInBar(step);
+  return {
+    kick: state.drumKick && pattern.kickSet.has(pos),
+    snares: state.drumSnare && pattern.snareSet.has(pos) ? pattern.snareSounds : [],
+  };
+}
+
+// 사이드체인을 거는 칸인가. 'demo'는 데모 드럼 킥이 울리는 칸, 'quarter'는 매 박 머리(소리 없음)다.
+// 'quarter'일 때는 데모 드럼 킥 칸이어도 박 머리에서 한 번만 건다.
+function pumpsAt(step) {
+  if (state.pumpSource === 'quarter') return step % stepsPerBeat() === 0;
+  return drumHits(step).kick;
+}
+
+// 데모 드럼의 step칸. drumOut이 있으면 소리를 내고, 펌핑 기준 칸이면 체인들을 덕킹한다.
 function scheduleDrumStep(ctx, drumOut, chains, step, t) {
-  const pattern = DEMO_DRUMS[state.drum];
-  if (!pattern || state.drum === 'none') return;
-  if (pattern.kickSteps.has(step)) {
-    if (drumOut) scheduleNote(ctx, drumOut, DEMO_DRUM_SOUNDS.kick, null, t);
-    for (const chain of chains) duckAt(chain, t);
+  const hits = drumHits(step);
+  if (drumOut) {
+    if (hits.kick) scheduleNote(ctx, drumOut, DEMO_DRUM_SOUNDS[state.kickSound] || DEMO_DRUM_SOUNDS.kick, null, t);
+    for (const sound of hits.snares) scheduleNote(ctx, drumOut, DEMO_DRUM_SOUNDS[sound], null, t);
   }
-  if (pattern.snareSteps.has(step) && drumOut) {
-    scheduleNote(ctx, drumOut, DEMO_DRUM_SOUNDS[pattern.snareSound], null, t);
-  }
+  if (pumpsAt(step)) for (const chain of chains) duckAt(chain, t);
 }
 
 // ---------------------------------------------------------------------------
@@ -943,6 +1186,20 @@ const Player = {
     return [];
   },
 
+  // 공통 딜레이 시간을 지금 템포·딜레이 음표에 맞춘다
+  // 딜레이 노드의 최대 시간을 넘으면 버스를 새로 만든다 (재생 중이면 다시 시작한다).
+  syncDelay() {
+    if (!this.bus) return;
+    if (delaySeconds() > this.bus.delayMax) {
+      const mode = this.mode;
+      this.stop();
+      this.bus = makeBus(this.ctx);
+      if (mode) this.start(mode);
+      return;
+    }
+    this.bus.delayNode.delayTime.setTargetAtTime(delaySeconds(), this.ctx.currentTime, 0.02);
+  },
+
   // 체인을 없애기 전에 소리를 빠르게 줄이고 잠시 뒤 끊는다
   dropChain(chain) {
     chain.input.gain.cancelScheduledValues(this.ctx.currentTime);
@@ -954,7 +1211,7 @@ const Player = {
   chain(relic, volume) {
     let chain = this.tracks.get(relic.id);
     const m = relicMix(relic);
-    const key = chainKey(m);
+    const key = chainKey(m, relic);
     if (chain && chain.key !== key) {
       this.dropChain(chain);
       chain = null;
@@ -968,6 +1225,7 @@ const Player = {
     if (chain.delaySend) chain.delaySend.gain.setTargetAtTime(m.delaySend, this.ctx.currentTime, 0.01);
     if (chain.lowCut) chain.lowCut.frequency.setTargetAtTime(lowCutFreq(m.lowCut), this.ctx.currentTime, 0.01);
     if (chain.highCut) chain.highCut.frequency.setTargetAtTime(highCutFreq(m.highCut), this.ctx.currentTime, 0.01);
+    if (chain.panner) chain.panner.pan.setTargetAtTime(relic.pan || 0, this.ctx.currentTime, 0.01);
     chain.sidechain = m.sidechain;
     return chain;
   },
@@ -1052,15 +1310,20 @@ const Player = {
     const chains = layers.map((l) => this.chain(l.relic, l.volume));
     this.drumGain.gain.setTargetAtTime(state.drumVolume, ctx.currentTime, 0.01);
     this.setVinyl(state.vinyl);
+    const steps = gridSteps();
+    const stepLen = stepSeconds();
     while (true) {
       // 시작 시각 + 칸 시각(스윙 포함). 예약 범위는 스윙 전 시각으로 판단한다.
-      const step = this.nextStep % TOOL.STEPS;
-      if (this.startTime + this.nextStep * TOOL.STEP_SECONDS >= until) break;
+      const step = this.nextStep % steps;
+      if (this.startTime + this.nextStep * stepLen >= until) break;
       const t = this.startTime + stepTime(this.nextStep);
-      if (step === 0) this.stats.firstTimes.push(t);
+      if (step === 0) {
+        this.stats.firstTimes.push(t);
+        layers.forEach((l, i) => sweepAt(chains[i], l.relic, t));
+      }
       if (t < ctx.currentTime) this.stats.late++;
       layers.forEach((l, i) => {
-        scheduleRelicStep(ctx, chains[i].input, l.relic, step, t);
+        scheduleRelicStep(ctx, chains[i].input, l.relic, step, this.startTime, this.nextStep);
         this.stats.scheduled += l.relic.notes.filter((n) => n.step === step).length;
       });
       scheduleDrumStep(ctx, this.drumGain, chains, step, t);
@@ -1073,14 +1336,15 @@ const Player = {
     if (!this.mode) return null;
     const elapsed = this.ctx.currentTime - this.startTime;
     if (elapsed < 0) return 0;
-    return (elapsed % TOOL.LOOP_SECONDS) / TOOL.LOOP_SECONDS;
+    const loop = loopSeconds();
+    return (elapsed % loop) / loop;
   },
 
   // 칸을 찍을 때 그 음을 한 번 들려준다
   preview(relic, row, velocity = 1) {
     const ctx = this.ensure();
     const preset = PRESET_BY_ID[relic.preset];
-    scheduleNote(ctx, this.bus.input, preset, rowMidi(preset, row, state.scale), ctx.currentTime + 0.01, TOOL.PREVIEW_GAIN * relic.volume * velocity);
+    scheduleNote(ctx, this.bus.input, preset, rowMidi(preset, row, state.scale, relic), ctx.currentTime + 0.01, TOOL.PREVIEW_GAIN * relic.volume * velocity);
   },
 };
 
@@ -1125,6 +1389,13 @@ function renderGlobals() {
     for (const [id, p] of Object.entries(DEMO_DRUMS)) drum.append(new Option(p.name, id));
   }
   drum.value = state.drum;
+  if (document.activeElement !== $('bpm')) $('bpm').value = state.bpm;
+  $('grid').value = state.grid;
+  $('delay-note').value = state.delayNote;
+  $('pump-source').value = state.pumpSource;
+  $('drum-kick').checked = state.drumKick;
+  $('kick-sound').value = state.kickSound;
+  $('drum-snare').checked = state.drumSnare;
   $('drum-volume').value = Math.round(state.drumVolume * 100);
   $('drum-volume-label').textContent = `${Math.round(state.drumVolume * 100)}%`;
   $('swing').value = Math.round(state.swing * 100);
@@ -1133,7 +1404,51 @@ function renderGlobals() {
   $('wav-drums').checked = state.wavDrums;
 }
 
+// 템포·격자를 바꾸면 칸 시각이 모두 바뀌므로 재생 중이면 처음부터 다시 재생한다 (박이 밀리지 않는다).
+function timingChanged() {
+  Player.syncDelay();
+  if (Player.mode) Player.start(Player.mode);
+  changed();
+}
+
+function setBpm(value) {
+  const bpm = clampBpm(Number(value));
+  if (bpm === state.bpm) { $('bpm').value = bpm; return; }
+  state.bpm = bpm;
+  $('bpm').value = bpm;
+  timingChanged();
+}
+
+// 격자 바꾸기. 8 -> 16은 바로, 16 -> 8은 홀수 칸 노트가 있으면 확인 창을 거쳐 지운다.
+function setGrid(grid) {
+  const from = state.grid;
+  if (grid === from || !TOOL.GRIDS.includes(grid)) return;
+  const apply = () => {
+    for (const r of state.relics) convertRelicGrid(r, from, grid);
+    state.grid = grid;
+    timingChanged();
+  };
+  const odd = grid === 8 ? oddStepNotes(state.relics) : 0;
+  if (odd) {
+    confirmModal('8분 격자로 바꾸기', `16분 홀수 칸(e·a 위치)에서 시작하는 노트 ${odd}개가 지워진다. 나머지 노트는 같은 시각에 남는다.`, apply, '바꾸기');
+    $('grid').value = from; // 취소하면 그대로. 확인하면 apply가 다시 그린다.
+  } else {
+    apply();
+  }
+}
+
 function setupGlobals() {
+  $('bpm').addEventListener('change', (e) => setBpm(e.target.value));
+  $('grid').addEventListener('change', (e) => setGrid(+e.target.value));
+  $('delay-note').addEventListener('change', (e) => {
+    if (TOOL.DELAY_NOTES[e.target.value]) state.delayNote = e.target.value;
+    Player.syncDelay();
+    changed();
+  });
+  $('pump-source').addEventListener('change', (e) => { state.pumpSource = e.target.value === 'quarter' ? 'quarter' : 'demo'; changed(); });
+  $('drum-kick').addEventListener('change', (e) => { state.drumKick = e.target.checked; saveSoon(); });
+  $('kick-sound').addEventListener('change', (e) => { state.kickSound = e.target.value === 'kick909' ? 'kick909' : 'kick'; saveSoon(); });
+  $('drum-snare').addEventListener('change', (e) => { state.drumSnare = e.target.checked; saveSoon(); });
   $('demo-drum').addEventListener('change', (e) => { state.drum = e.target.value; changed(); });
   $('drum-volume').addEventListener('input', (e) => {
     state.drumVolume = e.target.value / 100;
@@ -1187,7 +1502,7 @@ function renderMixSettings(relic) {
     });
     range.addEventListener('change', () => renderRight());
     row.append(el('span', '', MIX_SETTING_LABELS[key]), value, range);
-    if (key === 'sidechain' && state.drum === 'none') {
+    if (key === 'sidechain' && state.pumpSource === 'demo' && state.drum === 'none') {
       row.append(el('span', 'warn', '데모 드럼 필요 (킥 시각에 맞춰 누른다)'));
     }
     box.append(row);
@@ -1200,6 +1515,115 @@ function renderScale() {
     for (const name of Object.keys(SCALES)) select.append(new Option(name, name));
   }
   select.value = state.scale;
+  const root = $('root');
+  if (!root.options.length) NOTE_NAMES.forEach((n, i) => root.append(new Option(n, i)));
+  root.value = state.root;
+  $('pitch-rows').value = state.pitchRows;
+}
+
+// 행 수 바꾸기. 15 -> 8은 행 8 이상 노트가 있으면 확인 창을 거쳐 지운다.
+function setPitchRows(rows) {
+  if (rows === state.pitchRows || !TOOL.PITCH_ROW_CHOICES.includes(rows)) return;
+  const apply = () => {
+    if (rows < state.pitchRows) for (const r of state.relics) dropHighRows(r, rows);
+    state.pitchRows = rows;
+    for (const r of state.relics) normalizeNotes(r);
+    changed();
+  };
+  const high = rows < state.pitchRows ? highRowNotes(state.relics, rows) : 0;
+  if (high) {
+    confirmModal('8행으로 바꾸기', `행 ${rows} 이상에 있는 노트 ${high}개가 지워진다.`, apply, '바꾸기');
+    $('pitch-rows').value = state.pitchRows;
+  } else {
+    apply();
+  }
+}
+// 음높이 악기에서 행 rows 이상인 노트 수 / 지우기
+const highRowNotes = (relics, rows) => relics.reduce((sum, r) => sum + (PRESET_BY_ID[r.preset].pitched ? r.notes.filter((n) => n.row >= rows).length : 0), 0);
+function dropHighRows(relic, rows) {
+  if (PRESET_BY_ID[relic.preset].pitched) relic.notes = relic.notes.filter((n) => n.row < rows);
+}
+
+// 오른쪽 '유물 설정': 유물별 스윙(전체 따름), 팬, 옥타브 이동, 필터 스윕
+function renderRelicSettings(relic) {
+  const box = $('relic-settings');
+  box.innerHTML = '';
+  if (!relic) return;
+  const slider = (label, min, max, value, text, onInput) => {
+    const row = el('label', 'mix-setting');
+    const v = el('span', 'value', text(value));
+    const range = el('input');
+    range.type = 'range';
+    range.min = min;
+    range.max = max;
+    range.step = 1;
+    range.value = value;
+    range.addEventListener('input', () => { onInput(+range.value); v.textContent = text(+range.value); saveSoon(); });
+    range.addEventListener('change', () => renderRight());
+    row.append(el('span', '', label), v, range);
+    return { row, range };
+  };
+  // 스윙: '전체 따름'이면 relic.swing이 없다
+  const follows = typeof relic.swing !== 'number';
+  const swing = slider('스윙', 0, TOOL.SWING_MAX * 100, Math.round(relicSwing(relic) * 100),
+    (x) => (follows ? `전체 따름 (${x}%)` : `${x}%`), (x) => { relic.swing = x / 100; });
+  swing.range.disabled = follows;
+  swing.range.dataset.relic = 'swing';
+  const follow = el('label', 'small-check');
+  const check = el('input');
+  check.type = 'checkbox';
+  check.checked = follows;
+  check.dataset.relic = 'swing-follow';
+  check.addEventListener('change', () => {
+    if (check.checked) delete relic.swing;
+    else relic.swing = state.swing;
+    changed();
+  });
+  follow.append(check, ' 전체 스윙 따름');
+  swing.row.append(follow);
+  box.append(swing.row);
+  // 팬 (-100 ~ +100)
+  const pan = slider('팬', -100, 100, Math.round((relic.pan || 0) * 100),
+    (x) => (x === 0 ? '가운데' : x < 0 ? `왼쪽 ${-x}` : `오른쪽 ${x}`), (x) => { if (x) relic.pan = x / 100; else delete relic.pan; });
+  pan.range.dataset.relic = 'pan';
+  box.append(pan.row);
+  // 옥타브 이동
+  const oct = el('label', 'mix-setting');
+  const select = el('select');
+  select.dataset.relic = 'octave';
+  for (let o = TOOL.OCTAVE_SHIFT_MIN; o <= TOOL.OCTAVE_SHIFT_MAX; o++) select.append(new Option(o > 0 ? `+${o}` : String(o), o));
+  select.value = octaveShift(relic);
+  select.disabled = !PRESET_BY_ID[relic.preset].pitched;
+  select.addEventListener('change', () => {
+    const v = +select.value;
+    if (v) relic.octaveShift = v;
+    else delete relic.octaveShift;
+    changed();
+  });
+  oct.append(el('span', '', '옥타브'), select);
+  box.append(oct);
+  // 필터 스윕: 켜면 루프 머리에서 끝까지 로우패스가 시작 -> 끝 값으로 움직인다 (0% = 20kHz, 100% = 800Hz)
+  const fs = relic.filterSweep;
+  const sweepRow = el('label', 'small-check');
+  const sweepOn = el('input');
+  sweepOn.type = 'checkbox';
+  sweepOn.checked = !!fs;
+  sweepOn.dataset.relic = 'sweep-on';
+  sweepOn.addEventListener('change', () => {
+    if (sweepOn.checked) relic.filterSweep = { from: TOOL.SWEEP_DEFAULT_FROM, to: TOOL.SWEEP_DEFAULT_TO };
+    else delete relic.filterSweep;
+    changed();
+  });
+  sweepRow.append(sweepOn, ' 필터 스윕 (루프마다 로우패스가 움직임)');
+  box.append(sweepRow);
+  if (fs) {
+    const hz = (x) => `${x}% (${Math.round(highCutFreq(x / 100))}Hz)`;
+    const from = slider('스윕 시작', 0, 100, Math.round(fs.from * 100), hz, (x) => { fs.from = x / 100; });
+    const to = slider('스윕 끝', 0, 100, Math.round(fs.to * 100), hz, (x) => { fs.to = x / 100; });
+    from.range.dataset.relic = 'sweep-from';
+    to.range.dataset.relic = 'sweep-to';
+    box.append(from.row, to.row);
+  }
 }
 
 // 유물 이름 검사. 문제가 없으면 null, 있으면 이유.
@@ -1254,7 +1678,9 @@ function renderList() {
 function miniPattern(relic) {
   const mini = el('div', 'mini');
   const used = new Set(relic.notes.map((n) => n.step));
-  for (let s = 0; s < TOOL.STEPS; s++) mini.append(el('span', used.has(s) ? 'on' : ''));
+  const steps = gridSteps();
+  mini.style.gridTemplateColumns = `repeat(${steps}, 1fr)`;
+  for (let s = 0; s < steps; s++) mini.append(el('span', used.has(s) ? 'on' : ''));
   return mini;
 }
 
@@ -1320,7 +1746,7 @@ function applyPreset(presetId) {
   changed();
 }
 
-// 16박 편집기: 위쪽이 높은 음이다. 박 경계는 굵게, 0.5박 경계는 얇게, 4박마다 더 굵게 긋는다.
+// 16박 편집기: 위쪽이 높은 음이다. 박 경계는 굵게, 그 사이 칸 경계는 얇게, 마디(4박)마다 더 굵게 긋는다.
 let editorKey = '';
 
 function renderEditor() {
@@ -1337,26 +1763,34 @@ function renderEditor() {
   const preset = PRESET_BY_ID[relic.preset];
   const rows = rowCount(preset);
   $('editor-title').textContent = relic.name;
-  $('editor-meta').textContent = `${preset.name} · ${preset.pitched ? state.scale : '타악 1행'}`;
+  $('editor-meta').textContent = `${preset.name} · ${preset.pitched ? `${keyScaleName()}${octaveShift(relic) ? ` · 옥타브 ${octaveShift(relic) > 0 ? '+' : ''}${octaveShift(relic)}` : ''}` : '타악 1행'}`;
   // 구조(유물, 행 수, 스케일)가 같으면 칸의 on 표시만 바꾼다. 드래그 중 칸이 새로 만들어지지 않게 하기 위해서다.
-  const key = `${relic.id}|${relic.preset}|${state.scale}`;
+  // 격자(8분 32칸 / 16분 64칸)도 구조에 들어간다. 마디(4박) 경계가 가장 굵고, 박 경계가 굵고,
+  // 16분 격자에서는 8분 경계(eighth)를 중간 굵기로 긋는다.
+  const key = `${relic.id}|${relic.preset}|${state.scale}|${state.grid}|${state.root}|${state.pitchRows}|${octaveShift(relic)}`;
   if (key !== editorKey) {
     editorKey = key;
+    const steps = gridSteps();
+    const per = stepsPerBeat();
     editor.innerHTML = '';
     editor.classList.toggle('perc', !preset.pitched);
+    editor.classList.toggle('grid16', state.grid === 16);
+    editor.classList.toggle('rows15', preset.pitched && state.pitchRows === 15);
+    editor.style.gridTemplateColumns = `44px repeat(${steps}, minmax(${state.grid === 16 ? TOOL.CELL_MIN_PX_16 : TOOL.CELL_MIN_PX_8}px, 1fr))`;
     editor.append(el('div', 'corner'));
-    for (let s = 0; s < TOOL.STEPS; s++) {
-      editor.append(el('div', 'beat-num' + (s % 2 ? ' half' : ''), s % 2 ? '' : String(s / 2 + 1)));
+    for (let s = 0; s < steps; s++) {
+      editor.append(el('div', 'beat-num' + (s % per ? ' half' : ''), s % per ? '' : String(s / per + 1)));
     }
     for (let r = rows - 1; r >= 0; r--) {
       const last = r === 0 ? ' last' : '';
-      const midi = rowMidi(preset, r, state.scale);
+      const midi = rowMidi(preset, r, state.scale, relic);
       editor.append(el('div', 'row-label' + last, midi === null ? '타격' : midiName(midi)));
-      for (let s = 0; s < TOOL.STEPS; s++) {
+      for (let s = 0; s < steps; s++) {
         let cls = 'cell' + last;
-        if (s % 8 === 0) cls += ' bar';
-        else if (s % 2 === 0) cls += ' beat';
-        if (Math.floor(s / 2) % 2) cls += ' alt';
+        if (s % (per * 4) === 0) cls += ' bar';
+        else if (s % per === 0) cls += ' beat';
+        else if (per === 4 && s % 2 === 0) cls += ' eighth';
+        if (Math.floor(s / per) % 2) cls += ' alt';
         const cell = el('div', cls);
         cell.dataset.step = s;
         cell.dataset.row = r;
@@ -1401,11 +1835,22 @@ function setVelocity(note, v) {
 
 // (step, row)에 새 노트를 찍는다. 길이는 '새 노트 길이'이고 같은 행의 다음 노트 직전과 루프 끝에서 자른다.
 // '롤'이 2 이상이면 롤 노트(1칸)를 찍는다. 길이를 가진 앞 노트가 이 칸을 덮고 있으면 앞 노트를 이 칸 직전까지 줄인다.
+// '코드'가 없음이 아니고 음높이 악기면 그 행을 근음으로 스케일 위에 쌓은 행들(CHORD_SHAPES)을 한 번에 찍는다.
+// 행 범위를 넘는 음은 뺀다. 데이터는 노트 여러 개라 설계서 형식은 그대로다.
 function addNote(relic, step, row) {
+  const preset = PRESET_BY_ID[relic.preset];
+  const shape = preset.pitched ? CHORD_SHAPES[state.chordMode] || CHORD_SHAPES.none : CHORD_SHAPES.none;
+  // 이미 그 칸에서 시작하는 노트가 있는 행은 건드리지 않는다
+  const rows = shape.rows.map((d) => row + d)
+    .filter((r) => r < rowCount(preset) && (r === row || !relic.notes.some((n) => n.step === step && n.row === r)));
+  for (const r of rows) addOneNote(relic, step, r);
+}
+
+function addOneNote(relic, step, row) {
   const preset = PRESET_BY_ID[relic.preset];
   const before = coveringNote(relic, step, row);
   if (before) before.length = step - before.step;
-  const next = relic.notes.filter((o) => o.row === row && o.step > step).reduce((m, o) => Math.min(m, o.step), TOOL.STEPS);
+  const next = relic.notes.filter((o) => o.row === row && o.step > step).reduce((m, o) => Math.min(m, o.step), gridSteps());
   const note = { step, row };
   setVelocity(note, state.inputVelocity);
   if (state.newRepeat > 1) {
@@ -1458,7 +1903,7 @@ function resizeTarget(relic, cell, clientX) {
 function resizeTo(relic, cell) {
   if (!cell || !cell.classList.contains('cell') || +cell.dataset.row !== resizing.row) return;
   const next = relic.notes.filter((o) => o.row === resizing.row && o.step > resizing.step)
-    .reduce((m, o) => Math.min(m, o.step), TOOL.STEPS);
+    .reduce((m, o) => Math.min(m, o.step), gridSteps());
   const length = clamp(+cell.dataset.step - resizing.step + 1, 1, next - resizing.step);
   if (length > 1) resizing.length = length;
   else delete resizing.length;
@@ -1525,19 +1970,33 @@ function renderTools() {
       buttons.append(b);
     }
     const select = $('new-length');
-    for (const n of TOOL.NOTE_LENGTHS) select.append(new Option(`${n}칸`, n));
     select.addEventListener('change', () => { state.newLength = +select.value; changed(); });
     const repeat = $('new-repeat');
     for (const n of TOOL.NOTE_REPEATS) repeat.append(new Option(n === 1 ? '없음' : `${n}번`, n));
     repeat.addEventListener('change', () => { state.newRepeat = +repeat.value; changed(); });
+    const chord = $('chord-mode');
+    for (const [id, c] of Object.entries(CHORD_SHAPES)) chord.append(new Option(c.name, id));
+    chord.addEventListener('change', () => { state.chordMode = CHORD_SHAPES[chord.value] ? chord.value : 'none'; changed(); });
   }
   for (const b of buttons.children) b.classList.toggle('on', +b.dataset.value === state.inputVelocity);
-  $('new-length').value = state.newLength;
+  // 길이 선택지는 격자에 따라 다르다 (8분 [1, 2, 4, 8], 16분 [1, 2, 4, 8, 16]칸)
+  const lengthSelect = $('new-length');
+  const choices = noteLengthChoices();
+  if (lengthSelect.dataset.grid !== String(state.grid)) {
+    lengthSelect.dataset.grid = state.grid;
+    lengthSelect.innerHTML = '';
+    for (const n of choices) lengthSelect.append(new Option(`${n}칸`, n));
+  }
+  if (!choices.includes(state.newLength)) state.newLength = 1;
+  lengthSelect.value = state.newLength;
+  $('step-hint').textContent = `1칸 = ${state.grid}분음표 (${state.bpm}BPM, 약 ${stepSeconds().toFixed(3)}초)`;
   $('new-repeat').value = state.newRepeat;
+  $('chord-mode').value = state.chordMode;
   const relic = selectedRelic();
   const perc = relic && !PRESET_BY_ID[relic.preset].pitched;
   // 롤 노트는 1칸이므로 롤을 고르면 길이 선택이 쓰이지 않는다
   $('new-length').disabled = !!perc || state.newRepeat > 1;
+  $('chord-mode').disabled = !!perc;
   $('length-note').textContent = perc ? '타악은 길이를 쓰지 않는다' : state.newRepeat > 1 ? '롤 노트는 1칸이다' : '';
 }
 
@@ -1553,8 +2012,9 @@ function drawPlayhead() {
     const cells = $('editor').querySelectorAll('.cell');
     const wrap = $('editor-wrap').getBoundingClientRect();
     const first = cells[0].getBoundingClientRect();
-    const last = cells[TOOL.STEPS - 1].getBoundingClientRect();
-    head.style.left = `${first.left - wrap.left + (last.right - first.left) * pos - 1}px`;
+    const last = cells[gridSteps() - 1].getBoundingClientRect();
+    // 편집기가 가로 스크롤되면 표시선은 내용과 함께 움직이므로 스크롤 양을 더한다
+    head.style.left = `${first.left - wrap.left + $('editor-wrap').scrollLeft + (last.right - first.left) * pos - 1}px`;
   }
   if (Player.mode) requestAnimationFrame(drawPlayhead);
   else head.hidden = true;
@@ -1629,6 +2089,7 @@ function renderRight() {
   volume.value = relic ? Math.round(relic.volume * 100) : 100;
   $('volume-label').textContent = `${volume.value}%`;
   renderMixSettings(relic);
+  renderRelicSettings(relic);
   const info = $('info');
   info.innerHTML = '';
   if (!relic) return;
@@ -1757,7 +2218,7 @@ function alertModal(title, body) {
 // ---------------------------------------------------------------------------
 function relicSummary(relic) {
   const preset = PRESET_BY_ID[relic.preset];
-  const midis = relic.notes.map((n) => rowMidi(preset, n.row, state.scale)).filter((m) => m !== null);
+  const midis = relic.notes.map((n) => rowMidi(preset, n.row, state.scale, relic)).filter((m) => m !== null);
   const steps = new Set(relic.notes.map((n) => n.step));
   let range = '타격음 (음높이 없음)';
   if (preset.pitched) {
@@ -1769,9 +2230,9 @@ function relicSummary(relic) {
 // 한 줄 특징: 박 밀도, 정박/엇박, 음역
 function featureText(relic, steps, midis, preset) {
   if (!relic.notes.length) return '빈 비트';
-  const density = steps.size / TOOL.STEPS;
-  const parts = [`${steps.size}/${TOOL.STEPS}칸 ${density >= 0.5 ? '빽빽함' : density >= 0.25 ? '보통' : '성김'}`];
-  const onbeat = relic.notes.filter((n) => n.step % 2 === 0).length / relic.notes.length;
+  const density = steps.size / gridSteps();
+  const parts = [`${steps.size}/${gridSteps()}칸 ${density >= 0.5 ? '빽빽함' : density >= 0.25 ? '보통' : '성김'}`];
+  const onbeat = relic.notes.filter((n) => n.step % stepsPerBeat() === 0).length / relic.notes.length;
   parts.push(onbeat >= 0.7 ? '정박 위주' : onbeat <= 0.3 ? '엇박 위주' : '정박·엇박 섞임');
   if (preset.pitched) {
     const distinct = new Set(midis).size;
@@ -1784,6 +2245,7 @@ function featureText(relic, steps, midis, preset) {
   if (preset.pitched && relic.notes.some((n) => n.length > 1)) parts.push('긴 노트 있음');
   if (relic.notes.some((n) => n.repeat > 1)) parts.push('롤 있음');
   if (MIX_FIELDS.some((k) => relic[k] > 0)) parts.push('믹스 설정 있음');
+  if (RELIC_EXTRA_FIELDS.some((k) => relic[k] !== undefined)) parts.push('유물 설정 있음');
   return parts.join(', ');
 }
 
@@ -1794,17 +2256,24 @@ function timestamp() {
 }
 
 // 설계서의 기계용 데이터. 사람이 읽는 표는 모두 이 데이터에서 만든다.
-// 새 항목(velocity, length, sidechain, reverbSend, delaySend, lofi, lowCut, highCut, groove)은 기본값이면 넣지 않는다.
+// 새 항목(velocity, length, sidechain, reverbSend, delaySend, lofi, lowCut, highCut, swing, octaveShift, pan, filterSweep,
+// groove, bpm, grid, root, pitchRows, delayNote)은
+// 기본값이면 넣지 않는다. timing은 참고값(불러올 때 쓰지 않음)이고 최상위 bpm·grid가 원본이다.
 function designData(relics) {
   const data = {
     schema: TOOL.SCHEMA,
     exportedAt: new Date().toISOString(),
     timing: {
-      beatSeconds: TOOL.BEAT_SECONDS, stepSeconds: TOOL.STEP_SECONDS,
-      beats: TOOL.BEATS, steps: TOOL.STEPS, loopSeconds: TOOL.LOOP_SECONDS,
+      bpm: state.bpm, grid: state.grid, beatSeconds: 60 / state.bpm, stepSeconds: stepSeconds(),
+      beats: TOOL.BEATS, steps: gridSteps(), loopSeconds: loopSeconds(),
     },
-    scale: { name: state.scale, root: 'C', intervals: SCALES[state.scale] },
+    scale: { name: state.scale, root: NOTE_NAMES[state.root], intervals: SCALES[state.scale] },
   };
+  if (state.bpm !== TOOL.DEFAULT_BPM) data.bpm = state.bpm;
+  if (state.grid !== TOOL.DEFAULT_GRID) data.grid = state.grid;
+  if (state.root) data.root = state.root;
+  if (state.pitchRows !== TOOL.PITCH_ROWS) data.pitchRows = state.pitchRows;
+  if (state.delayNote !== TOOL.DEFAULT_DELAY_NOTE) data.delayNote = state.delayNote;
   if (state.swing > 0) data.groove = { swing: state.swing };
   data.relics = relics.map((relic) => {
     const preset = PRESET_BY_ID[relic.preset];
@@ -1819,8 +2288,11 @@ function designData(relics) {
     };
     const m = relicMix(relic);
     for (const k of MIX_FIELDS) if (m[k] > 0) out[k] = m[k];
+    // 단계 2·3 유물 항목 (기본값이면 넣지 않는다)
+    const extras = normalizeRelicExtras({ swing: relic.swing, octaveShift: relic.octaveShift, pan: relic.pan, filterSweep: relic.filterSweep });
+    for (const k of RELIC_EXTRA_FIELDS) if (extras[k] !== undefined) out[k] = extras[k];
     out.notes = relic.notes.map((n) => {
-      const midi = rowMidi(preset, n.row, state.scale);
+      const midi = rowMidi(preset, n.row, state.scale, relic);
       const note = { step: n.step, row: n.row, midi, pitch: midi === null ? null : midiName(midi) };
       if (noteVelocity(n) !== 1) note.velocity = noteVelocity(n);
       const length = noteLength(n, preset);
@@ -1832,6 +2304,9 @@ function designData(relics) {
   });
   return data;
 }
+
+// 딜레이 음표 이름 (설계서·화면 표기)
+const DELAY_NOTE_NAMES = { '1/8': '8분', '3/16': '점8분', '1/4': '4분', '3/8': '점4분' };
 
 // 세기 표기: 강(표기 없음), 중 @m, 약 @w
 function velocitySuffix(v) {
@@ -1858,6 +2333,19 @@ function mixSettingsText(r) {
   return MIX_FIELDS.map((k) => `${MIX_SETTING_LABELS[k]} ${mixValueText(k, r[k] || 0)}`).join(', ');
 }
 
+// 유물 상세의 유물 설정 한 줄(스윙, 옥타브, 팬, 필터 스윕). 모두 기본이면 null.
+function relicSettingsText(r) {
+  const parts = [];
+  if (typeof r.swing === 'number') parts.push(`스윙 ${Math.round(r.swing * 100)}% (전체와 따로)`);
+  if (r.octaveShift) parts.push(`옥타브 ${r.octaveShift > 0 ? '+' : ''}${r.octaveShift}`);
+  if (r.pan) parts.push(`팬 ${r.pan < 0 ? `왼쪽 ${Math.round(-r.pan * 100)}` : `오른쪽 ${Math.round(r.pan * 100)}`}`);
+  if (r.filterSweep) {
+    const hz = (v) => `${Math.round(v * 100)}% (${Math.round(highCutFreq(v))}Hz)`;
+    parts.push(`필터 스윕 ${hz(r.filterSweep.from)} -> ${hz(r.filterSweep.to)}`);
+  }
+  return parts.length ? parts.join(', ') : null;
+}
+
 function paramsText(params) {
   const lines = [];
   for (const o of params.oscs || []) {
@@ -1878,24 +2366,30 @@ function paramsText(params) {
   if (params.fm) lines.push(`FM: 사인 모듈레이터 음높이 x${params.fm.ratio}, 깊이 index ${params.fm.index} (index x 모듈레이터 Hz)에서 ${params.fm.decay}초 동안 0으로`);
   if (params.vibrato) lines.push(`비브라토: ${params.vibrato.rate}Hz, 깊이 ±${params.vibrato.depth}센트, ${params.vibrato.delay}초 뒤 시작`);
   if (params.hold) lines.push(`홀드: ${params.hold}초 (노트를 이만큼 이상 길게 울린다)`);
-  if (params.filterLfo) lines.push(`필터 LFO: ${params.filterLfo.rate}Hz, 폭 ±${params.filterLfo.depth}Hz (메인 필터 주파수에 더함)`);
+  if (params.spread) lines.push(`좌우 벌림(spread): ${params.spread} (오실레이터를 -${params.spread} ~ +${params.spread}에 고르게)`);
+  if (params.formants) lines.push(`포먼트: 메인 필터 대신 병렬 밴드패스 ${params.formants.map((f) => `${f.freq}Hz Q${f.Q} 게인 ${f.gain}`).join(' / ')}`);
+  if (params.filterLfo) lines.push(`필터 LFO: ${+params.filterLfo.rate.toFixed(3)}Hz, 폭 ±${params.filterLfo.depth}Hz (메인 필터 주파수에 더함)`);
   const e = params.env;
-  lines.push(`엔벨로프: 어택 ${e.attack}초, 디케이 ${e.decay}초, 서스테인 ${e.sustain}, 릴리스 ${e.release}초 (게이트 = max(노트 길이(기본 0.15초), 어택+디케이, 홀드))`);
+  lines.push(`엔벨로프: 어택 ${e.attack}초, 디케이 ${e.decay}초, 서스테인 ${e.sustain}, 릴리스 ${e.release}초 (게이트 = max(노트 길이(기본 1칸), 어택+디케이, 홀드))`);
   lines.push(`최대 게인 ${params.gain}`);
   return lines.map((l) => `- ${l}`).join('\n');
 }
 
 function designMarkdown(data) {
-  const t = data.timing;
+  // 사람이 읽는 시간 값은 소수 4자리로 줄인다 (JSON의 timing은 그대로)
+  const r4 = (v) => +v.toFixed(4);
+  const t = { ...data.timing, grid: data.grid || TOOL.DEFAULT_GRID, bpm: data.bpm || TOOL.DEFAULT_BPM, beatSeconds: r4(data.timing.beatSeconds), stepSeconds: r4(data.timing.stepSeconds), loopSeconds: r4(data.timing.loopSeconds) };
   const out = [];
   out.push('# 유물 비트 설계서');
   out.push('');
-  out.push('4Bit_Prototype 유물 비트 메이커(`relic-beat-tool/`)에서 내보낸 파일이다. 유물마다 악기 하나로 찍은 16박 루프다.');
+  out.push('4Bit_Prototype 유물 비트 메이커(`relic-beat-tool/`)에서 내보낸 파일이다. 유물마다 악기 하나로 찍은 16박(4마디) 루프다.');
   out.push('');
   out.push('## 읽는 법');
   out.push('');
-  out.push(`- **시간 기준:** 1박 = ${t.beatSeconds}초(게임 링 박자와 같음), 16박 = ${t.steps}칸, 칸 하나 = 0.5박 = ${t.stepSeconds}초, 루프 = ${t.loopSeconds}초. 루프는 이음매 없이 반복한다.`);
-  out.push(`- **칸 번호:** 0~${t.steps - 1}. 칸 i는 루프 시작 후 i x ${t.stepSeconds}초에 울린다. "박.위치" 표기로 칸 0 = 1.0, 칸 1 = 1.5, 칸 2 = 2.0 … 칸 31 = 16.5다.`);
+  const grid16 = t.grid === 16;
+  const per = stepsPerBeat(t.grid);
+  out.push(`- **시간 기준:** ${t.bpm}BPM(4분음표 기준, JSON \`bpm\`, 없으면 ${TOOL.DEFAULT_BPM}). 1박 = 4분음표 = ${t.beatSeconds}초, 격자 ${t.grid}분(JSON \`grid\`, 없으면 8): 칸 하나 = ${grid16 ? '0.25박 = 16분음표' : '0.5박 = 8분음표'} = ${t.stepSeconds}초, 16박 = 4마디 = ${t.steps}칸, 루프 = ${t.loopSeconds}초. 루프는 이음매 없이 반복한다. 표의 초는 반올림한 값이고 정확한 칸 시간은 ${grid16 ? 15 : 30} / ${t.bpm}초다.`);
+  out.push(`- **칸 번호:** 0~${t.steps - 1}. 칸 i는 루프 시작 후 i x ${t.stepSeconds}초에 울린다. "박.위치" 표기로 ${grid16 ? '칸 0 = 1.0, 칸 1 = 1.25, 칸 2 = 1.5, 칸 3 = 1.75, 칸 4 = 2.0 … 칸 63 = 16.75' : '칸 0 = 1.0, 칸 1 = 1.5, 칸 2 = 2.0 … 칸 31 = 16.5'}다.`);
   out.push('- **음 표기:** 과학적 음이름(C4 = MIDI 60, 샵 표기). 쉬는 칸은 `-`, 음높이 없는 타악은 `X`, 같은 칸의 여러 음(화음)은 `+`로 잇는다.');
   out.push('- **세기:** 음 뒤 `@m`은 중(0.7), `@w`는 약(0.4)이고 표기가 없으면 강(1.0)이다 (타악은 `X@m`). JSON `velocity`는 노트 게인 배율이고 없으면 1이다.');
   out.push(`- **노트 길이:** 기본 1칸이다. \`C3*4\`처럼 \`*칸 수\`가 붙은 음높이 노트는 그만큼 이어지고 표에서 이어지는 칸은 \`=\`다(JSON \`length\`, 없으면 1, 타악은 쓰지 않음). 게이트 = max(길이 x ${t.stepSeconds}초, 어택+디케이, 홀드)이고 루프 끝을 넘는 길이는 루프 끝에서 자른다. 악기의 릴리스는 게이트 뒤로 이어진다.`);
@@ -1905,12 +2399,16 @@ function designMarkdown(data) {
   } else {
     out.push(`- **스윙:** 없음. JSON에 \`groove.swing\`이 있으면 칸 i의 시각 = i x ${t.stepSeconds}초 + (i가 홀수면 swing x ${t.stepSeconds}초)다.`);
   }
-  out.push(`- **믹스 설정 (유물별, 없으면 0):** \`sidechain\`은 킥마다 유물 소리를 (1 - 값)까지 ${TOOL.SIDECHAIN_ATTACK}초에 눌렀다가 ${TOOL.SIDECHAIN_RELEASE}초에 되돌린다. 툴에서는 데모 드럼 킥에 맞추고, 게임에서는 무기 킥 시각에 맞춰 눌러야 한다. \`reverbSend\`·\`delaySend\`는 공통 리버브(감쇠 노이즈 임펄스 ${TOOL.REVERB_SECONDS}초)와 공통 딜레이(${TOOL.DELAY_TIME}초 = 1.5박, 피드백 ${TOOL.DELAY_FEEDBACK}, 피드백 로우패스 ${TOOL.DELAY_FEEDBACK_LOWPASS}Hz)로 보내는 양이다. \`lofi\`는 계단 곡선(${TOOL.LOFI_BITS_MAX}비트에서 ${TOOL.LOFI_BITS_MIN}비트로)과 로우패스(${TOOL.LOFI_CUTOFF_MAX}Hz에서 ${TOOL.LOFI_CUTOFF_MIN}Hz로)를 값에 따라 건다. \`lowCut\`(저음 깎기)은 하이패스 ${TOOL.LOW_CUT_MIN} x (${TOOL.CUT_FULL} / ${TOOL.LOW_CUT_MIN})^값 Hz, \`highCut\`(고음 깎기)은 로우패스 ${TOOL.HIGH_CUT_MAX} x (${TOOL.CUT_FULL} / ${TOOL.HIGH_CUT_MAX})^값 Hz다 (값 1이면 둘 다 ${TOOL.CUT_FULL}Hz, Q ${TOOL.CUT_Q}, 12dB/oct). 소리 경로는 볼륨, 사이드체인, 하이패스, 로우패스, 로파이 순이고 센드는 그 뒤에서 뽑는다.`);
+  const delayNote = data.delayNote || TOOL.DEFAULT_DELAY_NOTE;
+  const delaySec = +(TOOL.DELAY_NOTES[delayNote] * 60 / t.bpm).toFixed(4);
+  out.push(`- **믹스 설정 (유물별, 없으면 0):** \`sidechain\`은 킥마다 유물 소리를 (1 - 값)까지 ${TOOL.SIDECHAIN_ATTACK}초에 눌렀다가 ${TOOL.SIDECHAIN_RELEASE}초에 되돌린다. 4분 정박 킥(매 박 머리) 기준으로 설계했다. \`reverbSend\`·\`delaySend\`는 공통 리버브(감쇠 노이즈 임펄스 ${TOOL.REVERB_SECONDS}초)와 공통 딜레이(${DELAY_NOTE_NAMES[delayNote]} = ${TOOL.DELAY_NOTES[delayNote]}박 = ${delaySec}초, JSON \`delayNote\`, 없으면 ${TOOL.DEFAULT_DELAY_NOTE}, 피드백 ${TOOL.DELAY_FEEDBACK}, 피드백 로우패스 ${TOOL.DELAY_FEEDBACK_LOWPASS}Hz)로 보내는 양이다. \`lofi\`는 계단 곡선(${TOOL.LOFI_BITS_MAX}비트에서 ${TOOL.LOFI_BITS_MIN}비트로)과 로우패스(${TOOL.LOFI_CUTOFF_MAX}Hz에서 ${TOOL.LOFI_CUTOFF_MIN}Hz로)를 값에 따라 건다. \`lowCut\`(저음 깎기)은 하이패스 ${TOOL.LOW_CUT_MIN} x (${TOOL.CUT_FULL} / ${TOOL.LOW_CUT_MIN})^값 Hz, \`highCut\`(고음 깎기)은 로우패스 ${TOOL.HIGH_CUT_MAX} x (${TOOL.CUT_FULL} / ${TOOL.HIGH_CUT_MAX})^값 Hz다 (값 1이면 둘 다 ${TOOL.CUT_FULL}Hz, Q ${TOOL.CUT_Q}, 12dB/oct). 소리 경로는 볼륨, 사이드체인, 하이패스, 로우패스, 로파이 순이고 센드는 그 뒤에서 뽑는다.`);
   out.push('- **데모 드럼:** 툴의 데모 드럼(킥·스네어)은 미리듣기 전용이며 이 데이터에 없다.');
-  out.push(`- **스케일:** ${data.scale.name} (루트 ${data.scale.root}, 반음 간격 ${data.scale.intervals.join(' ')}). 음높이 악기는 스케일 음 ${TOOL.PITCH_ROWS}개(행 0이 가장 낮다), 타악은 행 1개다.`);
+  const root = data.root || 0;
+  out.push(`- **스케일:** ${keyScaleName(data.scale.name, root)} (반음 간격 ${data.scale.intervals.join(' ')}). 음높이는 C 기준 스케일 음에 키 \`root\`(${root}) 반음을 더한다(JSON \`root\` 0~11, 없으면 0). 음높이 악기는 스케일 음 ${data.pitchRows || TOOL.PITCH_ROWS}행(JSON \`pitchRows\` 8 또는 15, 없으면 8, 행 0이 가장 낮다), 타악은 행 1개다. 노트의 \`midi\`·\`pitch\`는 키와 유물의 옥타브 이동을 반영한 실제 음이다.`);
+  out.push(`- **유물 설정 (유물별, 없으면 기본):** \`swing\`(0~${TOOL.SWING_MAX})이 있으면 그 유물만 이 스윙을 쓰고 없으면 전체 스윙을 따른다. \`octaveShift\`(${TOOL.OCTAVE_SHIFT_MIN}~+${TOOL.OCTAVE_SHIFT_MAX})는 음을 옥타브 단위로 옮긴다(MIDI 0~127을 넘으면 옥타브 단위로 안으로 접는다). \`pan\`(-1 왼쪽 ~ 1 오른쪽)은 마스터로 가는 소리만 좌우로 보내고 리버브·딜레이 센드는 가운데에서 뽑는다. \`filterSweep\`({ from, to }, 각 0~1)은 루프 머리에서 끝까지 로우패스를 ${TOOL.HIGH_CUT_MAX} x (${TOOL.CUT_FULL} / ${TOOL.HIGH_CUT_MAX})^from Hz에서 ^to Hz로 지수 램프로 움직이고 루프마다 처음으로 돌아간다(고음 깎기와 따로 직렬로 건다).`);
   out.push('- **원본 데이터:** 맨 아래 JSON이 원본이고 위의 표는 JSON에서 만든 것이다. 둘이 다르면 JSON을 따른다. 툴의 불러오기도 JSON만 읽는다.');
-  out.push('- **게임 반영 시 주의:** 게임의 쿵(A)·짝(S) 판정 소리와 겹치지 않게 킥·스네어 음색은 쓰지 않았다. 박 시작은 게임 링 박자에 맞추고, 볼륨(`volume` x `mixVolume`)은 상대값이다. 합성 파라미터는 Web Audio API 기준(오실레이터 파형, BiquadFilter, 게인 엔벨로프)이다.');
-  out.push('- **선택 파라미터:** `distortion`(WaveShaper tanh 곡선, drive가 클수록 강함, 필터 앞), `fm`(사인 모듈레이터가 주파수를 변조, 깊이 = index x 모듈레이터 Hz가 decay초 동안 0으로), `vibrato`(LFO로 detune을 ±depth센트 흔듦, delay초 뒤 시작), `hold`(게이트를 max(0.15초, 어택+디케이, hold)로 늘림), `filterLfo`(사인 LFO가 메인 필터 주파수에 ±depth Hz를 rate Hz로 더함, 노트 시작에 위상 0)는 있는 프리셋에만 쓴다. 없으면 그 처리를 하지 않는다.');
+  out.push('- **게임 반영 시 주의:** 게임의 쿵(A)·짝(S) 판정 소리와 겹치지 않게 킥·스네어 음색은 쓰지 않았다. 템포와 격자는 위 시간 기준을 따르며 게임 링 박자(0.3초)와 묶여 있지 않다. 볼륨(`volume` x `mixVolume`)은 상대값이다. 합성 파라미터는 Web Audio API 기준(오실레이터 파형, BiquadFilter, 게인 엔벨로프)이다.');
+  out.push('- **선택 파라미터:** `distortion`(WaveShaper tanh 곡선, drive가 클수록 강함, 필터 앞), `fm`(사인 모듈레이터가 주파수를 변조, 깊이 = index x 모듈레이터 Hz가 decay초 동안 0으로), `vibrato`(LFO로 detune을 ±depth센트 흔듦, delay초 뒤 시작), `hold`(게이트를 max(1칸, 어택+디케이, hold)로 늘림), `filterLfo`(사인 LFO가 메인 필터 주파수에 ±depth Hz를 rate Hz로 더함, 노트 시작에 위상 0), `spread`(오실레이터를 좌우로 -spread ~ +spread에 고르게 벌림), `formants`(메인 필터 대신 병렬 밴드패스 [{ freq, Q, gain }]를 지나 합침, 보컬 모음)는 있는 프리셋에만 쓴다. 없으면 그 처리를 하지 않는다.');
   out.push('');
   out.push('## 요약');
   out.push('');
@@ -1936,27 +2434,33 @@ function designMarkdown(data) {
     out.push(`- **노트 수:** ${r.notes.length}`);
     const mixText = mixSettingsText(r);
     if (mixText) out.push(`- **믹스 설정:** ${mixText}`);
+    const relicText = relicSettingsText(r);
+    if (relicText) out.push(`- **유물 설정:** ${relicText}`);
     out.push('');
     out.push('합성 파라미터:');
     out.push('');
     out.push(paramsText(r.preset.params));
     out.push('');
-    out.push('| 박 | .0 | .5 |');
-    out.push('|---|---|---|');
+    // 박 단위 표: 행 = 박(4분음표) 16개, 열 = 박 안의 칸 (8분 .0 .5 / 16분 .0 .25 .5 .75)
+    const cols = STEP_FRACTIONS[t.grid].map((f) => `.${f}`);
+    out.push(`| 박 | ${cols.join(' | ')} |`);
+    out.push(`|---|${cols.map(() => '---').join('|')}|`);
     for (let b = 0; b < t.beats; b++) {
-      out.push(`| ${b + 1} | ${stepText(r, b * 2)} | ${stepText(r, b * 2 + 1)} |`);
+      out.push(`| ${b + 1} | ${cols.map((_, k) => stepText(r, b * per + k)).join(' | ')} |`);
     }
     out.push('');
     out.push('한 줄 패턴:');
     out.push('');
     out.push('```');
-    out.push(Array.from({ length: t.steps }, (_, s) => `${stepLabel(s)}:${stepText(r, s)}`).join(' '));
+    out.push(Array.from({ length: t.steps }, (_, s) => `${stepLabel(s, t.grid)}:${stepText(r, s)}`).join(' '));
     out.push('```');
   }
   out.push('');
   out.push('## 데이터 (JSON)');
   out.push('');
-  out.push('`notes`의 `step`은 칸 번호(0~31), `row`는 음높이 행(스케일 기준, 행 0이 가장 낮음), `midi`와 `pitch`는 그 행의 실제 음(타악은 null)이다. 선택 항목: 노트의 `velocity`(0~1, 없으면 1), `length`(칸 수, 없으면 1), `repeat`(한 칸 안 타격 수 1~4, 없으면 1, 2 이상이면 length는 1), 유물의 `sidechain`·`reverbSend`·`delaySend`·`lofi`·`lowCut`·`highCut`(0~1, 없으면 0), 전체의 `groove.swing`(0~0.5, 없으면 0).');
+  out.push(`최상위 선택 항목: \`bpm\`(${TOOL.BPM_MIN}~${TOOL.BPM_MAX} 정수, 없으면 ${TOOL.DEFAULT_BPM}), \`grid\`(8 또는 16, 없으면 8), \`root\`(0~11, 없으면 0), \`pitchRows\`(8 또는 15, 없으면 8), \`delayNote\`(${Object.keys(TOOL.DELAY_NOTES).join(', ')}, 없으면 ${TOOL.DEFAULT_DELAY_NOTE}). \`timing\`은 참고값이라 불러올 때 쓰지 않는다.`);
+  out.push('');
+  out.push('`notes`의 `step`은 칸 번호(8분 격자 0~31, 16분 격자 0~63), `row`는 음높이 행(스케일 기준, 행 0이 가장 낮음), `midi`와 `pitch`는 그 행의 실제 음(타악은 null)이다. 선택 항목: 노트의 `velocity`(0~1, 없으면 1), `length`(칸 수, 없으면 1), `repeat`(한 칸 안 타격 수 1~4, 없으면 1, 2 이상이면 length는 1), 유물의 `sidechain`·`reverbSend`·`delaySend`·`lofi`·`lowCut`·`highCut`(0~1, 없으면 0)·`swing`(없으면 전체 스윙)·`octaveShift`(-2~2, 없으면 0)·`pan`(-1~1, 없으면 0)·`filterSweep`({ from, to }, 없으면 없음), 전체의 `groove.swing`(0~0.5, 없으면 0).');
   out.push('');
   out.push('```json');
   out.push(JSON.stringify(data, null, 2));
@@ -2013,6 +2517,13 @@ function parseDesign(text) {
     throw new Error(`알 수 없는 스케일입니다: "${data.scale.name}"`);
   }
   if (!Array.isArray(data.relics) || !data.relics.length) throw new Error('유물(relics)이 없습니다.');
+  // 최상위 선택 항목. grid는 16만 16분 격자이고 그 밖은 8, bpm은 범위로 맞추고, 모르는 delayNote는 기본값이다.
+  const grid = data.grid === 16 ? 16 : 8;
+  const steps = gridSteps(grid);
+  const bpm = clampBpm(data.bpm);
+  const delayNote = TOOL.DELAY_NOTES[data.delayNote] ? data.delayNote : TOOL.DEFAULT_DELAY_NOTE;
+  const root = clampRoot(data.root);
+  const pitchRows = data.pitchRows === 15 ? 15 : TOOL.PITCH_ROWS;
   const names = new Set();
   const relics = data.relics.map((r, i) => {
     const where = `${i + 1}번째 유물`;
@@ -2025,22 +2536,24 @@ function parseDesign(text) {
     if (!preset) throw new Error(`"${name}": 알 수 없는 악기 프리셋입니다 (${presetId}).`);
     if (!Array.isArray(r.notes)) throw new Error(`"${name}": 노트(notes)가 없습니다.`);
     const notes = r.notes.map((n, j) => {
-      if (!Number.isInteger(n.step) || n.step < 0 || n.step >= TOOL.STEPS) throw new Error(`"${name}" ${j + 1}번째 노트: 칸 번호(step)가 0~${TOOL.STEPS - 1}이 아닙니다.`);
-      if (!Number.isInteger(n.row) || n.row < 0 || n.row >= rowCount(preset)) throw new Error(`"${name}" ${j + 1}번째 노트: 행(row)이 악기 범위를 벗어납니다.`);
+      if (!Number.isInteger(n.step) || n.step < 0 || n.step >= steps) throw new Error(`"${name}" ${j + 1}번째 노트: 칸 번호(step)가 0~${steps - 1}(격자 ${grid}분)이 아닙니다.`);
+      if (!Number.isInteger(n.row) || n.row < 0 || n.row >= rowCount(preset, pitchRows)) throw new Error(`"${name}" ${j + 1}번째 노트: 행(row)이 악기 범위를 벗어납니다.`);
       // 새 항목은 범위 밖이면 범위 안으로 맞춘다
       const note = { step: n.step, row: n.row };
       if (typeof n.velocity === 'number' && Number.isFinite(n.velocity)) note.velocity = clamp(n.velocity, 0, 1);
-      if (typeof n.length === 'number' && Number.isFinite(n.length)) note.length = clamp(Math.round(n.length), 1, TOOL.STEPS - n.step);
+      if (typeof n.length === 'number' && Number.isFinite(n.length)) note.length = clamp(Math.round(n.length), 1, steps - n.step);
       if (typeof n.repeat === 'number' && Number.isFinite(n.repeat)) note.repeat = clamp(Math.round(n.repeat), 1, TOOL.REPEAT_MAX);
       return note;
     });
     const volume = typeof r.volume === 'number' ? Math.min(TOOL.VOLUME_MAX, Math.max(0, r.volume)) : TOOL.DEFAULT_VOLUME;
     const relic = { name, preset: preset.id, notes, volume };
     for (const k of MIX_FIELDS) relic[k] = clamp(num(r[k], 0), 0, 1);
+    for (const k of RELIC_EXTRA_FIELDS) if (r[k] !== undefined) relic[k] = r[k];
+    normalizeRelicExtras(relic);
     return relic;
   });
   const swing = clamp(num(data.groove && data.groove.swing, 0), 0, TOOL.SWING_MAX);
-  return { scale: data.scale && data.scale.name, swing, relics };
+  return { scale: data.scale && data.scale.name, swing, relics, grid, bpm, delayNote, root, pitchRows };
 }
 
 function importText(text, filename) {
@@ -2070,6 +2583,22 @@ function importText(text, filename) {
   if (scaleChange) body.append(el('div', '', `스케일이 "${state.scale}"에서 "${parsed.scale}"로 바뀐다 (모든 유물의 음높이 행에 적용).`));
   const swingChange = Math.round(parsed.swing * 100) !== Math.round(state.swing * 100);
   if (swingChange) body.append(el('div', '', `스윙이 ${Math.round(state.swing * 100)}%에서 ${Math.round(parsed.swing * 100)}%로 바뀐다 (모든 유물에 적용).`));
+  const bpmChange = parsed.bpm !== state.bpm;
+  if (bpmChange) body.append(el('div', '', `템포가 ${state.bpm}BPM에서 ${parsed.bpm}BPM으로 바뀐다 (모든 유물에 적용).`));
+  const delayChange = parsed.delayNote !== state.delayNote;
+  if (delayChange) body.append(el('div', '', `딜레이가 ${DELAY_NOTE_NAMES[state.delayNote]}에서 ${DELAY_NOTE_NAMES[parsed.delayNote]}로 바뀐다.`));
+  // 격자가 다르면 파일의 격자를 툴 전체에 적용하고, 파일에 없는 유물은 같은 시각을 유지하도록 옮긴다
+  const gridChange = parsed.grid !== state.grid;
+  const others = state.relics.filter((r) => !parsed.relics.some((p) => p.name === r.name));
+  const dropped = gridChange && parsed.grid === 8 ? oddStepNotes(others) : 0;
+  if (gridChange) {
+    body.append(el('div', '', `격자가 ${state.grid}분에서 ${parsed.grid}분으로 바뀐다. 파일에 없는 유물의 노트는 같은 시각으로 옮긴다${dropped ? ` (16분 홀수 칸 노트 ${dropped}개는 지워진다)` : ''}.`));
+  }
+  const rootChange = parsed.root !== state.root;
+  if (rootChange) body.append(el('div', '', `키가 ${NOTE_NAMES[state.root]}에서 ${NOTE_NAMES[parsed.root]}로 바뀐다 (모든 유물의 음높이에 적용).`));
+  const rowsChange = parsed.pitchRows !== state.pitchRows;
+  const highDropped = rowsChange && parsed.pitchRows < state.pitchRows ? highRowNotes(others, parsed.pitchRows) : 0;
+  if (rowsChange) body.append(el('div', '', `행 수가 ${state.pitchRows}행에서 ${parsed.pitchRows}행으로 바뀐다${highDropped ? ` (파일에 없는 유물의 행 ${parsed.pitchRows} 이상 노트 ${highDropped}개는 지워진다)` : ''}.`));
   body.append(el('div', 'hint', '목록에만 있는 유물과 믹스 바는 그대로다.'));
   // 덮어쓰기는 파일 내용이 곧 그 유물이다: 파일에 없는 새 항목은 기본값으로 돌아간다
   const fill = (target, r) => {
@@ -2080,11 +2609,30 @@ function importText(text, filename) {
       if (r[k] > 0) target[k] = r[k];
       else delete target[k];
     }
+    for (const k of RELIC_EXTRA_FIELDS) {
+      if (r[k] !== undefined) target[k] = r[k];
+      else delete target[k];
+    }
     fitNotesToPreset(target);
   };
   const apply = () => {
     if (scaleChange) state.scale = parsed.scale;
     state.swing = parsed.swing;
+    state.root = parsed.root;
+    if (rowsChange) {
+      if (parsed.pitchRows < state.pitchRows) for (const r of others) dropHighRows(r, parsed.pitchRows);
+      state.pitchRows = parsed.pitchRows;
+    }
+    if (gridChange) {
+      for (const r of others) convertRelicGrid(r, state.grid, parsed.grid);
+      state.grid = parsed.grid;
+    }
+    state.bpm = parsed.bpm;
+    state.delayNote = parsed.delayNote;
+    if (gridChange || bpmChange || delayChange) {
+      Player.syncDelay();
+      if (Player.mode) Player.start(Player.mode);
+    }
     for (const r of parsed.relics) {
       const target = existing.get(r.name);
       if (target) {
@@ -2099,7 +2647,7 @@ function importText(text, filename) {
     changed();
     setStatus(`불러옴: 덮어쓰기 ${overwrite.length}, 추가 ${added.length}`);
   };
-  if (overwrite.length || scaleChange || swingChange) confirmModal('설계서 불러오기', body, apply, '불러오기');
+  if (overwrite.length || scaleChange || swingChange || bpmChange || delayChange || gridChange || rootChange || rowsChange) confirmModal('설계서 불러오기', body, apply, '불러오기');
   else apply();
 }
 
@@ -2136,7 +2684,7 @@ function setupImport() {
 // ---------------------------------------------------------------------------
 // 오디오 내보내기 (WAV)
 // ---------------------------------------------------------------------------
-// 이음매 없는 한 바퀴(4.8초)를 렌더한다. 재생과 같은 체인·스윙·사이드체인을 쓰고 바이닐 노이즈는 넣지 않는다.
+// 이음매 없는 한 바퀴(16박 = loopSeconds(), 130BPM이면 약 7.385초)를 렌더한다. 재생과 같은 체인·스윙·사이드체인을 쓰고 바이닐 노이즈는 넣지 않는다.
 //  1) 한 바퀴의 노트를 압축기 앞까지 두 바퀴 길이로 렌더한다. 루프 끝을 넘는 릴리스·리버브·딜레이 꼬리가 두 번째 바퀴 자리에 남는다.
 //     사이드체인은 두 번째 바퀴 자리의 킥에도 걸어, 반복할 때 다음 바퀴 킥이 앞 바퀴 꼬리를 누르는 것까지 넣는다.
 //  2) 그 꼬리를 앞으로 접어 더한다. 이음매 앞뒤가 같은 노트에서 나오므로 반복해도 끊기지 않는다.
@@ -2146,7 +2694,7 @@ function setupImport() {
 // opts.drums: 데모 드럼 소리를 넣을지. 데모 드럼이 선택되어 있으면 사이드체인은 이 값과 상관없이 적용한다.
 async function renderLoop(layers, opts = {}) {
   const sr = TOOL.WAV_SAMPLE_RATE;
-  const L = Math.round(TOOL.LOOP_SECONDS * sr);
+  const L = Math.round(loopSeconds() * sr);
   const ctx = new OfflineAudioContext(2, L * 2, sr);
   const bus = makeBus(ctx, false);
   const chains = layers.map(({ relic, volume }) => makeChain(ctx, bus, relic, volume));
@@ -2156,11 +2704,14 @@ async function renderLoop(layers, opts = {}) {
     drumOut.gain.value = state.drumVolume;
     drumOut.connect(bus.input);
   }
-  for (let g = 0; g < TOOL.STEPS * 2; g++) {
-    const step = g % TOOL.STEPS;
+  const steps = gridSteps();
+  for (let g = 0; g < steps * 2; g++) {
+    const step = g % steps;
     const t = stepTime(g);
-    if (g < TOOL.STEPS) layers.forEach(({ relic }, i) => scheduleRelicStep(ctx, chains[i].input, relic, step, t));
-    scheduleDrumStep(ctx, g < TOOL.STEPS ? drumOut : null, chains, step, t);
+    // 필터 스윕은 두 번째 바퀴 자리에도 걸어 접은 꼬리가 다음 바퀴 머리와 같은 필터를 지나게 한다
+    if (step === 0) layers.forEach(({ relic }, i) => sweepAt(chains[i], relic, t));
+    if (g < steps) layers.forEach(({ relic }, i) => scheduleRelicStep(ctx, chains[i].input, relic, step, 0, g));
+    scheduleDrumStep(ctx, g < steps ? drumOut : null, chains, step, t);
   }
   const pre = await ctx.startRendering();
 
@@ -2256,6 +2807,8 @@ function setup() {
   setupEditorInput();
   setupImport();
   $('scale').addEventListener('change', (e) => { state.scale = e.target.value; changed(); });
+  $('root').addEventListener('change', (e) => { state.root = clampRoot(+e.target.value); changed(); });
+  $('pitch-rows').addEventListener('change', (e) => setPitchRows(+e.target.value));
   $('mix-play').addEventListener('click', () => Player.toggle('mix'));
   $('single-play').addEventListener('click', () => Player.toggle('single'));
   $('volume').addEventListener('input', (e) => {
