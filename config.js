@@ -541,7 +541,7 @@ const CONFIG = {
     // 일반
     kick_solo: { name: '킥 솔로', rarity: 'common', desc: '쿵 노드 데미지 +20%', pct: 0.2 },
     snare_solo: { name: '스네어 솔로', rarity: 'common', desc: '짝 노드 데미지 +20%', pct: 0.2 },
-    subwoofer: { name: '서브우퍼', rarity: 'common', desc: '쿵 Perfect 시 맞은 적을 오른쪽으로 1칸 밀침', push: 1 },
+    subwoofer: { name: '서브우퍼', rarity: 'common', desc: '쿵 Perfect 시 맞은 적을 오른쪽으로 1칸 밀침', push: 1, bumpDamage: 1 },
     crash_cymbal: { name: '크래시 심벌', rarity: 'common', desc: '짝 Perfect 시 인접한 적에게 데미지 50%', splash: 0.5 },
     rehearsal: { name: '리허설', rarity: 'common', desc: '같은 무기로 연속 클리어한 웨이브당 데미지 +6% (최대 +36%)', pctPerWave: 0.06, maxPct: 0.36 },
     repertoire: { name: '레퍼토리', rarity: 'common', desc: '써 본 무기 1종당 데미지 +5% (최대 +30%)', pctPerWeapon: 0.05, maxPct: 0.3 },
@@ -570,6 +570,12 @@ const CONFIG = {
     fermata: { name: '페르마타', rarity: 'epic', desc: '한 사이클 전부 Perfect면 모든 적 3초 정지 + 피해', freezeTime: 3, damageRatio: 0.5 },
   },
   PARTICLES_RELIC: 4,           // 유물 효과(인접 피해, 추가 타격 등)로 맞은 적에게 튀는 입자 수
+  // 서브우퍼로 밀린 적이 막혀 부딪히는 연출: 적이 오른쪽으로 BUMP_OFFSET만큼 튀었다 돌아오고,
+  // 칸 오른쪽 경계(부딪힌 면)에 흰 섬광과 입자가 튄다.
+  BUMP_TIME: 0.15,
+  BUMP_OFFSET: 5,               // 내부 해상도 픽셀
+  BUMP_FLASH_TIME: 0.12,
+  PARTICLES_BUMP: 5,
 
   // player.stats가 효과로 도달할 수 있는 수치의 한계. 지금은 능력치를 바꾸는 보상이 없고, 추후 유물에서 쓴다.
   STAT_LIMITS: {

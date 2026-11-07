@@ -51,17 +51,26 @@ const RELIC_LOGIC = {
     damagePct: (game, ctx, state, def) => (ctx.drum === 'snare' ? def.pct : 0),
   },
 
-  // 쿵 Perfect로 맞은 적을 오른쪽으로 민다. 벽이나 다른 적(플레이어 포함)에 막히면 그대로다.
-  // 이동하지 않는 적은 밀리지 않는다. 진행 중인 텔레그래프 칸은 그대로 둔다.
-  // 오른쪽 적부터 밀어 나란히 선 적이 서로 막지 않게 한다.
+  // 쿵 Perfect로 맞은 적을 오른쪽으로 민다. 진행 중인 텔레그래프 칸은 그대로 둔다.
+  // 오른쪽 적부터 밀어, 나란히 선 적은 앞 적이 밀려난 자리로 함께 밀린다.
+  // 벽이나 다른 적(또는 플레이어)에 막히면 그 자리에서 부딪혀 bumpDamage를 받는다. 막은 것이 적이면 그 적도 받는다.
+  // 부딪힘마다 따로 계산하므로, 벽에 막힌 적은 벽 충돌과 뒤 적에게 박힌 데미지를 둘 다 받는다.
   subwoofer: {
     node(game, e, state, def) {
       if (e.grade !== 'perfect' || e.drum !== 'kick') return;
-      const alive = e.targets.filter((t) => !t.dead && !t.def.stationary).sort((a, b) => b.col - a.col);
-      for (const enemy of alive) {
+      const pushed = e.targets.filter((t) => !t.dead).sort((a, b) => b.col - a.col);
+      for (const enemy of pushed) {
+        if (enemy.dead) continue;
         const col = enemy.col + def.push;
-        if (!Grid.inBounds(col, enemy.row) || game.isOccupied(col, enemy.row)) continue;
-        enemy.moveTo(col, enemy.row, enemy.moveTimer);
+        const row = enemy.row;
+        if (Grid.inBounds(col, row) && !game.isOccupied(col, row)) {
+          enemy.moveTo(col, row, enemy.moveTimer);
+          continue;
+        }
+        const obstacle = Grid.inBounds(col, row) ? game.enemyAt(col, row) : null;
+        game.bumpEnemy(enemy);
+        game.damageEnemy(enemy, def.bumpDamage, 'subwoofer');
+        if (obstacle) game.damageEnemy(obstacle, def.bumpDamage, 'subwoofer');
       }
     },
   },

@@ -85,6 +85,7 @@ class Enemy {
 
     this.spawnTimer = CONFIG.SPAWN_DELAY;
     this.flash = 0;
+    this.bump = 0;           // 부딪힘 연출(서브우퍼)의 남은 시간. 그리기에만 쓴다.
     this.enterIdle();
   }
 

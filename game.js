@@ -11,6 +11,7 @@ const SFX_TABLE = {
   kill: { freq: 520, dur: 0.12, type: 'square', gain: 0.8 },
   clear: { freq: 990, dur: 0.2, type: 'triangle', gain: 1.2 },
   gameover: { freq: 90, dur: 0.5, type: 'sawtooth', gain: 1.2 },
+  bump: { freq: 150, dur: 0.07, type: 'square', gain: 1 },
 };
 
 const Sfx = {
@@ -77,6 +78,7 @@ class Game {
     this.enemies = [];
     this.telegraphs = [];
     this.impacts = [];
+    this.bumpFlashes = []; // 서브우퍼 부딪힘 섬광 { col, row, age }. 칸 오른쪽 경계에 그린다.
     this.ringBursts = [];
     this.particles = [];
     this.hitStop = 0;
@@ -550,6 +552,22 @@ class Game {
     this.shakePower = power;
   }
 
+  // 밀린 적이 오른쪽 장애물에 부딪히는 연출. 데미지는 부르는 쪽이 준다.
+  bumpEnemy(enemy) {
+    enemy.bump = CONFIG.BUMP_TIME;
+    this.bumpFlashes.push({ col: enemy.col, row: enemy.row, age: 0 });
+    const x = Grid.cellX(enemy.col) + CONFIG.CELL_SIZE;
+    const y = Grid.cellY(enemy.row) + CONFIG.CELL_SIZE / 2;
+    for (let i = 0; i < CONFIG.PARTICLES_BUMP; i++) {
+      // 부딪힌 면에서 왼쪽 위아래로 튄다
+      const angle = Math.PI + (Math.random() - 0.5) * Math.PI * 0.9;
+      const speed = CONFIG.PARTICLE_SPEED * (0.5 + Math.random() / 2);
+      this.particles.push({ x, y: y + (Math.random() - 0.5) * 16, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, age: 0 });
+    }
+    this.shake(CONFIG.SHAKE_PERFECT);
+    Sfx.play('bump');
+  }
+
   burst(col, row, count) {
     const x = Grid.cellX(col) + CONFIG.CELL_SIZE / 2;
     const y = Grid.cellY(row) + CONFIG.CELL_SIZE / 2;
@@ -637,12 +655,15 @@ class Game {
   updateEffects(dt) {
     for (const popup of this.popups) popup.age += dt;
     this.popups = this.popups.filter((p) => p.age < CONFIG.POPUP_TIME);
+    for (const flash of this.bumpFlashes) flash.age += dt;
+    this.bumpFlashes = this.bumpFlashes.filter((f) => f.age < CONFIG.BUMP_FLASH_TIME);
     for (const impact of this.impacts) impact.age += dt;
     this.impacts = this.impacts.filter((i) => i.age < CONFIG.IMPACT_TIME);
     for (const burst of this.ringBursts) burst.age += dt;
     this.ringBursts = this.ringBursts.filter((b) => b.age < CONFIG.RING_BURST_TIME);
     for (const enemy of this.enemies) {
       if (enemy.flash > 0) enemy.flash -= dt;
+      enemy.bump = tickDown(enemy.bump, dt);
     }
     for (const p of this.particles) {
       p.x += p.vx * dt;

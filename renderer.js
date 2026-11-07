@@ -479,12 +479,23 @@ class Renderer {
     for (const impact of game.impacts) {
       this.rect(Grid.cellX(impact.col), Grid.cellY(impact.row), size, size, COLORS.impact);
     }
+    // 부딪힌 면(칸 오른쪽 경계)의 흰 섬광. 굵게 나타났다가 가늘어지며 사라진다.
+    const ctx = this.ctx;
+    for (const flash of game.bumpFlashes) {
+      const t = flash.age / CONFIG.BUMP_FLASH_TIME;
+      const w = Math.max(1, Math.round(4 * (1 - t)));
+      ctx.globalAlpha = 1 - t;
+      this.rect(Grid.cellX(flash.col) + size - Math.floor(w / 2), Grid.cellY(flash.row) + 3, w, size - 6, COLORS.text);
+    }
+    ctx.globalAlpha = 1;
   }
 
   drawEnemy(enemy) {
     // 스폰 대기 중에는 깜빡인다
     if (enemy.spawnTimer > 0 && Math.floor(enemy.spawnTimer * 12) % 2 === 0) return;
-    const x = CONFIG.GRID_X + enemy.drawCol * CONFIG.CELL_SIZE;
+    // 부딪힘(서브우퍼): 오른쪽으로 튀었다가 제자리로 돌아온다
+    const bump = enemy.bump > 0 ? Math.sin(Math.PI * (1 - enemy.bump / CONFIG.BUMP_TIME)) * CONFIG.BUMP_OFFSET : 0;
+    const x = CONFIG.GRID_X + enemy.drawCol * CONFIG.CELL_SIZE + Math.round(bump);
     const y = CONFIG.GRID_Y + enemy.drawRow * CONFIG.CELL_SIZE;
     const look = ENEMY_LOOKS[enemy.kind];
     const flashing = enemy.flash > 0;
