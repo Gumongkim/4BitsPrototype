@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>4Bit 유물 비트 메이커</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="tool.css">
+</head>
+<body>
+<header id="top">
+  <div class="top-title">
+    <h1>유물 비트 메이커</h1>
+    <label class="scale-pick">스케일
+      <select id="scale"></select>
+    </label>
+  </div>
+  <div id="mix-bar"></div>
+  <div class="mix-buttons">
+    <button id="mix-play" class="primary play-btn">▶ 믹스 재생</button>
+    <button id="mix-random" title="전체 유물 중에서 무작위로 골라 5칸을 새로 채운다">랜덤 믹스</button>
+  </div>
+  <div id="globals">
+    <label class="g-item" title="미리듣기 전용 킥·스네어. 설계서에는 들어가지 않는다">데모 드럼
+      <select id="demo-drum"></select>
+    </label>
+    <label class="g-item">드럼 볼륨
+      <input type="range" id="drum-volume" min="0" max="150" step="5" value="100">
+      <span id="drum-volume-label" class="g-value">100%</span>
+    </label>
+    <label class="g-item" title="홀수 칸(뒤 반박) 시작을 swing x 0.15초 늦춘다. 33% 근처가 셔플">스윙
+      <input type="range" id="swing" min="0" max="50" step="1" value="0">
+      <span id="swing-label" class="g-value">0%</span>
+    </label>
+    <label class="g-item check" title="재생에만 얹는 아주 작은 노이즈와 크랙. 설계서·WAV에는 없다">
+      <input type="checkbox" id="vinyl"> 바이닐 노이즈
+    </label>
+  </div>
+</header>
+
+<aside id="left">
+  <div class="left-head">
+    <h2 class="section-title">유물</h2>
+    <button id="add-relic" class="icon" title="새 유물 추가">+</button>
+  </div>
+  <form id="add-form" class="name-form" hidden>
+    <input type="text" id="add-name" maxlength="30" placeholder="유물 이름" autocomplete="off">
+    <button type="submit" class="primary">추가</button>
+    <button type="button" id="add-cancel">취소</button>
+    <p class="form-error" id="add-error"></p>
+  </form>
+  <ul id="relic-list"></ul>
+  <div class="preset-wrap">
+    <h2 class="section-title">악기 프리셋</h2>
+    <ul id="preset-list"></ul>
+  </div>
+  <div class="left-foot">
+    <div class="check-row">
+      <label class="check"><input type="checkbox" id="check-all"> 전체 체크</label>
+      <button id="delete-checked" class="small danger" title="체크한 유물을 모두 삭제">체크한 유물 삭제</button>
+    </div>
+    <div class="foot-buttons">
+      <button id="export-audio" title="체크한 유물마다 WAV 1개 + 체크한 유물을 합친 믹스 WAV 1개">오디오 내보내기 (WAV)</button>
+      <label class="check small-check" title="WAV에 데모 드럼 소리를 넣는다. 사이드체인은 이 체크와 상관없이 데모 드럼 킥에 맞춰 적용된다">
+        <input type="checkbox" id="wav-drums"> WAV에 데모 드럼 포함
+      </label>
+      <button id="export-doc" class="primary" title="체크한 유물의 설계서(.md)">설계서 내보내기</button>
+      <button id="import" title="설계서(.md) 파일 불러오기. 파일을 화면에 끌어다 놓아도 된다">불러오기</button>
+    </div>
+    <input id="import-file" type="file" accept=".md,text/markdown,text/plain" hidden>
+    <p id="status" class="hint"></p>
+  </div>
+</aside>
+
+<main id="center">
+  <div class="editor-head">
+    <div>
+      <span id="editor-title" class="editor-title"></span>
+      <span id="editor-meta" class="hint inline"></span>
+    </div>
+    <span class="hint inline">칸 클릭: 찍기 / 지우기 · 드래그: 연속 입력 · Shift+클릭 또는 우클릭: 세기 바꾸기 · 노트 오른쪽 끝 끌기: 길이 · 1칸 = 0.5박(0.15초)</span>
+  </div>
+  <div class="editor-tools">
+    <span class="tool-label">입력 세기</span>
+    <div id="velocity-buttons" class="seg"></div>
+    <label class="tool-label">새 노트 길이
+      <select id="new-length"></select>
+    </label>
+    <label class="tool-label" title="한 칸(0.15초) 안에서 같은 노트를 N번 나눠 친다 (하이햇·스네어 롤)">롤
+      <select id="new-repeat"></select>
+    </label>
+    <span id="length-note" class="hint inline"></span>
+  </div>
+  <div id="editor-wrap">
+    <div id="editor"></div>
+    <div id="playhead" hidden></div>
+  </div>
+  <p id="editor-empty" class="empty" hidden>왼쪽 위 + 로 유물을 추가하고 선택하면 여기서 16박 비트를 찍는다.</p>
+</main>
+
+<aside id="right">
+  <section>
+    <h2 class="section-title">선택한 유물</h2>
+    <p id="right-name" class="right-name">-</p>
+    <button id="single-play" class="primary wide play-btn">▶ 이 유물 재생</button>
+    <label class="field">볼륨 <span id="volume-label">100%</span>
+      <input type="range" id="volume" min="0" max="150" step="5" value="100">
+    </label>
+    <button id="clear-notes" class="wide danger">노트 모두 지우기</button>
+  </section>
+  <section>
+    <h2 class="section-title">믹스 설정</h2>
+    <div id="mix-settings"></div>
+  </section>
+  <section>
+    <h2 class="section-title">정보</h2>
+    <dl id="info" class="info"></dl>
+  </section>
+  <section>
+    <h2 class="section-title">시간 기준</h2>
+    <p class="hint">1박 0.3초 (게임의 링 박자와 같음), 노트 단위 0.5박 = 0.15초. 16박 = 32칸 = 4.8초 루프를 반복한다.<br>
+    스케일은 모든 유물에 하나다. 음높이 악기는 스케일 음 8행, 타악·노이즈 악기는 1행이다.</p>
+  </section>
+</aside>
+
+<div id="mix-popup" class="popup" hidden></div>
+<div id="drop-overlay" hidden>여기에 놓으면 설계서를 불러옵니다</div>
+<div id="modal" hidden>
+  <div class="modal-box">
+    <p id="modal-title" class="modal-title"></p>
+    <div id="modal-body" class="modal-body"></div>
+    <div class="modal-buttons">
+      <button id="modal-cancel">취소</button>
+      <button id="modal-ok" class="primary">확인</button>
+    </div>
+  </div>
+</div>
+
+<script src="tool.js"></script>
+</body>
+</html>

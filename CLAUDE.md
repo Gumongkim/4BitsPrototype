@@ -23,6 +23,7 @@
 - 스크립트를 추가·삭제하면 두 HTML의 `<script>` 목록을 함께 고친다.
 - `tools/log-webhook.gs`: 로그 웹훅용 구글 시트 Apps Script 예시. 게임 스크립트가 아니므로 HTML과 웹 링크(Artifact)에 넣지 않는다.
 - `weapon-tool/`: 무기 제작 웹 툴 (`index.html`, `tool.css`, `tool.js`). 게임과 독립이며 웹 링크(Artifact)에 포함하지 않는다. 같은 기술 제약(바닐라 JS, file:// 실행)을 따른다. 툴에서 내보낸 JSON을 받으면 `howToRead`와 `gameConfig`를 보고 `config.js` `WEAPONS`에 옮긴다.
+- `relic-beat-tool/`: 유물 비트 메이커 웹 툴 (`index.html`, `tool.css`, `tool.js`). 사용법·조정 값·설계서 양식·수정 규칙은 `relic-beat-tool/CLAUDE.md` 지침서에 있다. 이 툴이나 설계서를 다루기 전에 먼저 읽고, 툴을 바꾸면 지침서도 고친다. 유물별 16박 비트(악기 1종)를 찍고 믹스로 들어 보며 설계서(.md)와 WAV로 내보낸다. 게임과 독립이며 웹 링크(Artifact)에 포함하지 않는다. 같은 기술 제약을 따르고 소리는 Web Audio API로 합성한다(오디오 파일 없음). 상수는 `tool.js` 맨 위 `TOOL`에 있다. 설계서(`relic-beats-*.md`)를 받으면 맨 아래 JSON(스키마 `4bit-prototype-relic-beat-tool/v1`)을 원본으로 읽는다. 노트 세기·길이·롤, 유물별 사이드체인·리버브/딜레이 센드·로파이·저음/고음 깎기, 전체 스윙은 선택 항목(없으면 기본값)이고, 데모 드럼·바이닐 노이즈는 미리듣기 전용이라 설계서에 없다.
 
 ## 웹 링크 (Artifact)
 
