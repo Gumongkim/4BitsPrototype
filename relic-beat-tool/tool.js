@@ -18,6 +18,12 @@ const TOOL = {
   OCTAVE_SHIFT_MIN: -2,         // 유물별 옥타브 이동
   OCTAVE_SHIFT_MAX: 2,
   CYCLE_CHOICES: [1, 2, 4, 8],  // 사이클 길이(루프 수). 최대 8루프 = 32마디
+  // 슬롯 악기 모드
+  DEGREE_ROWS: 8,               // 패턴 편집기 행 수 (degree 0~7)
+  VOICES_MIN: 2,
+  VOICES_MAX: 4,
+  CHORD_SIZES: [3, 4, 5],       // 코드 진행의 화음 크기 (3화음, 7화음, 9화음)
+  BARS: 4,                      // 루프의 마디 수 (코드 진행 칸 수)
   MIX_SLOTS: 5,                 // 믹스 바 칸 수. 게임의 유물 소지 상한과 같다.
   NAME_MAX: 30,
   DEFAULT_SCALE: 'C 마이너 펜타토닉',
@@ -477,6 +483,10 @@ for (const p of Object.values(DEMO_DRUMS)) {
   p.snareSet = new Set(p.snare || []);
 }
 const PRESET_BY_ID = Object.fromEntries(PRESETS.map((p) => [p.id, p]));
+// 슬롯 악기 모드의 패턴 유물이 쓰는 가상 프리셋. 편집기에서 8행(degree 0~7)을 주려고만 쓴다(PRESETS 목록에는 없다).
+// 소리는 슬롯의 악기로 내므로 이 파라미터로는 울리지 않는다.
+const PATTERN_PRESET_ID = 'pattern';
+PRESET_BY_ID[PATTERN_PRESET_ID] = { id: PATTERN_PRESET_ID, name: '패턴', pitched: true, octave: 3, pattern: true, params: PRESET_BY_ID.marimba.params };
 
 // ---------------------------------------------------------------------------
 // 음높이
@@ -506,6 +516,7 @@ const octaveShift = (relic) => (relic && Number.isInteger(relic.octaveShift) ? c
 
 // 음높이 악기의 행 수는 전체 설정 pitchRows(8 또는 15)다. 타악은 1행.
 function rowCount(preset, pitchRows = state.pitchRows) {
+  if (preset.pattern) return TOOL.DEGREE_ROWS; // 슬롯 모드 패턴: degree 8행 고정
   return preset.pitched ? pitchRows : 1;
 }
 
@@ -550,6 +561,10 @@ function defaultState() {
     drumKick: true,        // 데모 드럼 킥 소리 켜기
     kickSound: 'kick',     // 데모 드럼 킥 음색 (KICK_SOUNDS: 'kick' 기본 / 'kick909' / 'deep')
     cycleLoops: 1,         // 사이클 길이(루프 수: 1, 2, 4, 8). 필터 스윕·등장 루프가 이 길이에 걸친다
+    mode: 'relic',         // 'relic'(유물 악기 모드, 기본) / 'slot'(슬롯 악기 모드)
+    slotMode: defaultSlotMode(), // 슬롯 악기 모드 설정: 슬롯 5칸, 코드 진행, 선택한 슬롯
+    // 지금 모드가 아닌 쪽의 유물 목록·믹스 바·선택. relics/mix/selectedId는 항상 지금 모드의 것이다(setMode가 맞바꾼다).
+    inactive: { relics: [], mix: Array(TOOL.MIX_SLOTS).fill(null), selectedId: null },
     wavLength: 'loop',     // WAV 길이: 'loop'(한 루프) 또는 'cycle'(한 사이클)
     chordMode: 'none',     // 코드 찍기 도우미 (CHORD_SHAPES 키)
     drumSnare: true,       // 데모 드럼 스네어·클랩 소리 켜기
@@ -644,6 +659,26 @@ function loadState() {
     if (!CHORD_SHAPES[s.chordMode]) s.chordMode = 'none';
     // 여기서는 아직 전역 state가 없으므로 칸 수와 행 수를 저장된 값으로 넘긴다
     for (const r of s.relics) {
+      normalizeRelicExtras(r);
+      normalizeNotes(r, gridSteps(s.grid), s.pitchRows);
+    }
+    // 슬롯 악기 모드 (없으면 기본값)
+    if (s.mode !== 'slot') s.mode = 'relic';
+    const sm = s.slotMode && typeof s.slotMode === 'object' ? s.slotMode : {};
+    const slots = Array.isArray(sm.slots) && sm.slots.length === TOOL.MIX_SLOTS ? sm.slots : SLOT_DEFAULTS.map((x) => JSON.parse(JSON.stringify(x)));
+    s.slotMode = {
+      slots: slots.map((x) => normalizeSlot(x)),
+      progression: normalizeProgression(sm.progression),
+      selectedSlot: clamp(Math.round(num(sm.selectedSlot, 0)), 0, TOOL.MIX_SLOTS - 1),
+      focus: sm.focus === 'slot' ? 'slot' : 'relic',
+    };
+    const ia = s.inactive && typeof s.inactive === 'object' ? s.inactive : {};
+    s.inactive = {
+      relics: (Array.isArray(ia.relics) ? ia.relics : []).filter((r) => r && typeof r.name === 'string' && PRESET_BY_ID[r.preset]),
+      mix: Array.from({ length: TOOL.MIX_SLOTS }, (_, i) => (ia.mix && ia.mix[i]) || null),
+      selectedId: ia.selectedId || null,
+    };
+    for (const r of s.inactive.relics) {
       normalizeRelicExtras(r);
       normalizeNotes(r, gridSteps(s.grid), s.pitchRows);
     }
@@ -756,6 +791,20 @@ function convertRelicGrid(relic, from, to) {
   return dropped;
 }
 const oddStepNotes = (relics) => relics.reduce((sum, r) => sum + r.notes.filter((n) => n.step % 2).length, 0);
+
+// (슬롯 악기 모드 상수: 상태를 만들기 전에 있어야 해서 여기에 둔다. 함수는 '슬롯 악기 모드' 절에 있다)
+const SLOT_ROLES = { chord: '코드', bass: '베이스', lead: '리드', pad: '패드', perc: '타악' };
+const DEGREE_NAMES = ['R', '3', '5', '7', "R'", "3'", "5'", "9'"];
+// 기본 슬롯: 딥하우스 v4(relic-beats-deephouse-v4.md)의 악기·볼륨·믹스 설정에서 가져왔다
+const SLOT_DEFAULTS = [
+  { preset: 'rhodes_trem', role: 'chord', voices: 4, volume: 0.35, sidechain: 0.25, chorus: 0.35, hallSend: 0.25, tape: 0.3, reverbSend: 0.1, pan: -0.1 },
+  { preset: 'deep_bass', role: 'bass', voices: 3, octaveShift: -1, volume: 0.65, sidechain: 0.35, tape: 0.2 },
+  { preset: 'shaker', role: 'perc', voices: 3, volume: 1.2, swing: 0.25 },
+  { preset: 'vocal_oo', role: 'lead', voices: 3, volume: 1, delaySend: 0.2, hallSend: 0.3, tape: 0.25, reverbSend: 0.1 },
+  { preset: 'vocal_pad', role: 'pad', voices: 3, volume: 1.2, sidechain: 0.4, hallSend: 0.45, chorus: 0.3, filterSweep: { from: 0.7, to: 0.15, shape: 'upDown' } },
+];
+// 기본 코드 진행: C 자연 단음계 + root 5(F 단조)면 Fm9, Fm9, B♭m9, B♭m9
+const DEFAULT_PROGRESSION = [{ root: 0, size: 5 }, { root: 0, size: 5 }, { root: 3, size: 5 }, { root: 3, size: 5 }];
 
 let state = loadState() || defaultState();
 let saveTimer = null;
@@ -1370,7 +1419,8 @@ function scheduleRelicStep(ctx, out, relic, step, base, g) {
   const t = base + stepTime(g, swing);
   for (const n of relic.notes) {
     if (n.step !== step) continue;
-    const midi = rowMidi(preset, n.row, state.scale, relic);
+    // 슬롯 모드의 변환 결과(resolvePattern)는 midi를 직접 갖는다. 유물 악기 모드 노트는 row로 음을 정한다.
+    const midi = n.midi !== undefined ? n.midi : rowMidi(preset, n.row, state.scale, relic);
     const repeat = noteRepeat(n);
     if (repeat > 1) {
       const interval = noteGate(step, 1, swing) / repeat;
@@ -1420,6 +1470,243 @@ function scheduleDrumStep(ctx, drumOut, chains, step, t) {
 }
 
 // ---------------------------------------------------------------------------
+// 슬롯 악기 모드: 믹스 바 5칸(슬롯)이 악기·역할·믹스 설정을 갖고, 패턴 유물은 리듬과 코드 기준 단계(degree)만 갖는다.
+// 패턴 유물은 { id, name, preset: 'pattern', notes: [{ step, row(= degree), length?, velocity?, repeat? }], loops?, checked }.
+// 슬롯에 들어간 패턴은 resolvePattern으로 실제 MIDI 노트가 되고, slotRelic이 슬롯 악기와 믹스 설정을 가진 '가상 유물'을 만들어
+// 기존 체인(makeChain)·재생(scheduleRelicStep)·렌더(renderLoop)에 그대로 넘긴다.
+// ---------------------------------------------------------------------------
+
+function defaultSlotMode() {
+  return {
+    slots: SLOT_DEFAULTS.map((s) => normalizeSlot(JSON.parse(JSON.stringify(s)))),
+    progression: DEFAULT_PROGRESSION.map((c) => ({ ...c })),
+    selectedSlot: 0,   // 오른쪽 패널과 패턴 단독 재생(미리듣기 슬롯)이 쓰는 슬롯
+    focus: 'relic',    // 오른쪽 패널이 보이는 대상: 'relic'(패턴 유물) / 'slot'(선택한 슬롯)
+  };
+}
+
+// 슬롯 하나를 정리한다. 믹스 설정·유물 설정 항목은 유물 악기 모드와 같은 규칙이다(loops는 패턴 유물 쪽이라 지운다).
+function normalizeSlot(s) {
+  const slot = s && typeof s === 'object' ? s : {};
+  if (!PRESET_BY_ID[slot.preset] || slot.preset === PATTERN_PRESET_ID) slot.preset = 'marimba';
+  if (!SLOT_ROLES[slot.role]) slot.role = PRESET_BY_ID[slot.preset].pitched ? 'lead' : 'perc';
+  slot.voices = clamp(Math.round(num(slot.voices, 3)), TOOL.VOICES_MIN, TOOL.VOICES_MAX);
+  slot.volume = clamp(num(slot.volume, TOOL.DEFAULT_VOLUME), 0, TOOL.VOLUME_MAX);
+  for (const k of MIX_FIELDS) {
+    const v = clamp(num(slot[k], 0), 0, 1);
+    if (v > 0) slot[k] = v;
+    else delete slot[k];
+  }
+  normalizeRelicExtras(slot);
+  delete slot.loops;
+  return slot;
+}
+
+function normalizeProgression(p) {
+  return Array.from({ length: TOOL.BARS }, (_, i) => {
+    const c = (Array.isArray(p) && p[i]) || DEFAULT_PROGRESSION[i];
+    return {
+      root: clamp(Math.round(num(c.root, 0)), 0, 6),
+      size: TOOL.CHORD_SIZES.includes(c.size) ? c.size : 5,
+    };
+  });
+}
+
+// 스케일 행 r의 반음(키 C 기준, 키 root는 더하지 않음)
+function scaleSemi(r) {
+  const scale = SCALES[state.scale];
+  return scale[r % scale.length] + 12 * Math.floor(r / scale.length);
+}
+// 코드 음(근음부터 스케일 위로 3도씩 = 행 +2씩 size개)의 반음
+const chordTones = (ch) => Array.from({ length: ch.size }, (_, k) => scaleSemi(ch.root + 2 * k));
+// 코드 음 pitch class 집합 (키 반영)
+const chordPcs = (ch) => new Set(chordTones(ch).map((t) => (t + state.root) % 12));
+
+// degree d의 반음(키 C 기준). 0 R, 1 3, 2 5, 3 7, 4 R', 5 3', 6 5', 7 9'.
+// 3화음이면 7음 자리는 근음 한 옥타브 위, 3·7화음이면 9음 자리는 5음 위로 바꾼다(없는 음을 내지 않는다).
+function degreeSemi(ch, d) {
+  const t = chordTones(ch);
+  if (d === 7) return ch.size >= 5 ? t[4] : t[2] + 12;
+  const i = d % 4;
+  const oct = 12 * Math.floor(d / 4);
+  if (i === 3 && ch.size < 4) return t[0] + 12 + oct;
+  return t[i] + oct;
+}
+
+// 코드 이름 (예: Fm9. 음 이름은 툴의 샵 표기를 따라 B♭은 A#)
+function chordName(ch) {
+  const raw = chordTones(ch);
+  const t = raw.map((x) => x - raw[0]);
+  const root = NOTE_NAMES[(raw[0] + state.root) % 12];
+  const third = t[1], fifth = t[2];
+  let name = third === 3 ? (fifth === 6 ? 'dim' : 'm') : (fifth === 8 ? 'aug' : '');
+  if (ch.size >= 4) {
+    const sev = t[3];
+    if (name === 'm') name = sev === 11 ? 'm(maj7)' : 'm7';
+    else if (name === 'dim') name = sev === 9 ? 'dim7' : 'm7b5';
+    else if (name === 'aug') name = sev === 11 ? 'aug(maj7)' : 'aug7';
+    else name = sev === 11 ? 'maj7' : '7';
+  }
+  if (ch.size >= 5) {
+    const ninth = t[4] - 12;
+    if (ninth === 2 && /^(m7|maj7|7)$/.test(name)) name = name.replace('7', '9');
+    else name += ninth === 1 ? '(b9)' : ninth === 3 ? '(#9)' : '(9)';
+  }
+  return root + name;
+}
+
+// 슬롯 음역: 프리셋 옥타브 + octaveShift의 C ~ 두 옥타브 위
+function slotRange(slot) {
+  const preset = PRESET_BY_ID[slot.preset];
+  const low = 12 * ((preset.octave || 3) + 1 + octaveShift(slot));
+  return { low, high: low + 24 };
+}
+function foldInto(m, low, high) {
+  while (m > high) m -= 12;
+  while (m < low) m += 12;
+  return m;
+}
+
+// 칸 step이 속한 마디의 코드
+function chordAtStep(step, progression) {
+  return progression[Math.min(TOOL.BARS - 1, Math.floor(step / (gridSteps() / TOOL.BARS)))];
+}
+
+// 코드 화음 보이싱: top 아래 한 옥타브 안에 코드 음 voices-1개를 채운다. prev(앞 화음)와 음 이동 합이 가장 작은 조합을 고른다.
+// 앞 화음이 없으면 3음·7음·5음·근음 순으로 고른다(채움음에 9음은 쓰지 않는다). 음이 모자라면 맨 위 음의 옥타브 아래를 겹친다.
+// 화음 안에서 단2도로 붙는 조합(예: A♭ 바로 아래 G)은 다른 조합이 있으면 고르지 않는다.
+function chordVoicing(ch, top, voices, prev) {
+  const tones = chordTones(ch);
+  // 채움음에는 9음을 쓰지 않는다(9음은 패턴의 degree 9'로만 낸다). m9 코드의 9음과 단3도는 반음 관계(Fm9의 G·A♭)라
+  // 슬롯마다 따로 고른 화음끼리 반음으로 부딪히기 쉽기 때문이다. 색은 7음과 패턴의 9'로 낸다.
+  const priority = [1, 3, 2, 0].filter((i) => i < tones.length);
+  const topPc = top % 12;
+  const below = (pc) => { let m = top - 1; while (m % 12 !== pc) m--; return m; };
+  const cands = [];
+  for (const i of priority) {
+    const pc = (tones[i] + state.root) % 12;
+    if (pc !== topPc && !cands.some((c) => c % 12 === pc)) cands.push(below(pc));
+  }
+  if (cands.length < voices - 1) cands.push(top - 12);
+  const need = Math.min(voices - 1, cands.length);
+  const combos = [];
+  const pick = (start, acc) => {
+    if (acc.length === need) { combos.push(acc.slice()); return; }
+    for (let i = start; i < cands.length; i++) { acc.push(cands[i]); pick(i + 1, acc); acc.pop(); }
+  };
+  pick(0, []);
+  // 한 화음 안에서 단2도 계열(1·13·25반음)로 붙는 조합은 피한다(예: Fm9에서 A♭ 바로 아래 G). 모두 붙으면 그대로 쓴다.
+  const clash = (combo) => {
+    const a = [...combo, top];
+    return a.some((x, i) => a.some((y, j) => j > i && [1, 13, 25].includes(Math.abs(x - y))));
+  };
+  const clean = combos.filter((c) => !clash(c));
+  if (clean.length) combos.splice(0, combos.length, ...clean);
+  let best = combos[0] || [];
+  if (prev && combos.length > 1) {
+    const cost = (combo) => {
+      const a = [...combo, top].sort((x, y) => x - y);
+      const b = prev.slice().sort((x, y) => x - y);
+      if (a.length !== b.length) return a.reduce((s, m) => s + Math.min(...b.map((q) => Math.abs(q - m))), 0);
+      return a.reduce((s, m, i) => s + Math.abs(m - b[i]), 0);
+    };
+    let bestCost = Infinity;
+    for (const c of combos) { const v = cost(c); if (v < bestCost) { bestCost = v; best = c; } }
+  }
+  return [...best, top].sort((x, y) => x - y);
+}
+
+// 패턴 -> 실제 음. 결과는 유물 악기 모드 노트 형식에 midi를 더한 것({ step, midi, length?, velocity?, repeat? })이다.
+// 재생·WAV·설계서 표가 모두 이 함수를 쓴다.
+//  bass: 단음, 슬롯 음역의 가장 낮은 옥타브. degree 4~6은 한 옥타브 위, 7음(3)·9음(7)은 근음(아래·위)으로.
+//  chord: degree 음을 맨 위로, 그 아래 한 옥타브 안에 코드 음 voices-1개(앞 화음과 이동 합 최소).
+//  lead: 단음, 슬롯 음역 안. pad: chord와 같고 길이를 다음 패턴 노트 직전 또는 코드가 바뀌는 칸 직전까지 늘인다.
+//  perc 또는 타악 프리셋: 음높이를 버린다. 음높이 프리셋에 perc 역할이면 근음(lead 규칙)을 친다.
+//  경계: 노트가 코드가 바뀌는 칸을 넘으면 거기서 끊는다. 단 그 음이 다음 코드에도 있으면(공통음) 이어 간다(화음은 음마다).
+//  음역: 결과가 슬롯 음역(프리셋 옥타브 + octaveShift의 C ~ 두 옥타브 위)을 벗어나면 옥타브 단위로 안으로 접는다.
+function resolvePattern(relic, slot, progression = state.slotMode.progression) {
+  const preset = PRESET_BY_ID[slot.preset];
+  const steps = gridSteps();
+  const perBar = steps / TOOL.BARS;
+  const sorted = relic.notes.slice().sort((a, b) => a.step - b.step || a.row - b.row);
+  const extra = (n) => {
+    const o = {};
+    if (n.velocity !== undefined && n.velocity !== 1) o.velocity = n.velocity;
+    if (n.repeat > 1) o.repeat = n.repeat;
+    return o;
+  };
+  if (!preset.pitched) return sorted.map((n) => ({ step: n.step, midi: null, ...extra(n) }));
+  const role = slot.role === 'perc' ? 'lead' : slot.role;
+  const { low, high } = slotRange(slot);
+  const key = state.root;
+  // 코드가 바뀌는 칸들 (마디 머리 중 앞 마디와 코드가 다른 곳)
+  const changes = [];
+  for (let b = 1; b < TOOL.BARS; b++) {
+    const a = progression[b - 1], c = progression[b];
+    if (a.root !== c.root || a.size !== c.size) changes.push(b * perBar);
+  }
+  const cut = (s, len, midi) => {
+    for (const c of changes) {
+      if (c <= s || c >= s + len) continue;
+      if (!chordPcs(chordAtStep(c, progression)).has(midi % 12)) return c - s;
+    }
+    return len;
+  };
+  const out = [];
+  let prev = null;
+  sorted.forEach((n, idx) => {
+    const ch = chordAtStep(n.step, progression);
+    const d = slot.role === 'perc' ? 0 : n.row;
+    let len = n.repeat > 1 ? 1 : (n.length || 1);
+    if (role === 'pad' && !(n.repeat > 1)) {
+      const next = sorted.slice(idx + 1).find((o) => o.step > n.step);
+      const change = changes.find((c) => c > n.step);
+      len = Math.min(next ? next.step : steps, change !== undefined ? change : steps) - n.step;
+    }
+    len = Math.min(len, steps - n.step);
+    let midis;
+    if (role === 'bass') {
+      const tone = d % 4 === 3 || d === 7 ? 0 : d % 4; // 7음·9음은 근음으로
+      const pc = (chordTones(ch)[tone] + key) % 12;
+      let m = low + ((pc - low) % 12 + 12) % 12; // 음역의 가장 낮은 그 음
+      if (d >= 4) m += 12;
+      midis = [foldInto(m, low, high)];
+    } else {
+      const lead = low + key + degreeSemi(ch, d);
+      if (role === 'lead') {
+        midis = [foldInto(lead, low, high)];
+      } else {
+        // chord·pad: 맨 위 음을 음역 위쪽 [low + 12, high]에 두어 아래 음들이 음역 안에 남게 한다
+        const top = foldInto(lead, low + 12, high);
+        midis = chordVoicing(ch, top, slot.voices, prev);
+        prev = midis;
+      }
+    }
+    for (const midi of midis) {
+      const l = n.repeat > 1 ? 1 : cut(n.step, len, midi);
+      const note = { step: n.step, midi, ...extra(n) };
+      if (l > 1) note.length = l;
+      out.push(note);
+    }
+  });
+  return out;
+}
+
+// 슬롯 i에 패턴 유물을 넣은 가상 유물. 체인 캐시가 슬롯마다 하나가 되게 id를 슬롯으로 정한다.
+function slotRelic(i, pattern) {
+  const slot = state.slotMode.slots[i];
+  const r = { id: `slot-${i}`, name: `${i + 1}번 ${pattern.name}`, preset: slot.preset, notes: resolvePattern(pattern, slot), volume: slot.volume };
+  for (const k of MIX_FIELDS) if (slot[k] > 0) r[k] = slot[k];
+  for (const k of ['swing', 'pan', 'filterSweep']) if (slot[k] !== undefined) r[k] = slot[k];
+  if (pattern.loops) r.loops = pattern.loops;
+  return r;
+}
+
+// 슬롯 모드 믹스 바에 든 [슬롯 번호, 패턴 유물] 목록
+const filledSlots = () => state.mix.map((m, i) => [i, m && relicById(m.relicId)]).filter(([, r]) => r);
+const isSlotMode = () => state.mode === 'slot';
+
+// ---------------------------------------------------------------------------
 // 실시간 재생
 // ---------------------------------------------------------------------------
 const Player = {
@@ -1432,7 +1719,7 @@ const Player = {
   tracks: new Map(), // 유물 id -> 그 유물의 출력 체인 (makeChain)
   drumGain: null,    // 데모 드럼 볼륨
   vinyl: null,       // 바이닐 노이즈 소스
-  stats: { scheduled: 0, late: 0, firstTimes: [], loops: [] }, // 검증용: 예약 수, 늦게 예약된 노트 수, 루프별 첫 칸 시각, 루프별 사이클 번호
+  stats: { scheduled: 0, late: 0, firstTimes: [], loops: [], stages: [] }, // 검증용: 예약 수, 늦은 예약 수, 루프별 첫 칸 시각, 루프별 사이클 번호, 쌓기 단계
 
   ensure() {
     if (!this.ctx) {
@@ -1445,6 +1732,19 @@ const Player = {
 
   // 지금 재생할 유물과 칸별 볼륨. 단일 재생은 선택한 유물을 따라간다.
   layers() {
+    // 슬롯 악기 모드: 슬롯마다 가상 유물(슬롯 악기 + 변환된 노트). 단독 재생은 선택한 패턴을 선택한 슬롯 악기로.
+    // 'stack'(쌓기 재생)은 채운 슬롯 전부를 돌려주고 tick이 지금 단계까지만 친다.
+    if (isSlotMode()) {
+      if (this.mode === 'single') {
+        const r = selectedRelic();
+        const i = state.slotMode.selectedSlot;
+        return r ? [{ relic: slotRelic(i, r), volume: state.slotMode.slots[i].volume }] : [];
+      }
+      if (this.mode === 'mix' || this.mode === 'stack') {
+        return filledSlots().map(([i, r]) => ({ relic: slotRelic(i, r), volume: state.slotMode.slots[i].volume }));
+      }
+      return [];
+    }
     if (this.mode === 'single') {
       const r = selectedRelic();
       return r ? [{ relic: r, volume: r.volume }] : [];
@@ -1523,7 +1823,7 @@ const Player = {
     this.mode = mode;
     this.startTime = ctx.currentTime + TOOL.START_DELAY;
     this.nextStep = 0;
-    this.stats = { scheduled: 0, late: 0, firstTimes: [], loops: [] };
+    this.stats = { scheduled: 0, late: 0, firstTimes: [], loops: [], stages: [] };
     this.drumGain = ctx.createGain();
     this.drumGain.connect(this.bus.input);
     this.tick();
@@ -1612,7 +1912,11 @@ const Player = {
         layers.forEach((l, i) => sweepAt(chains[i], l.relic, t, loopIdx));
       }
       if (t < ctx.currentTime) this.stats.late++;
+      // 쌓기 재생: 한 사이클마다 한 층씩(슬롯 1 -> 1·2 -> …) 늘리고 마지막 단계를 반복한다
+      const stage = this.mode === 'stack' ? this.stackStage(this.nextStep) : layers.length;
+      if (step === 0 && this.mode === 'stack') this.stats.stages.push(stage);
       layers.forEach((l, i) => {
+        if (i >= stage) return;
         // 등장 루프가 꺼진 루프에서는 노트를 예약하지 않는다(사이드체인·필터 스윕은 계속)
         if (!relicLoopOn(l.relic, loopIdx)) return;
         scheduleRelicStep(ctx, chains[i].input, l.relic, step, this.startTime, this.nextStep);
@@ -1640,10 +1944,26 @@ const Player = {
   },
 
   // 칸을 찍을 때 그 음을 한 번 들려준다
-  preview(relic, row, velocity = 1) {
+  preview(relic, row, velocity = 1, step = 0) {
     const ctx = this.ensure();
+    // 슬롯 모드 패턴: 선택한 슬롯 악기로 그 칸 코드의 degree 음(역할 변환 그대로)을 들려준다
+    if (PRESET_BY_ID[relic.preset].pattern) {
+      const slot = state.slotMode.slots[state.slotMode.selectedSlot];
+      const preset = PRESET_BY_ID[slot.preset];
+      for (const n of resolvePattern({ notes: [{ step, row }] }, slot)) {
+        scheduleNote(ctx, this.bus.input, preset, n.midi, ctx.currentTime + 0.01, TOOL.PREVIEW_GAIN * slot.volume * velocity);
+      }
+      return;
+    }
     const preset = PRESET_BY_ID[relic.preset];
     scheduleNote(ctx, this.bus.input, preset, rowMidi(preset, row, state.scale, relic), ctx.currentTime + 0.01, TOOL.PREVIEW_GAIN * relic.volume * velocity);
+  },
+
+  // 쌓기 재생의 지금 단계(1 ~ 채운 슬롯 수). g = 재생 시작부터 센 칸 번호
+  stackStage(g) {
+    const total = filledSlots().length;
+    const cycle = Math.floor(g / gridSteps() / state.cycleLoops);
+    return Math.min(total, cycle + 1);
   },
 };
 
@@ -1671,6 +1991,7 @@ function changed() {
 
 function render() {
   renderScale();
+  renderProgression();
   renderGlobals();
   renderList();
   renderPresets();
@@ -1725,11 +2046,12 @@ function setGrid(grid) {
   const from = state.grid;
   if (grid === from || !TOOL.GRIDS.includes(grid)) return;
   const apply = () => {
-    for (const r of state.relics) convertRelicGrid(r, from, grid);
+    // 지금 모드와 다른 모드(inactive)의 유물도 함께 옮긴다(격자는 두 모드가 같이 쓴다)
+    for (const r of [...state.relics, ...state.inactive.relics]) convertRelicGrid(r, from, grid);
     state.grid = grid;
     timingChanged();
   };
-  const odd = grid === 8 ? oddStepNotes(state.relics) : 0;
+  const odd = grid === 8 ? oddStepNotes([...state.relics, ...state.inactive.relics]) : 0;
   if (odd) {
     confirmModal('8분 격자로 바꾸기', `16분 홀수 칸(e·a 위치)에서 시작하는 노트 ${odd}개가 지워진다. 나머지 노트는 같은 시각에 남는다.`, apply, '바꾸기');
     $('grid').value = from; // 취소하면 그대로. 확인하면 apply가 다시 그린다.
@@ -1827,6 +2149,8 @@ function renderScale() {
   if (!root.options.length) NOTE_NAMES.forEach((n, i) => root.append(new Option(n, i)));
   root.value = state.root;
   $('pitch-rows').value = state.pitchRows;
+  $('mode').value = state.mode;
+  $('pitch-rows').disabled = isSlotMode(); // 슬롯 모드 패턴은 degree 8행 고정
 }
 
 // 행 수 바꾸기. 15 -> 8은 행 8 이상 노트가 있으면 확인 창을 거쳐 지운다.
@@ -1853,9 +2177,9 @@ function dropHighRows(relic, rows) {
 }
 
 // 오른쪽 '유물 설정': 유물별 스윙(전체 따름), 팬, 옥타브 이동, 필터 스윕
-function renderRelicSettings(relic) {
-  const box = $('relic-settings');
-  box.innerHTML = '';
+function renderRelicSettings(relic, opts = {}) {
+  const box = opts.into || $('relic-settings');
+  if (!opts.into) box.innerHTML = '';
   if (!relic) return;
   const slider = (label, min, max, value, text, onInput) => {
     const row = el('label', 'mix-setting');
@@ -1871,6 +2195,8 @@ function renderRelicSettings(relic) {
     row.append(el('span', '', label), v, range);
     return { row, range };
   };
+  // loopsOnly(슬롯 모드 패턴)면 등장 루프만, noLoops(슬롯)면 등장 루프를 빼고 보인다
+  if (!opts.loopsOnly) {
   // 스윙: '전체 따름'이면 relic.swing이 없다
   const follows = typeof relic.swing !== 'number';
   const swing = slider('스윙', 0, TOOL.SWING_MAX * 100, Math.round(relicSwing(relic) * 100),
@@ -1944,8 +2270,9 @@ function renderRelicSettings(relic) {
     shapeRow.append(el('span', '', `스윕 모양 (사이클 ${state.cycleLoops}루프 동안)`), shape);
     box.append(from.row, to.row, shapeRow);
   }
+  } // loopsOnly가 아닐 때 끝
   // 등장 루프: 사이클이 2루프 이상일 때 루프마다 켜고 끈다(없으면 모든 루프에서 울린다)
-  if (state.cycleLoops > 1) {
+  if (state.cycleLoops > 1 && !opts.noLoops) {
     const row = el('div', 'loop-checks');
     row.append(el('span', '', '등장 루프'));
     for (let i = 0; i < state.cycleLoops; i++) {
@@ -2074,13 +2401,26 @@ function renderPresets() {
       }
     }
   }
+  // 슬롯 모드에서는 프리셋 목록이 선택한 슬롯의 악기를 고른다
+  const slot = isSlotMode() ? state.slotMode.slots[state.slotMode.selectedSlot] : null;
   for (const b of list.querySelectorAll('button')) {
-    b.classList.toggle('on', !!relic && relic.preset === b.dataset.preset);
-    b.disabled = !relic;
+    b.classList.toggle('on', slot ? slot.preset === b.dataset.preset : !!relic && relic.preset === b.dataset.preset);
+    b.disabled = !slot && !relic;
   }
 }
 
 function applyPreset(presetId) {
+  if (isSlotMode()) {
+    // 선택한 슬롯의 악기. 타악 프리셋이면 역할을 타악으로, 타악 역할에 음높이 프리셋이면 리드로 맞춘다.
+    const slot = state.slotMode.slots[state.slotMode.selectedSlot];
+    slot.preset = presetId;
+    const pitched = PRESET_BY_ID[presetId].pitched;
+    if (!pitched) slot.role = 'perc';
+    else if (slot.role === 'perc') slot.role = 'lead';
+    state.slotMode.focus = 'slot';
+    changed();
+    return;
+  }
   const relic = selectedRelic();
   if (!relic) return;
   relic.preset = presetId;
@@ -2105,11 +2445,16 @@ function renderEditor() {
   const preset = PRESET_BY_ID[relic.preset];
   const rows = rowCount(preset);
   $('editor-title').textContent = relic.name;
+  if (preset.pattern) {
+    const slot = state.slotMode.slots[state.slotMode.selectedSlot];
+    $('editor-meta').textContent = `패턴 (행 = 코드 기준 단계) · 미리듣기: ${state.slotMode.selectedSlot + 1}번 슬롯 ${PRESET_BY_ID[slot.preset].name} (${SLOT_ROLES[slot.role]}) · ${state.slotMode.progression.map(chordName).join(' ')}`;
+  } else {
   $('editor-meta').textContent = `${preset.name} · ${preset.pitched ? `${keyScaleName()}${octaveShift(relic) ? ` · 옥타브 ${octaveShift(relic) > 0 ? '+' : ''}${octaveShift(relic)}` : ''}` : '타악 1행'}`;
+  }
   // 구조(유물, 행 수, 스케일)가 같으면 칸의 on 표시만 바꾼다. 드래그 중 칸이 새로 만들어지지 않게 하기 위해서다.
   // 격자(8분 32칸 / 16분 64칸)도 구조에 들어간다. 마디(4박) 경계가 가장 굵고, 박 경계가 굵고,
   // 16분 격자에서는 8분 경계(eighth)를 중간 굵기로 긋는다.
-  const key = `${relic.id}|${relic.preset}|${state.scale}|${state.grid}|${state.root}|${state.pitchRows}|${octaveShift(relic)}`;
+  const key = `${relic.id}|${relic.preset}|${state.scale}|${state.grid}|${state.root}|${state.pitchRows}|${octaveShift(relic)}|${preset.pattern ? JSON.stringify(state.slotMode.progression) : ''}`;
   if (key !== editorKey) {
     editorKey = key;
     const steps = gridSteps();
@@ -2117,7 +2462,7 @@ function renderEditor() {
     editor.innerHTML = '';
     editor.classList.toggle('perc', !preset.pitched);
     editor.classList.toggle('grid16', state.grid === 16);
-    editor.classList.toggle('rows15', preset.pitched && state.pitchRows === 15);
+    editor.classList.toggle('rows15', preset.pitched && !preset.pattern && state.pitchRows === 15);
     editor.style.gridTemplateColumns = `44px repeat(${steps}, minmax(${state.grid === 16 ? TOOL.CELL_MIN_PX_16 : TOOL.CELL_MIN_PX_8}px, 1fr))`;
     editor.append(el('div', 'corner'));
     for (let s = 0; s < steps; s++) {
@@ -2125,8 +2470,13 @@ function renderEditor() {
     }
     for (let r = rows - 1; r >= 0; r--) {
       const last = r === 0 ? ' last' : '';
-      const midi = rowMidi(preset, r, state.scale, relic);
-      editor.append(el('div', 'row-label' + last, midi === null ? '타격' : midiName(midi)));
+      if (preset.pattern) {
+        // 패턴: 행 이름은 degree(R, 3, 5, 7, R', 3', 5', 9'), 마디 첫 칸에 그 마디 코드의 실제 음 이름을 흐리게 쓴다
+        editor.append(el('div', 'row-label' + last, DEGREE_NAMES[r]));
+      } else {
+        const midi = rowMidi(preset, r, state.scale, relic);
+        editor.append(el('div', 'row-label' + last, midi === null ? '타격' : midiName(midi)));
+      }
       for (let s = 0; s < steps; s++) {
         let cls = 'cell' + last;
         if (s % (per * 4) === 0) cls += ' bar';
@@ -2136,6 +2486,10 @@ function renderEditor() {
         const cell = el('div', cls);
         cell.dataset.step = s;
         cell.dataset.row = r;
+        if (preset.pattern && s % (per * 4) === 0) {
+          const ch = state.slotMode.progression[Math.floor(s / (per * 4))];
+          cell.append(el('span', 'deg-note', NOTE_NAMES[(degreeSemi(ch, r) + state.root) % 12]));
+        }
         editor.append(cell);
       }
     }
@@ -2181,7 +2535,8 @@ function setVelocity(note, v) {
 // 행 범위를 넘는 음은 뺀다. 데이터는 노트 여러 개라 설계서 형식은 그대로다.
 function addNote(relic, step, row) {
   const preset = PRESET_BY_ID[relic.preset];
-  const shape = preset.pitched ? CHORD_SHAPES[state.chordMode] || CHORD_SHAPES.none : CHORD_SHAPES.none;
+  // 코드 찍기 도우미는 음높이 악기에만 쓰고, 슬롯 모드 패턴(degree 행)에서는 꺼진다
+  const shape = preset.pitched && !preset.pattern ? CHORD_SHAPES[state.chordMode] || CHORD_SHAPES.none : CHORD_SHAPES.none;
   // 이미 그 칸에서 시작하는 노트가 있는 행은 건드리지 않는다
   const rows = shape.rows.map((d) => row + d)
     .filter((r) => r < rowCount(preset) && (r === row || !relic.notes.some((n) => n.step === step && n.row === r)));
@@ -2203,7 +2558,7 @@ function addOneNote(relic, step, row) {
   }
   relic.notes.push(note);
   normalizeNotes(relic);
-  Player.preview(relic, row, state.inputVelocity);
+  Player.preview(relic, row, state.inputVelocity, step);
 }
 
 // 드래그 입력: 빈 칸(또는 긴 노트가 이어지는 칸)을 누르면 찍기, 노트 시작 칸을 누르면 지우기를 드래그 내내 유지한다.
@@ -2267,7 +2622,7 @@ function setupEditorInput() {
     if (e.button === 2 || (e.button === 0 && e.shiftKey)) {
       if (n) {
         setVelocity(n, nextVelocity(noteVelocity(n)));
-        Player.preview(relic, row, noteVelocity(n));
+        Player.preview(relic, row, noteVelocity(n), n.step);
         noteEdited(relic);
       }
       return;
@@ -2338,7 +2693,7 @@ function renderTools() {
   const perc = relic && !PRESET_BY_ID[relic.preset].pitched;
   // 롤 노트는 1칸이므로 롤을 고르면 길이 선택이 쓰이지 않는다
   $('new-length').disabled = !!perc || state.newRepeat > 1;
-  $('chord-mode').disabled = !!perc;
+  $('chord-mode').disabled = !!perc || (!!relic && !!PRESET_BY_ID[relic.preset].pattern);
   $('length-note').textContent = perc ? '타악은 길이를 쓰지 않는다' : state.newRepeat > 1 ? '롤 노트는 1칸이다' : '';
 }
 
@@ -2363,14 +2718,23 @@ function drawPlayhead() {
   const loop = Player.cycleLoop();
   cyclePos.hidden = loop === null || state.cycleLoops < 2;
   if (!cyclePos.hidden) cyclePos.textContent = `루프 ${loop + 1}/${state.cycleLoops}`;
+  // 쌓기 재생 단계 ("쌓기 3/5")
+  const stackPos = $('stack-pos');
+  stackPos.hidden = Player.mode !== 'stack';
+  if (!stackPos.hidden) {
+    const elapsed = Math.max(0, Player.ctx.currentTime - Player.startTime);
+    const g = Math.floor(elapsed / stepSeconds());
+    stackPos.textContent = `쌓기 ${Player.stackStage(g)}/${filledSlots().length}`;
+  }
   if (Player.mode) requestAnimationFrame(drawPlayhead);
-  else { head.hidden = true; cyclePos.hidden = true; }
+  else { head.hidden = true; cyclePos.hidden = true; stackPos.hidden = true; }
 }
 
 // 상단 믹스 바: 칸 5개. 빈 칸의 + 로 유물을 고르고, 찬 칸에는 이름, 제거, 볼륨이 있다.
 function renderMix() {
   const bar = $('mix-bar');
   bar.innerHTML = '';
+  if (isSlotMode()) { renderSlotMix(bar); return; }
   state.mix.forEach((slot, i) => {
     const relic = slot && relicById(slot.relicId);
     const box = el('div', 'mix-slot' + (relic ? ' filled' : ''));
@@ -2425,7 +2789,115 @@ function openMixPopup(index, anchor) {
   popup.hidden = false;
 }
 
+// 슬롯 모드 믹스 바: 칸 = 슬롯. 위에 슬롯 악기(역할), 아래에 들어간 패턴 유물. 칸을 누르면 그 슬롯을 선택한다.
+function renderSlotMix(bar) {
+  const sm = state.slotMode;
+  state.mix.forEach((entry, i) => {
+    const slot = sm.slots[i];
+    const relic = entry && relicById(entry.relicId);
+    const box = el('div', 'mix-slot' + (relic ? ' filled' : '') + (sm.selectedSlot === i ? ' selected' : ''));
+    box.dataset.slot = i;
+    box.append(el('span', 'num', String(i + 1)));
+    const inst = el('span', 'slot-inst', `${PRESET_BY_ID[slot.preset].name} · ${SLOT_ROLES[slot.role]}`);
+    box.append(inst);
+    if (!relic) {
+      const add = el('button', 'add small', '+ 패턴 넣기');
+      add.addEventListener('click', (e) => { e.stopPropagation(); openMixPopup(i, add); });
+      box.append(add);
+    } else {
+      const remove = el('button', 'remove', '×');
+      remove.title = '슬롯에서 빼기';
+      remove.addEventListener('click', (e) => { e.stopPropagation(); state.mix[i] = null; changed(); });
+      box.append(el('span', 'name', relic.name), remove);
+    }
+    box.title = `${i + 1}번 슬롯: ${PRESET_BY_ID[slot.preset].name} (${SLOT_ROLES[slot.role]})${relic ? ` · ${relic.name}` : ''}`;
+    box.addEventListener('click', () => { sm.selectedSlot = i; sm.focus = 'slot'; changed(); });
+    bar.append(box);
+  });
+}
+
+// 위쪽 둘째 줄 코드 진행: 마디마다 근음(스케일 음 이름)과 화음 크기(3/7/9)
+function renderProgression() {
+  const box = $('progression');
+  box.hidden = !isSlotMode();
+  if (box.hidden) return;
+  box.innerHTML = '';
+  box.append(el('span', 'g-item', '코드 진행'));
+  state.slotMode.progression.forEach((ch, b) => {
+    const wrap = el('span', 'bar');
+    wrap.append(el('span', '', `${b + 1}마디`));
+    const root = el('select');
+    root.dataset.bar = b;
+    for (let r = 0; r <= 6; r++) root.append(new Option(NOTE_NAMES[(scaleSemi(r) + state.root) % 12], r));
+    root.value = ch.root;
+    root.addEventListener('change', () => { ch.root = +root.value; changed(); });
+    const size = el('select');
+    size.dataset.barSize = b;
+    for (const [v, n] of [[3, '3화음'], [4, '7화음'], [5, '9화음']]) size.append(new Option(n, v));
+    size.value = ch.size;
+    size.addEventListener('change', () => { ch.size = +size.value; changed(); });
+    wrap.append(root, size, el('span', 'chord-name', chordName(ch)));
+    box.append(wrap);
+  });
+}
+
+// 오른쪽 '슬롯 악기' 칸: 선택한 슬롯의 악기(왼쪽 프리셋 목록에서 고른다), 역할, 화음 음 수
+function renderSlotSettings() {
+  const section = $('slot-section');
+  const sm = state.slotMode;
+  section.hidden = !isSlotMode() || sm.focus !== 'slot';
+  if (section.hidden) return;
+  const box = $('slot-settings');
+  box.innerHTML = '';
+  const slot = sm.slots[sm.selectedSlot];
+  box.append(el('div', 'hint', `악기: ${PRESET_BY_ID[slot.preset].name} (왼쪽 악기 프리셋에서 바꾼다)`));
+  const roleRow = el('label', '', '역할');
+  const role = el('select');
+  role.dataset.slot = 'role';
+  for (const [id, name] of Object.entries(SLOT_ROLES)) role.append(new Option(name, id));
+  role.value = slot.role;
+  role.disabled = !PRESET_BY_ID[slot.preset].pitched;
+  role.addEventListener('change', () => { slot.role = role.value; changed(); });
+  roleRow.append(role);
+  const voiceRow = el('label', '', '화음 음 수 (코드·패드)');
+  const voices = el('select');
+  voices.dataset.slot = 'voices';
+  for (let v = TOOL.VOICES_MIN; v <= TOOL.VOICES_MAX; v++) voices.append(new Option(`${v}음`, v));
+  voices.value = slot.voices;
+  voices.disabled = slot.role !== 'chord' && slot.role !== 'pad';
+  voices.addEventListener('change', () => { slot.voices = +voices.value; changed(); });
+  voiceRow.append(voices);
+  const range = slotRange(slot);
+  box.append(roleRow, voiceRow, el('div', 'hint', PRESET_BY_ID[slot.preset].pitched ? `음역 ${midiName(range.low)} ~ ${midiName(range.high)} (옥타브 이동은 아래 '슬롯 설정')` : '타악: 음높이를 쓰지 않는다'));
+}
+
+// 오른쪽 '패턴 설정': 미리듣기 슬롯, 등장 루프
+function renderPatternSettings(relic) {
+  const box = $('relic-settings');
+  box.innerHTML = '';
+  if (!relic) return;
+  const row = el('label', 'mix-setting');
+  const pick = el('select');
+  pick.dataset.relic = 'preview-slot';
+  state.slotMode.slots.forEach((s, i) => pick.append(new Option(`${i + 1}번 ${PRESET_BY_ID[s.preset].name}`, i)));
+  pick.value = state.slotMode.selectedSlot;
+  pick.addEventListener('change', () => { state.slotMode.selectedSlot = +pick.value; changed(); });
+  row.append(el('span', '', '미리듣기 슬롯'), pick);
+  box.append(row);
+  // 등장 루프는 renderRelicSettings와 같은 줄을 쓴다
+  const tmp = el('div');
+  const holder = $('relic-settings');
+  renderRelicSettings(relic, { loopsOnly: true, into: tmp });
+  for (const c of [...tmp.children]) holder.append(c);
+}
+
 function renderRight() {
+  if (isSlotMode()) { renderRightSlot(); return; }
+  $('slot-section').hidden = true;
+  $('right-title').textContent = '선택한 유물';
+  $('mix-title').textContent = '믹스 설정';
+  $('relic-title').textContent = '유물 설정';
+  $('volume').parentElement.hidden = false;
   const relic = selectedRelic();
   $('right-name').textContent = relic ? relic.name : '선택한 유물 없음';
   $('single-play').disabled = !relic;
@@ -2446,24 +2918,95 @@ function renderRight() {
   }
 }
 
+// 슬롯 모드 오른쪽 패널: 대상이 슬롯이면 슬롯 악기·볼륨·믹스 설정·슬롯 설정, 패턴 유물이면 단독 재생·미리듣기 슬롯·등장 루프
+function renderRightSlot() {
+  const sm = state.slotMode;
+  const slot = sm.slots[sm.selectedSlot];
+  const relic = selectedRelic();
+  const onSlot = sm.focus === 'slot';
+  $('right-title').textContent = onSlot ? `${sm.selectedSlot + 1}번 슬롯` : '선택한 패턴';
+  $('right-name').textContent = onSlot ? `${PRESET_BY_ID[slot.preset].name} (${SLOT_ROLES[slot.role]})` : relic ? relic.name : '선택한 패턴 없음';
+  $('single-play').disabled = !relic;
+  $('clear-notes').disabled = onSlot || !relic || !relic.notes.length;
+  const volume = $('volume');
+  volume.parentElement.hidden = !onSlot;
+  volume.disabled = false;
+  volume.max = TOOL.VOLUME_MAX * 100;
+  volume.value = Math.round(slot.volume * 100);
+  $('volume-label').textContent = `${volume.value}%`;
+  renderSlotSettings();
+  $('mix-title').textContent = onSlot ? '슬롯 믹스 설정' : '믹스 설정 (슬롯이 가진다)';
+  $('relic-title').textContent = onSlot ? '슬롯 설정' : '패턴 설정';
+  if (onSlot) {
+    renderMixSettings(slot);
+    renderRelicSettings(slot, { noLoops: true });
+  } else {
+    $('mix-settings').innerHTML = '';
+    $('mix-settings').append(el('div', 'hint', '패턴 유물에는 악기·믹스 설정이 없다. 위 믹스 바의 슬롯을 누르면 그 슬롯의 설정이 보인다.'));
+    renderPatternSettings(relic);
+  }
+  const info = $('info');
+  info.innerHTML = '';
+  if (onSlot || !relic) return;
+  const steps = new Set(relic.notes.map((n) => n.step));
+  const degrees = [...new Set(relic.notes.map((n) => n.row))].sort((a, b) => a - b).map((d) => DEGREE_NAMES[d]);
+  const sample = resolvePattern(relic, slot).filter((n) => n.midi !== null).slice(0, 8).map((n) => midiName(n.midi)).join(' ');
+  for (const [k, v] of [['노트 수', String(relic.notes.length)], ['칸', `${steps.size}/${gridSteps()}칸`], ['단계', degrees.join(' ') || '-'],
+    [`${sm.selectedSlot + 1}번 슬롯 실제 음`, sample || (PRESET_BY_ID[slot.preset].pitched ? '-' : '타악')]]) {
+    info.append(el('dt', '', k), el('dd', '', v));
+  }
+}
+
 function renderPlayButtons() {
   const single = $('single-play');
   const mix = $('mix-play');
+  const stack = $('stack-play');
+  const slotMode = isSlotMode();
   single.classList.toggle('playing', Player.mode === 'single');
-  single.textContent = Player.mode === 'single' ? '■ 정지' : '▶ 이 유물 재생';
+  single.textContent = Player.mode === 'single' ? '■ 정지' : slotMode ? `▶ 이 패턴 재생 (${state.slotMode.selectedSlot + 1}번 슬롯)` : '▶ 이 유물 재생';
   mix.classList.toggle('playing', Player.mode === 'mix');
   mix.textContent = Player.mode === 'mix' ? '■ 믹스 정지' : '▶ 믹스 재생';
   mix.disabled = !state.mix.some((s) => s && relicById(s.relicId));
+  stack.hidden = !slotMode;
+  stack.classList.toggle('playing', Player.mode === 'stack');
+  stack.textContent = Player.mode === 'stack' ? '■ 쌓기 정지' : '▶ 쌓기 재생';
+  stack.disabled = mix.disabled;
+  const random = $('mix-random');
+  random.textContent = slotMode ? '순서대로 채우기' : '랜덤 믹스';
+  random.title = slotMode ? '무작위로 고른 패턴 유물을 1번 슬롯부터 채운다 (게임에서 유물을 얻는 순서 흉내)' : '전체 유물 중에서 무작위로 골라 5칸을 새로 채운다';
+}
+
+// 모드 바꾸기: 재생을 멈추고 지금 모드의 유물 목록·믹스 바·선택을 inactive와 맞바꾼다. 두 모드의 작업은 서로 지워지지 않는다.
+function setMode(mode) {
+  if (mode !== 'slot') mode = 'relic';
+  if (mode === state.mode) return;
+  Player.stop();
+  const cur = { relics: state.relics, mix: state.mix, selectedId: state.selectedId };
+  state.relics = state.inactive.relics;
+  state.mix = state.inactive.mix;
+  state.selectedId = state.inactive.selectedId;
+  state.inactive = cur;
+  state.mode = mode;
+  if (!selectedRelic() && state.relics.length) state.selectedId = state.relics[0].id;
+  editorKey = '';
+  changed();
 }
 
 // ---------------------------------------------------------------------------
 // 유물 추가·선택·삭제
 // ---------------------------------------------------------------------------
 function newRelic(name) {
-  return { id: `relic_${state.nextId++}`, name, preset: TOOL.DEFAULT_PRESET, notes: [], volume: TOOL.DEFAULT_VOLUME, checked: true };
+  return { id: `relic_${state.nextId++}`, name, preset: isSlotMode() ? PATTERN_PRESET_ID : TOOL.DEFAULT_PRESET, // 슬롯 모드에서는 패턴 유물
+    notes: [], volume: TOOL.DEFAULT_VOLUME, checked: true };
 }
 
 function selectRelic(id) {
+  if (isSlotMode() && state.slotMode.focus !== 'relic') {
+    state.slotMode.focus = 'relic';
+    state.selectedId = id;
+    changed();
+    return;
+  }
   if (state.selectedId === id) return;
   state.selectedId = id;
   changed();
@@ -2852,8 +3395,10 @@ function checkedRelics() {
 function exportDesign() {
   const relics = checkedRelics();
   if (!relics.length) { setStatus('체크한 유물이 없습니다.', true); return; }
-  const filename = `relic-beats-${timestamp()}.md`;
-  const md = designMarkdown(designData(relics));
+  // 슬롯 모드: 체크한 패턴 유물과 슬롯·코드 진행을 내보낸다
+  const slot = isSlotMode();
+  const filename = slot ? `relic-beats-slot-${timestamp()}.md` : `relic-beats-${timestamp()}.md`;
+  const md = slot ? designMarkdownSlot(designDataSlot(relics)) : designMarkdown(designData(relics));
   downloadBlob(new Blob([md], { type: 'text/markdown;charset=utf-8' }), filename);
   setStatus(`설계서 저장: ${filename} (유물 ${relics.length}개)`);
   return md;
@@ -2878,6 +3423,7 @@ function parseDesign(text) {
   if (data.schema !== TOOL.SCHEMA) {
     throw new Error(`지원하지 않는 버전입니다: "${data.schema}". 이 툴은 "${TOOL.SCHEMA}"를 읽습니다.`);
   }
+  if (data.mode === 'slot') return parseSlotData(data);
   if (data.scale && data.scale.name && !SCALES[data.scale.name]) {
     throw new Error(`알 수 없는 스케일입니다: "${data.scale.name}"`);
   }
@@ -2931,7 +3477,12 @@ function importText(text, filename) {
     setStatus(`불러오기 실패: ${e.message}`, true);
     return;
   }
-  const existing = new Map(state.relics.map((r) => [r.name, r]));
+  if (parsed.mode === 'slot') { importSlotDesign(parsed, filename); return; }
+  // 슬롯 모드에서 불러오면 확인을 누를 때 유물 악기 모드로 바꾼다(취소하면 그대로). 슬롯 모드 작업은 그대로 남는다.
+  const switchMode = isSlotMode();
+  const relicList = switchMode ? state.inactive.relics : state.relics;
+  const patternList = switchMode ? state.relics : state.inactive.relics;
+  const existing = new Map(relicList.map((r) => [r.name, r]));
   const overwrite = parsed.relics.filter((r) => existing.has(r.name));
   const added = parsed.relics.filter((r) => !existing.has(r.name));
   const body = el('div');
@@ -2955,7 +3506,8 @@ function importText(text, filename) {
   if (delayChange) body.append(el('div', '', `딜레이가 ${DELAY_NOTE_NAMES[state.delayNote]}에서 ${DELAY_NOTE_NAMES[parsed.delayNote]}로 바뀐다.`));
   // 격자가 다르면 파일의 격자를 툴 전체에 적용하고, 파일에 없는 유물은 같은 시각을 유지하도록 옮긴다
   const gridChange = parsed.grid !== state.grid;
-  const others = state.relics.filter((r) => !parsed.relics.some((p) => p.name === r.name));
+  // 파일에 없는 유물: 지금 목록에서 이름이 다른 것 + 다른 모드(inactive)의 유물 전부(격자는 두 모드가 같이 쓴다)
+  const others = [...relicList.filter((r) => !parsed.relics.some((p) => p.name === r.name)), ...patternList];
   const dropped = gridChange && parsed.grid === 8 ? oddStepNotes(others) : 0;
   if (gridChange) {
     body.append(el('div', '', `격자가 ${state.grid}분에서 ${parsed.grid}분으로 바뀐다. 파일에 없는 유물의 노트는 같은 시각으로 옮긴다${dropped ? ` (16분 홀수 칸 노트 ${dropped}개는 지워진다)` : ''}.`));
@@ -2984,6 +3536,7 @@ function importText(text, filename) {
     fitNotesToPreset(target);
   };
   const apply = () => {
+    if (switchMode) setMode('relic');
     if (scaleChange) state.scale = parsed.scale;
     state.swing = parsed.swing;
     state.root = parsed.root;
@@ -3017,8 +3570,267 @@ function importText(text, filename) {
     changed();
     setStatus(`불러옴: 덮어쓰기 ${overwrite.length}, 추가 ${added.length}`);
   };
-  if (overwrite.length || scaleChange || swingChange || bpmChange || delayChange || gridChange || rootChange || rowsChange || cycleChange) confirmModal('설계서 불러오기', body, apply, '불러오기');
+  if (switchMode) body.prepend(el('div', '', '유물 악기 모드 설계서다. 불러오면 툴이 유물 악기 모드로 바뀐다(슬롯 모드 작업은 그대로 남는다).'));
+  if (switchMode || overwrite.length || scaleChange || swingChange || bpmChange || delayChange || gridChange || rootChange || rowsChange || cycleChange) confirmModal('설계서 불러오기', body, apply, '불러오기');
   else apply();
+}
+
+// ---------------------------------------------------------------------------
+// 슬롯 악기 모드 설계서 (relic-beats-slot-장르-버전.md). 스키마 이름은 그대로이고 최상위 mode: "slot"으로 구분한다.
+// ---------------------------------------------------------------------------
+// 슬롯 하나의 JSON (기본값은 생략: octaveShift 0, voices는 chord·pad일 때만, 믹스 설정 0, swing·pan·filterSweep 없음)
+function slotData(slot) {
+  const out = { preset: slot.preset, role: slot.role };
+  if (slot.role === 'chord' || slot.role === 'pad') out.voices = slot.voices;
+  out.volume = slot.volume;
+  if (octaveShift(slot)) out.octaveShift = octaveShift(slot);
+  for (const k of MIX_FIELDS) if (slot[k] > 0) out[k] = slot[k];
+  const extras = normalizeRelicExtras({ swing: slot.swing, pan: slot.pan, filterSweep: slot.filterSweep });
+  for (const k of ['swing', 'pan', 'filterSweep']) if (extras[k] !== undefined) out[k] = extras[k];
+  return out;
+}
+
+function designDataSlot(relics) {
+  const data = {
+    schema: TOOL.SCHEMA,
+    mode: 'slot',
+    exportedAt: new Date().toISOString(),
+    timing: {
+      bpm: state.bpm, grid: state.grid, beatSeconds: 60 / state.bpm, stepSeconds: stepSeconds(),
+      beats: TOOL.BEATS, steps: gridSteps(), loopSeconds: loopSeconds(),
+    },
+    scale: { name: state.scale, root: NOTE_NAMES[state.root], intervals: SCALES[state.scale] },
+  };
+  if (state.bpm !== TOOL.DEFAULT_BPM) data.bpm = state.bpm;
+  if (state.grid !== TOOL.DEFAULT_GRID) data.grid = state.grid;
+  if (state.root) data.root = state.root;
+  if (state.cycleLoops !== 1) data.cycleLoops = state.cycleLoops;
+  if (state.delayNote !== TOOL.DEFAULT_DELAY_NOTE) data.delayNote = state.delayNote;
+  if (state.swing > 0) data.groove = { swing: state.swing };
+  data.progression = state.slotMode.progression.map((c) => ({ root: c.root, size: c.size }));
+  data.slots = state.slotMode.slots.map(slotData);
+  data.relics = relics.map((relic) => {
+    const slotIndex = state.mix.findIndex((s) => s && s.relicId === relic.id);
+    const out = { name: relic.name };
+    if (slotIndex >= 0) out.mixSlot = slotIndex + 1;
+    out.pattern = relic.notes.map((n) => {
+      const p = { step: n.step, degree: n.row };
+      if (n.repeat > 1) p.repeat = n.repeat;
+      else if (n.length > 1) p.length = n.length;
+      if (noteVelocity(n) !== 1) p.velocity = noteVelocity(n);
+      return p;
+    });
+    if (relic.loops) out.loops = relic.loops;
+    return out;
+  });
+  return data;
+}
+
+// 패턴 표기: degree 기호(R 3 5 7 R' 3' 5' 9'), 화음은 +, 길이 *n, 이어지는 칸 =, 롤 /n, 세기 @m/@w
+function patternStepText(r, step) {
+  const heads = r.pattern.filter((n) => n.step === step);
+  if (heads.length) {
+    return heads.map((n) => DEGREE_NAMES[n.degree] + (n.length > 1 ? `*${n.length}` : '') + (n.repeat > 1 ? `/${n.repeat}` : '') + velocitySuffix(n.velocity)).join('+');
+  }
+  if (r.pattern.some((n) => n.length > 1 && n.step < step && step < n.step + n.length)) return '=';
+  return '-';
+}
+
+function designMarkdownSlot(data) {
+  const r4 = (v) => +v.toFixed(4);
+  const grid = data.grid || TOOL.DEFAULT_GRID;
+  const bpm = data.bpm || TOOL.DEFAULT_BPM;
+  const per = stepsPerBeat(grid);
+  const steps = gridSteps(grid);
+  const cycle = data.cycleLoops || 1;
+  const root = data.root || 0;
+  const out = [];
+  out.push('# 유물 비트 설계서 (슬롯 악기 모드)');
+  out.push('');
+  out.push('4Bit_Prototype 유물 비트 메이커(`relic-beat-tool/`)의 슬롯 악기 모드에서 내보낸 파일이다. 믹스 바 5칸(슬롯)이 악기를 정하고, 유물은 리듬과 코드 기준 높낮이(degree)만 정한다. 유물을 얻은 순서대로 슬롯 1 → 5에 들어가 그 슬롯의 악기로 연주된다.');
+  out.push('');
+  out.push('## 읽는 법');
+  out.push('');
+  out.push(`- **시간 기준:** ${bpm}BPM(4분음표). 격자 ${grid}분: 칸 하나 = ${r4(stepSecondsFor(grid, bpm))}초, 16박 = 4마디 = ${steps}칸, 루프 = ${r4(steps * stepSecondsFor(grid, bpm))}초. 사이클 ${cycle}루프 = ${cycle * 4}마디.`);
+  out.push(`- **스케일·키:** ${keyScaleName(data.scale.name, root)} (반음 간격 ${data.scale.intervals.join(' ')}, JSON \`root\` ${root}).`);
+  out.push(`- **슬롯:** 아래 슬롯 표의 악기·역할·음역·믹스 설정으로 그 슬롯에 들어간 유물(패턴)을 연주한다. 믹스 설정 항목의 뜻은 유물 악기 모드 설계서와 같다.`);
+  out.push(`- **코드 진행:** 마디마다 \`{ root, size }\`. root는 스케일 행(0 = 스케일 첫 음), 코드는 그 행부터 스케일 위로 3도씩(행 +2씩) size개(3 = 3화음, 4 = 7화음, 5 = 9화음)를 쌓는다.`);
+  out.push(`- **degree (패턴의 높낮이):** 0 = R(근음), 1 = 3, 2 = 5, 3 = 7, 4 = R'(한 옥타브 위), 5 = 3', 6 = 5', 7 = 9'. 그 칸 마디의 코드 음이다. 3화음이면 7음 자리는 근음 한 옥타브 위, 3·7화음이면 9음 자리는 5음 위로 바꾼다.`);
+  out.push(`- **역할별 변환:** bass = 단음, 슬롯 음역의 가장 낮은 옥타브(degree 4~6은 한 옥타브 위, 7음·9음은 근음으로). chord = degree 음을 맨 위로, 그 아래 한 옥타브 안에 코드 음 voices-1개(앞 화음과 음 이동 합이 가장 작은 자리). lead = 단음, 슬롯 음역 안. pad = chord와 같고 길이를 다음 패턴 노트 직전 또는 코드가 바뀌는 칸 직전까지 늘인다. perc = 음높이를 버리고 타악을 친다. 슬롯 음역 = 프리셋 옥타브 + octaveShift의 C ~ 두 옥타브 위, 벗어나면 옥타브 단위로 안으로 접는다.`);
+  out.push(`- **경계 처리:** 노트가 코드가 바뀌는 칸을 넘으면 거기서 끊는다. 그 음이 다음 코드에도 있으면(공통음) 이어 간다. 화음은 음마다 따로 판단한다.`);
+  out.push(`- **패턴 표기:** 칸마다 degree 기호, 쉬는 칸 \`-\`, 같은 칸 여러 음은 \`+\`, \`*n\` 길이(이어지는 칸 \`=\`), \`/n\` 롤, \`@m\`·\`@w\` 세기(중 0.7, 약 0.4). 순서: 기호, 길이, 롤, 세기.`);
+  out.push(`- **등장 루프:** 유물의 \`loops\`(사이클 안 루프별 true/false)가 있으면 false인 루프에서 치지 않는다. 없으면 모든 루프.`);
+  out.push('- **원본 데이터:** 맨 아래 JSON이 원본이다. 표는 JSON에서 만든 것이다. 이 파일은 `mode: "slot"`이라 슬롯 모드를 모르는 이전 툴로 열면 `notes`·`preset`이 없어 거부된다.');
+  out.push('');
+  out.push('## 슬롯');
+  out.push('');
+  out.push('| 슬롯 | 악기 | 역할 | 옥타브 | 화음 음 수 | 볼륨 | 믹스·슬롯 설정 |');
+  out.push('|---|---|---|---|---|---|---|');
+  data.slots.forEach((s, i) => {
+    const preset = PRESET_BY_ID[s.preset];
+    const mix = MIX_FIELDS.filter((k) => s[k] > 0).map((k) => `${MIX_SETTING_LABELS[k]} ${Math.round(s[k] * 100)}%`);
+    const rel = relicSettingsText(s);
+    out.push(`| ${i + 1} | ${preset.name} (\`${s.preset}\`) | ${SLOT_ROLES[s.role]} | ${preset.pitched ? (s.octaveShift ? (s.octaveShift > 0 ? '+' : '') + s.octaveShift : '0') : '-'} | ${s.voices || '-'} | ${Math.round(s.volume * 100)}% | ${[...mix, rel].filter(Boolean).join(', ') || '-'} |`);
+  });
+  out.push('');
+  out.push('## 코드 진행');
+  out.push('');
+  out.push('| 마디 | 코드 | 코드 음 (R 3 5 7 9) |');
+  out.push('|---|---|---|');
+  data.progression.forEach((c, b) => {
+    out.push(`| ${b + 1} | ${chordName(c)} | ${chordTones(c).map((t) => NOTE_NAMES[(t + root) % 12]).join(' ')} |`);
+  });
+  out.push('');
+  out.push('## 요약');
+  out.push('');
+  out.push('| 유물 | 노트 수 | 칸 | 쓰는 단계 | 특징 |');
+  out.push('|---|---|---|---|---|');
+  for (const r of data.relics) {
+    const used = new Set(r.pattern.map((n) => n.step));
+    const degrees = [...new Set(r.pattern.map((n) => n.degree))].sort((a, b) => a - b).map((d) => DEGREE_NAMES[d]).join(' ');
+    const onbeat = r.pattern.length ? r.pattern.filter((n) => n.step % per === 0).length / r.pattern.length : 0;
+    const parts = [onbeat >= 0.7 ? '정박 위주' : onbeat <= 0.3 ? '엇박 위주' : '정박·엇박 섞임'];
+    if (r.pattern.some((n) => n.length > 1)) parts.push('긴 노트 있음');
+    if (r.pattern.some((n) => n.repeat > 1)) parts.push('롤 있음');
+    if (r.pattern.some((n) => n.velocity !== undefined && n.velocity < 1)) parts.push('강약 있음');
+    if (r.loops) parts.push('등장 루프 있음');
+    out.push(`| ${r.name} | ${r.pattern.length} | ${used.size}/${steps} | ${degrees || '-'} | ${parts.join(', ')} |`);
+  }
+  for (const r of data.relics) {
+    out.push('');
+    out.push(`## ${r.name}`);
+    out.push('');
+    out.push(`- **노트 수:** ${r.pattern.length}${r.mixSlot ? ` (내보낼 때 ${r.mixSlot}번 슬롯)` : ''}`);
+    const loopText = loopsText(r, cycle);
+    if (loopText) out.push(`- **등장 루프:** ${loopText}`);
+    // 슬롯 1에 넣었을 때의 실제 음 (resolvePattern)
+    const pattern = { notes: r.pattern.map((n) => ({ step: n.step, row: n.degree, length: n.length, velocity: n.velocity, repeat: n.repeat })) };
+    const resolved = resolvePattern(pattern, normalizeSlot(JSON.parse(JSON.stringify(data.slots[0]))), data.progression);
+    const byStep = new Map();
+    for (const n of resolved) {
+      const s = byStep.get(n.step) || [];
+      s.push(n.midi === null ? 'X' : midiName(n.midi) + (n.length > 1 ? `*${n.length}` : ''));
+      byStep.set(n.step, s);
+    }
+    out.push(`- **1번 슬롯(${PRESET_BY_ID[data.slots[0].preset].name}, ${SLOT_ROLES[data.slots[0].role]})에 넣으면:** ${[...byStep].map(([s, v]) => `${stepLabel(s, grid)}:${v.join('+')}`).join(' ') || '-'}`);
+    out.push('');
+    const cols = STEP_FRACTIONS[grid].map((x) => `.${x}`);
+    out.push(`| 박 | ${cols.join(' | ')} |`);
+    out.push(`|---|${cols.map(() => '---').join('|')}|`);
+    for (let b = 0; b < TOOL.BEATS; b++) out.push(`| ${b + 1} | ${cols.map((_, k) => patternStepText(r, b * per + k)).join(' | ')} |`);
+    out.push('');
+    out.push('한 줄 패턴:');
+    out.push('');
+    out.push('```');
+    out.push(Array.from({ length: steps }, (_, s) => `${stepLabel(s, grid)}:${patternStepText(r, s)}`).join(' '));
+    out.push('```');
+  }
+  out.push('');
+  out.push('## 데이터 (JSON)');
+  out.push('');
+  out.push('최상위 `mode: "slot"`, `progression`(마디 4개), `slots`(항상 5개: preset, role, voices(코드·패드), volume, 선택 항목 octaveShift·믹스 설정·swing·pan·filterSweep), `relics`(name, pattern: [{ step, degree, length?, velocity?, repeat? }], loops?, mixSlot은 참고값). 나머지 최상위 선택 항목(bpm, grid, root, cycleLoops, delayNote, groove)은 유물 악기 모드와 같다.');
+  out.push('');
+  out.push('```json');
+  out.push(JSON.stringify(data, null, 2));
+  out.push('```');
+  out.push('');
+  return out.join('\n');
+}
+const stepSecondsFor = (grid, bpm) => (grid === 16 ? 15 : 30) / bpm;
+
+// 슬롯 모드 JSON을 읽는다 (parseDesign이 mode: "slot"이면 부른다). 문제가 있으면 throw.
+function parseSlotData(data) {
+  if (data.scale && data.scale.name && !SCALES[data.scale.name]) throw new Error(`알 수 없는 스케일입니다: "${data.scale.name}"`);
+  if (!Array.isArray(data.relics) || !data.relics.length) throw new Error('유물(relics)이 없습니다.');
+  const grid = data.grid === 16 ? 16 : 8;
+  const steps = gridSteps(grid);
+  const names = new Set();
+  const relics = data.relics.map((r, i) => {
+    if (!r || typeof r.name !== 'string' || !r.name.trim()) throw new Error(`${i + 1}번째 유물: 이름이 없습니다.`);
+    const name = r.name.trim().slice(0, TOOL.NAME_MAX);
+    if (names.has(name)) throw new Error(`이름이 겹칩니다: "${name}"`);
+    names.add(name);
+    if (!Array.isArray(r.pattern)) throw new Error(`"${name}": 패턴(pattern)이 없습니다.`);
+    const notes = r.pattern.map((n, j) => {
+      if (!Number.isInteger(n.step) || n.step < 0 || n.step >= steps) throw new Error(`"${name}" ${j + 1}번째 노트: 칸 번호(step)가 0~${steps - 1}(격자 ${grid}분)이 아닙니다.`);
+      if (!Number.isInteger(n.degree) || n.degree < 0 || n.degree >= TOOL.DEGREE_ROWS) throw new Error(`"${name}" ${j + 1}번째 노트: degree가 0~7이 아닙니다.`);
+      const note = { step: n.step, row: n.degree };
+      if (typeof n.velocity === 'number' && Number.isFinite(n.velocity)) note.velocity = clamp(n.velocity, 0, 1);
+      if (typeof n.length === 'number' && Number.isFinite(n.length)) note.length = clamp(Math.round(n.length), 1, steps - n.step);
+      if (typeof n.repeat === 'number' && Number.isFinite(n.repeat)) note.repeat = clamp(Math.round(n.repeat), 1, TOOL.REPEAT_MAX);
+      return note;
+    });
+    const relic = { name, preset: PATTERN_PRESET_ID, notes, volume: TOOL.DEFAULT_VOLUME };
+    if (r.loops !== undefined) relic.loops = r.loops;
+    normalizeRelicExtras(relic);
+    for (const k of ['swing', 'octaveShift', 'pan', 'filterSweep']) delete relic[k];
+    return relic;
+  });
+  const slotsIn = Array.isArray(data.slots) ? data.slots : [];
+  const slots = Array.from({ length: TOOL.MIX_SLOTS }, (_, i) => normalizeSlot(JSON.parse(JSON.stringify(slotsIn[i] || SLOT_DEFAULTS[i]))));
+  return {
+    mode: 'slot',
+    scale: data.scale && data.scale.name,
+    swing: clamp(num(data.groove && data.groove.swing, 0), 0, TOOL.SWING_MAX),
+    grid,
+    bpm: clampBpm(data.bpm),
+    root: clampRoot(data.root),
+    cycleLoops: TOOL.CYCLE_CHOICES.includes(data.cycleLoops) ? data.cycleLoops : 1,
+    delayNote: TOOL.DELAY_NOTES[data.delayNote] ? data.delayNote : TOOL.DEFAULT_DELAY_NOTE,
+    progression: normalizeProgression(data.progression),
+    slots,
+    relics,
+  };
+}
+
+// 슬롯 모드 파일 불러오기: 툴을 슬롯 모드로 바꾸고 슬롯·코드 진행·전역 설정을 파일 내용으로, 패턴 유물은 이름이 같으면 덮어쓰고 없으면 추가한다.
+// 유물 악기 모드의 유물 목록은 그대로 남는다(모드별로 따로 저장).
+function importSlotDesign(parsed, filename) {
+  const slotRelics = isSlotMode() ? state.relics : state.inactive.relics;
+  const existing = new Map(slotRelics.map((r) => [r.name, r]));
+  const overwrite = parsed.relics.filter((r) => existing.has(r.name));
+  const added = parsed.relics.filter((r) => !existing.has(r.name));
+  const body = el('div');
+  body.append(el('div', '', `${filename}은 슬롯 악기 모드 설계서다. 툴을 슬롯 악기 모드로 바꾸고 슬롯 5칸·코드 진행·템포·격자·키·스케일·사이클·딜레이·스윙을 파일 내용으로 바꾼다.`));
+  if (overwrite.length) body.append(el('div', '', `덮어쓰는 패턴: ${overwrite.map((r) => r.name).join(', ')}`));
+  if (added.length) body.append(el('div', '', `새로 추가하는 패턴: ${added.map((r) => r.name).join(', ')}`));
+  const gridChange = parsed.grid !== state.grid;
+  if (gridChange) body.append(el('div', '', `격자가 ${state.grid}분에서 ${parsed.grid}분으로 바뀐다. 파일에 없는 유물(두 모드 모두)의 노트는 같은 시각으로 옮긴다.`));
+  body.append(el('div', 'hint', '유물 악기 모드의 유물 목록과 믹스 바는 그대로다.'));
+  const apply = () => {
+    Player.stop();
+    if (!isSlotMode()) setMode('slot');
+    if (gridChange) {
+      const others = [...state.relics.filter((r) => !parsed.relics.some((p) => p.name === r.name)), ...state.inactive.relics];
+      for (const r of others) convertRelicGrid(r, state.grid, parsed.grid);
+      state.grid = parsed.grid;
+    }
+    if (parsed.scale) state.scale = parsed.scale;
+    Object.assign(state, { swing: parsed.swing, bpm: parsed.bpm, root: parsed.root, cycleLoops: parsed.cycleLoops, delayNote: parsed.delayNote });
+    state.slotMode.slots = parsed.slots;
+    state.slotMode.progression = parsed.progression;
+    for (const r of parsed.relics) {
+      const target = existing.get(r.name);
+      if (target) {
+        target.notes = r.notes;
+        if (r.loops) target.loops = r.loops;
+        else delete target.loops;
+        normalizeNotes(target);
+      } else {
+        const relic = newRelic(r.name);
+        relic.preset = PATTERN_PRESET_ID;
+        relic.notes = r.notes;
+        if (r.loops) relic.loops = r.loops;
+        normalizeNotes(relic);
+        state.relics.push(relic);
+      }
+    }
+    if (!selectedRelic() && state.relics.length) state.selectedId = state.relics[0].id;
+    Player.syncDelay();
+    changed();
+    setStatus(`슬롯 모드 불러옴: 덮어쓰기 ${overwrite.length}, 추가 ${added.length}`);
+  };
+  confirmModal('슬롯 모드 설계서 불러오기', body, apply, '불러오기');
 }
 
 function readFile(file) {
@@ -3164,7 +3976,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // 체크한 유물마다 WAV 1개 + 체크한 유물을 모두 합친 믹스 WAV 1개
 async function exportAudio() {
   const relics = checkedRelics();
-  if (!relics.length) { setStatus('체크한 유물이 없습니다.', true); return []; }
+  if (!relics.length && !isSlotMode()) { setStatus('체크한 유물이 없습니다.', true); return []; }
   const button = $('export-audio');
   button.disabled = true;
   const stamp = timestamp();
@@ -3173,6 +3985,26 @@ async function exportAudio() {
   const cycle = state.wavLength === 'cycle' && state.cycleLoops > 1;
   const opts = { drums: state.wavDrums, cycle };
   try {
+    if (isSlotMode()) {
+      // 슬롯 모드: 채운 슬롯마다 WAV 1개(relic-slot-슬롯번호-유물이름-시각.wav) + 믹스 1개
+      const filled = filledSlots();
+      if (!filled.length) throw new Error('믹스 바 슬롯이 비어 있습니다.');
+      const layers = filled.map(([i, r]) => ({ relic: slotRelic(i, r), volume: state.slotMode.slots[i].volume }));
+      for (let k = 0; k < layers.length; k++) {
+        const [i, r] = filled[k];
+        setStatus(`렌더링 중: ${i + 1}번 슬롯 ${r.name}`);
+        const channels = await renderLoop([layers[k]], opts);
+        files.push({ name: `relic-slot-${i + 1}-${safeFileName(r.name)}-${stamp}.wav`, blob: encodeWav(channels, TOOL.WAV_SAMPLE_RATE) });
+      }
+      setStatus('렌더링 중: 믹스');
+      files.push({ name: `relic-slot-mix-${stamp}.wav`, blob: encodeWav(await renderLoop(layers, opts), TOOL.WAV_SAMPLE_RATE) });
+      for (const f of files) {
+        downloadBlob(f.blob, f.name);
+        await sleep(TOOL.DOWNLOAD_GAP_MS);
+      }
+      setStatus(`WAV ${files.length}개 저장 (슬롯 ${filled.length}개 + 믹스 1개)`);
+      return files;
+    }
     for (const relic of relics) {
       setStatus(`렌더링 중: ${relic.name}`);
       const channels = await renderLoop([{ relic, volume: relic.volume }], opts);
@@ -3208,8 +4040,16 @@ function setup() {
   $('root').addEventListener('change', (e) => { state.root = clampRoot(+e.target.value); changed(); });
   $('pitch-rows').addEventListener('change', (e) => setPitchRows(+e.target.value));
   $('mix-play').addEventListener('click', () => Player.toggle('mix'));
+  $('stack-play').addEventListener('click', () => Player.toggle('stack'));
+  $('mode').addEventListener('change', (e) => setMode(e.target.value));
   $('single-play').addEventListener('click', () => Player.toggle('single'));
   $('volume').addEventListener('input', (e) => {
+    if (isSlotMode() && state.slotMode.focus === 'slot') {
+      state.slotMode.slots[state.slotMode.selectedSlot].volume = e.target.value / 100;
+      $('volume-label').textContent = `${e.target.value}%`;
+      saveSoon();
+      return;
+    }
     const relic = selectedRelic();
     if (!relic) return;
     relic.volume = e.target.value / 100;

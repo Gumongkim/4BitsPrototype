@@ -10,6 +10,12 @@
 <header id="top">
   <div class="top-title">
     <h1>유물 비트 메이커</h1>
+    <label class="scale-pick" title="유물 악기: 유물마다 악기·음·리듬이 정해져 있다. 슬롯 악기: 믹스 바 5칸이 악기를 정하고 유물(패턴)은 리듬과 코드 기준 높낮이만 정한다">모드
+      <select id="mode">
+        <option value="relic">유물 악기</option>
+        <option value="slot">슬롯 악기</option>
+      </select>
+    </label>
     <label class="scale-pick" title="모든 음을 C에서 이만큼 올린다 (스케일 이름은 C 기준 그대로)">키
       <select id="root"></select>
     </label>
@@ -27,6 +33,7 @@
   <div class="mix-buttons">
     <button id="mix-play" class="primary play-btn">▶ 믹스 재생</button>
     <button id="mix-random" title="전체 유물 중에서 무작위로 골라 5칸을 새로 채운다">랜덤 믹스</button>
+    <button id="stack-play" class="play-btn" title="슬롯 1만 → 1·2 → … → 5개 순서로 한 사이클씩 늘려 가며 재생한다 (마지막 단계 반복)" hidden>▶ 쌓기 재생</button>
   </div>
   <div id="globals">
     <label class="g-item" title="4분음표 기준 템포 (60~180). 재생 중에 바꾸면 처음부터 다시 재생한다">템포
@@ -84,6 +91,7 @@
     <label class="g-item check" title="재생에만 얹는 아주 작은 노이즈와 크랙. 설계서·WAV에는 없다">
       <input type="checkbox" id="vinyl"> 바이닐 노이즈
     </label>
+    <div id="progression" class="progression" hidden title="슬롯 악기 모드의 코드 진행: 마디마다 근음(스케일 음)과 화음 크기"></div>
   </div>
 </header>
 
@@ -133,6 +141,7 @@
       <span id="editor-title" class="editor-title"></span>
       <span id="editor-meta" class="hint inline"></span>
       <span id="cycle-pos" class="cycle-pos" hidden></span>
+      <span id="stack-pos" class="cycle-pos" hidden></span>
     </div>
     <span class="hint inline">칸 클릭: 찍기 / 지우기 · 드래그: 연속 입력 · Shift+클릭 또는 우클릭: 세기 바꾸기 · 노트 오른쪽 끝 끌기: 길이 · <span id="step-hint"></span></span>
   </div>
@@ -159,7 +168,7 @@
 
 <aside id="right">
   <section>
-    <h2 class="section-title">선택한 유물</h2>
+    <h2 class="section-title" id="right-title">선택한 유물</h2>
     <p id="right-name" class="right-name">-</p>
     <button id="single-play" class="primary wide play-btn">▶ 이 유물 재생</button>
     <label class="field">볼륨 <span id="volume-label">100%</span>
@@ -167,12 +176,16 @@
     </label>
     <button id="clear-notes" class="wide danger">노트 모두 지우기</button>
   </section>
+  <section id="slot-section" hidden>
+    <h2 class="section-title">슬롯 악기</h2>
+    <div id="slot-settings"></div>
+  </section>
   <section>
-    <h2 class="section-title">믹스 설정</h2>
+    <h2 class="section-title" id="mix-title">믹스 설정</h2>
     <div id="mix-settings"></div>
   </section>
   <section>
-    <h2 class="section-title">유물 설정</h2>
+    <h2 class="section-title" id="relic-title">유물 설정</h2>
     <div id="relic-settings"></div>
   </section>
   <section>

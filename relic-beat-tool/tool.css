@@ -339,3 +339,12 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 #relic-settings select { margin-left: auto; }
 .cycle-pos { margin-left: 8px; padding: 1px 6px; border-radius: 4px; background: #2a3150; color: var(--text); font-size: 11px; }
 .loop-checks { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 2px 0 10px; font-size: 12px; color: var(--dim); }
+/* 슬롯 악기 모드 */
+.progression { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.progression .bar { display: flex; align-items: center; gap: 4px; }
+.progression .chord-name { min-width: 54px; color: var(--text); }
+.mix-slot .slot-inst { display: block; font-size: 11px; color: var(--dim); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; grid-column: 1 / -1; }
+.mix-slot.selected { outline: 2px solid #7380b8; }
+#editor .cell .deg-note { display: block; font-size: 9px; line-height: 1; color: rgba(255, 255, 255, 0.28); pointer-events: none; padding: 2px 0 0 2px; }
+#slot-settings label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; color: var(--dim); }
+#slot-settings select { margin-left: auto; }
