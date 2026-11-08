@@ -39,6 +39,14 @@
         <option value="16">16분 (64칸)</option>
       </select>
     </label>
+    <label class="g-item" title="사이클 = 루프 N번. 필터 스윕과 유물별 등장 루프가 사이클 전체에 걸친다">사이클
+      <select id="cycle-loops">
+        <option value="1">1루프 (4마디)</option>
+        <option value="2">2루프 (8마디)</option>
+        <option value="4">4루프 (16마디)</option>
+        <option value="8">8루프 (32마디)</option>
+      </select>
+    </label>
     <label class="g-item" title="홀수 칸 시작을 swing x 1칸 늦춘다. 8분 격자는 8분 스윙, 16분 격자는 16분 스윙. 33% 근처가 셔플">스윙
       <input type="range" id="swing" min="0" max="50" step="1" value="0">
       <span id="swing-label" class="g-value">0%</span>
@@ -59,6 +67,7 @@
       <select id="kick-sound">
         <option value="kick">기본 킥</option>
         <option value="kick909">909 킥</option>
+        <option value="deep">딥 킥</option>
       </select>
     </label>
     <label class="g-item check" title="데모 드럼 스네어·클랩 소리"><input type="checkbox" id="drum-snare"> 스네어</label>
@@ -104,6 +113,12 @@
       <label class="check small-check" title="WAV에 데모 드럼 소리를 넣는다. 사이드체인은 이 체크와 상관없이 데모 드럼 킥에 맞춰 적용된다">
         <input type="checkbox" id="wav-drums"> WAV에 데모 드럼 포함
       </label>
+      <label class="check small-check" title="한 사이클이면 루프 x 사이클 길이를 렌더하고 사이클 단위로 이음매 없이 반복된다">WAV 길이
+        <select id="wav-length">
+          <option value="loop">한 루프</option>
+          <option value="cycle">한 사이클</option>
+        </select>
+      </label>
       <button id="export-doc" class="primary" title="체크한 유물의 설계서(.md)">설계서 내보내기</button>
       <button id="import" title="설계서(.md) 파일 불러오기. 파일을 화면에 끌어다 놓아도 된다">불러오기</button>
     </div>
@@ -117,6 +132,7 @@
     <div>
       <span id="editor-title" class="editor-title"></span>
       <span id="editor-meta" class="hint inline"></span>
+      <span id="cycle-pos" class="cycle-pos" hidden></span>
     </div>
     <span class="hint inline">칸 클릭: 찍기 / 지우기 · 드래그: 연속 입력 · Shift+클릭 또는 우클릭: 세기 바꾸기 · 노트 오른쪽 끝 끌기: 길이 · <span id="step-hint"></span></span>
   </div>

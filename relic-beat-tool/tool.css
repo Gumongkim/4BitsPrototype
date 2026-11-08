@@ -337,3 +337,5 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 /* 15행 편집기: 행 높이를 줄여 한 화면에 들어오게 한다 */
 #editor.rows15 .cell, #editor.rows15 .row-label { height: 18px; font-size: 10px; }
 #relic-settings select { margin-left: auto; }
+.cycle-pos { margin-left: 8px; padding: 1px 6px; border-radius: 4px; background: #2a3150; color: var(--text); font-size: 11px; }
+.loop-checks { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 2px 0 10px; font-size: 12px; color: var(--dim); }

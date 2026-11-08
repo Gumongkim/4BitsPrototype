@@ -35,15 +35,15 @@
 
 ## 3. 화면과 조작
 
-- **왼쪽:** 유물 목록(+ 추가, 이름 중복 불가·30자, 체크박스 = 내보내기 대상, ✎ 이름 변경, × 삭제, '체크한 유물 삭제'), 악기 프리셋 목록(카테고리 머리글), 오디오 내보내기(WAV)와 'WAV에 데모 드럼 포함', 설계서 내보내기, 불러오기(파일 선택 또는 화면에 끌어다 놓기).
-- **위쪽:** 키(C~B), 스케일, 행 수(8/15) 선택, 믹스 바 5칸(+ 넣기, × 빼기, 칸 볼륨 0~150%), 믹스 재생, 랜덤 믹스(전체 유물에서 무작위로 5칸 채움). 둘째 줄은 전역 설정: 템포(숫자 입력, BPM), 격자(8분 32칸 / 16분 64칸), 스윙 0~50%, 딜레이(8분/점8분/4분/점4분), 데모 드럼(없음/록·J-pop/붐뱁/하우스·EDM/일렉트로닉 팝/투스텝·UK 개러지)과 킥·스네어 켜기 체크박스, 킥 음색(기본 / 909), 드럼 볼륨, 펌핑 기준(데모 킥 / 4분 정박), 바이닐 노이즈.
+- **왼쪽:** 유물 목록(+ 추가, 이름 중복 불가·30자, 체크박스 = 내보내기 대상, ✎ 이름 변경, × 삭제, '체크한 유물 삭제'), 악기 프리셋 목록(카테고리 머리글), 오디오 내보내기(WAV)와 'WAV에 데모 드럼 포함', 'WAV 길이'(한 루프 / 한 사이클), 설계서 내보내기, 불러오기(파일 선택 또는 화면에 끌어다 놓기).
+- **위쪽:** 키(C~B), 스케일, 행 수(8/15) 선택, 믹스 바 5칸(+ 넣기, × 빼기, 칸 볼륨 0~150%), 믹스 재생, 랜덤 믹스(전체 유물에서 무작위로 5칸 채움). 둘째 줄은 전역 설정: 템포(숫자 입력, BPM), 격자(8분 32칸 / 16분 64칸), 사이클(1/2/4/8루프), 스윙 0~50%, 딜레이(8분/점8분/4분/점4분), 데모 드럼(없음/록·J-pop/붐뱁/하우스·EDM/일렉트로닉 팝/투스텝·UK 개러지)과 킥·스네어 켜기 체크박스, 킥 음색(기본 / 909 / 딥), 드럼 볼륨, 펌핑 기준(데모 킥 / 4분 정박), 바이닐 노이즈.
 - **가운데 편집기:** 세로 음높이(위가 높음), 가로 32칸(8분) 또는 64칸(16분). 15행이면 행 높이가 18px로 준다. 마디(4박) 경계가 가장 굵고 박 경계가 굵다. 16분 격자에서는 8분 경계를 중간 굵기로 긋고, 칸 최소 너비가 14px이라 화면이 좁으면 가로 스크롤이 생긴다. 편집기 위에 '입력 세기'(강/중/약), '새 노트 길이'(8분 1/2/4/8칸, 16분 1/2/4/8/16칸), '코드'(없음/3화음/7화음/sus4/add9: 누른 행을 근음으로 스케일 위에 행 간격 [0,2,4] / [0,2,4,6] / [0,3,4] / [0,2,4,8]을 한 번에 찍는다. 행 범위를 넘는 음과 이미 그 칸에서 시작하는 행은 뺀다. 타악이면 꺼진다), '롤'(없음/2/3/4번, 2 이상이면 1칸 롤 노트를 찍고 길이 선택은 쓰지 않는다). 롤 노트는 칸 안에 (롤 수 - 1)개의 가는 세로 선이 보이고 길이 손잡이가 없다.
   - 빈 칸 클릭: 찍기. 노트 시작 칸 클릭: 지우기. 드래그: 처음 동작(찍기/지우기)을 이어서.
   - Shift+클릭 또는 우클릭: 세기를 강 → 중 → 약 → 강으로.
   - 음높이 노트의 마지막 칸 오른쪽 끝(7px)을 끌기: 길이 바꾸기. 같은 행의 다음 노트에서 멈춘다.
   - 긴 노트가 이어지는 칸에 찍으면 앞 노트가 그 칸 직전까지 줄고 새 노트가 생긴다.
-  - 같은 칸에 여러 행(화음)을 찍을 수 있다. 찍을 때 그 음이 한 번 들린다. 재생 중에는 흰 선이 현재 위치다.
-- **오른쪽:** 선택한 유물 단독 재생, 유물 볼륨(0~150%), 노트 모두 지우기, 믹스 설정 슬라이더(사이드체인, 리버브 센드, 딜레이 센드, 로파이, 저음 깎기, 고음 깎기, 각 0~100%. 저음·고음 깎기는 필터 Hz도 보인다), 유물 설정(스윙 슬라이더와 '전체 스윙 따름' 체크, 팬 -100~+100, 옥타브 -2~+2 선택(타악은 꺼짐), 필터 스윕 켜기와 시작·끝 슬라이더), 정보(악기, 음높이 범위, 노트 수, 특징).
+  - 같은 칸에 여러 행(화음)을 찍을 수 있다. 찍을 때 그 음이 한 번 들린다. 재생 중에는 흰 선이 현재 위치이고, 사이클이 2루프 이상이면 편집기 제목 옆에 '루프 2/4'처럼 사이클 위치가 보인다.
+- **오른쪽:** 선택한 유물 단독 재생, 유물 볼륨(0~150%), 노트 모두 지우기, 믹스 설정 슬라이더(사이드체인, 리버브 센드, 딜레이 센드, 로파이, 저음 깎기, 고음 깎기, 코러스, 홀 리버브, 테이프, 각 0~100%. 저음·고음 깎기는 필터 Hz도 보인다), 유물 설정(스윙 슬라이더와 '전체 스윙 따름' 체크, 팬 -100~+100, 옥타브 -2~+2 선택(타악은 꺼짐), 필터 스윕 켜기와 시작·끝 슬라이더·스윕 모양, 사이클이 2루프 이상이면 등장 루프 체크박스 줄), 정보(악기, 음높이 범위, 노트 수, 특징).
 - 단독 재생과 믹스 재생은 동시에 돌지 않는다. 재생 중 편집·볼륨·칸 변경이 바로 반영된다.
 - 작업 상태는 localStorage `relicBeatTool.state`에 자동 저장된다. 이전 버전이 저장한 상태도 없는 항목을 기본값으로 채워 연다.
 
@@ -61,13 +61,17 @@
 | `lofi` | 0 ~ 1 | 0 | 계단 곡선(12비트 → 3비트) + 로우패스(18kHz → 2.5kHz) |
 | `lowCut` | 0 ~ 1 | 0 | 저음 깎기: 하이패스 20 x (800 / 20)^값 Hz (0.5 → 126Hz, 1 → 800Hz), Q 0.707 |
 | `highCut` | 0 ~ 1 | 0 | 고음 깎기: 로우패스 20000 x (800 / 20000)^값 Hz (0.5 → 4kHz, 1 → 800Hz), Q 0.707 |
+| `chorus` | 0 ~ 1 | 0 | 스테레오 코러스(로파이 뒤, 팬 앞). 좌우 지연 15ms를 ±3ms 반대 위상으로 흔든다. LFO 1마디에 한 번(bpm / 240 Hz), 루프 머리에서 위상 0. 젖은 소리 = 값, 마른 소리 = 1 - 값 x 0.5 |
+| `hallSend` | 0 ~ 1 | 0 | 두 번째 리버브 '홀'(4초)로 보내는 양. 어떤 유물도 0보다 크지 않으면 홀 버스를 만들지 않는다 |
+| `tape` | 0 ~ 1 | 0 | 테이프 질감(필터 스윕 뒤, 로파이 앞): 포화 tanh drive 1 + 4 x 값(출력 레벨 보정), 흔들림 8ms 지연을 ±0.6 x 값 ms로 2박에 한 번(bpm / 120 Hz), 고음 감쇠 로우패스 18000 x (6000/18000)^값 Hz. 로파이 = 디지털 샘플러(비트 감소), 테이프 = 아날로그 녹음(포화·흔들림) |
 | 노트 `velocity` | 0 ~ 1 | 1 | 노트 게인 배율. 입력 단계는 강 1.0 / 중 0.7 / 약 0.4 |
 | 노트 `length` | 1 ~ (칸 수 - 시작 칸) | 1 | 칸 수. 음높이 악기만 쓴다(타악은 무시). 같은 행에서 노트끼리 겹치지 않는다 |
 | 노트 `repeat` | 1 ~ 4 | 1 | 롤: 그 칸(스윙 반영)을 N등분해 같은 세기로 N번 친다. 한 번의 게이트는 그 간격. 2 이상이면 `length`는 1로 맞춘다 |
 | `swing` | 0 ~ 0.5 또는 없음 | 없음 | 있으면 이 유물만 이 스윙으로 홀수 칸을 늦춘다. 없으면 전체 스윙을 따른다(데모 드럼과 펌핑은 항상 전체 스윙·킥 기준) |
 | `octaveShift` | -2 ~ 2 정수 | 0 | 행 0의 MIDI에 12 x 값을 더한다. 음높이 악기만 |
 | `pan` | -1 ~ 1 | 0 | 0이 아니면 로파이 뒤에 StereoPanner. 리버브·딜레이 센드는 팬 앞(가운데)에서 뽑는다. -1이면 오른쪽 채널 무음 |
-| `filterSweep` | `{ from, to }` 각 0 ~ 1 또는 없음 | 없음 | 루프 머리에서 끝까지 로우패스 컷오프를 from에서 to로 지수 램프(0~1 -> Hz는 `highCut`과 같다: 0 = 20kHz, 1 = 800Hz). 루프마다 처음 값으로. `highCut`과 따로 직렬로 건다. 켤 때 기본 from 0.8(약 1.5kHz), to 0(20kHz) |
+| `filterSweep` | `{ from, to, shape? }` 각 0 ~ 1 또는 없음 | 없음 | 사이클(루프 x `cycleLoops`) 동안 로우패스 컷오프를 움직인다(0~1 -> Hz는 `highCut`과 같다: 0 = 20kHz, 1 = 800Hz, Hz 지수 램프). `shape`: up(from -> to, 기본, 내보내지 않음) / down(to -> from) / upDown(사이클 앞 절반 from -> to, 뒤 절반 to -> from, 사이클 끝과 머리가 같아 튀지 않는다). 사이클 머리마다 처음 값으로. `highCut`과 따로 직렬로 건다. 켤 때 기본 from 0.8(약 1.5kHz), to 0(20kHz). 사이클 1에 up이면 이전과 같다 |
+| `loops` | 불리언 배열(최대 8) 또는 없음 | 없음(모두 켜짐) | 사이클 안 루프별 등장. false인 루프에서는 노트를 예약하지 않는다(꼬리·리버브는 남고 사이드체인·필터 스윕은 계속). 길이가 사이클과 다르면 앞에서부터 쓰고 모자라면 켜짐. 모두 켜짐이면 지운다 |
 
 ### 4-2. 전역 값
 
@@ -76,13 +80,15 @@
 | 스케일 | `SCALES` 11종 | C 마이너 펜타토닉 | `scale` | 음높이 행의 음. C 마이너/메이저 펜타토닉, C 자연 단음계, C 장음계, C 도리안, C 블루스, C 프리지안, C 믹솔리디안, C 하모닉 마이너, C 리디안, C 반음계 |
 | 키 `root` | 0 ~ 11 정수 | 0 (C) | `root` (0이 아닐 때만) | 모든 음을 C에서 root 반음 올린다. 스케일 이름은 C 기준 그대로, 설계서에는 "A 자연 단음계 (C 자연 단음계 + root 9)"처럼 쓴다 |
 | 행 수 `pitchRows` | 8 / 15 | 8 | `pitchRows` (15일 때만) | 음높이 악기 행 수. 15행이면 스케일 음을 두 옥타브 남짓 쌓는다(반음계 15행 = 15반음). 15 -> 8로 바꾸면 행 8 이상 노트를 확인 창을 거쳐 지운다 |
+| 사이클 `cycleLoops` | 1, 2, 4, 8 | 1 | `cycleLoops` (1이 아닐 때만) | 사이클 = 루프 N번 = 4N마디(최대 32마디). 노트는 4마디 한 루프만 있고, 필터 스윕과 등장 루프가 사이클에 걸친다. 재생 중 편집기 위에 '루프 2/4'처럼 보인다. 바꾸면 재생을 처음부터 다시 한다 |
+| WAV 길이 `wavLength` | loop / cycle | loop | 없음 | 한 사이클이면 루프 x 사이클을 렌더하고 사이클 단위로 이음매 없이 반복한다. 한 루프인데 사이클이 2 이상이면 필터 스윕은 사이클 첫 루프 구간 값, 등장 루프는 무시(모든 유물이 울린다)하고 상태줄에 알린다 |
 | 템포 `bpm` | 60 ~ 180 정수 | 130 | `bpm` (130이 아닐 때만) | 4분음표 기준 템포 |
 | 격자 `grid` | 8 / 16 | 8 | `grid` (16일 때만) | 1칸 = 8분음표(32칸) / 16분음표(64칸). 루프는 둘 다 4마디 |
 | 스윙 | 0 ~ 0.5 | 0 | `groove.swing` | 홀수 칸의 시작과 노트 끝 경계를 swing x 1칸 늦춘다. 0.33 근처가 셔플. 16분 격자에서는 16분 스윙 |
 | 딜레이 `delayNote` | `1/8`, `3/16`(점8분), `1/4`, `3/8`(점4분) | `3/8` | `delayNote` (기본이 아닐 때만, 모르는 값은 기본) | 공통 딜레이 시간 = 음표 박 수 x 60 / bpm초 (130BPM 점4분 = 90/130초 = 이전 고정값) |
 | 데모 드럼 | 없음/rock/boombap/house/electropop/twostep | 없음 | 없음 | 미리듣기 전용 킥·스네어. 유물 프리셋 목록에 없다 |
 | 킥·스네어 켜기 `drumKick`·`drumSnare` | 켜기/끄기 | 둘 다 켜기 | 없음 | 끈 소리는 내지 않는다 |
-| 킥 음색 `kickSound` | `kick` / `kick909` | `kick` | 없음 | 데모 드럼 킥 소리. 909는 더 길고 둥근 몸통 + 고음 클릭 노이즈 + 약한 포화 |
+| 킥 음색 `kickSound` | `kick` / `kick909` / `deep` | `kick` | 없음 | 데모 드럼 킥 소리. 909는 더 길고 둥근 몸통 + 고음 클릭 노이즈 + 약한 포화, 딥은 120Hz -> 45Hz(0.12초)로 낮고 길며(디케이 0.45초) 클릭이 거의 없다 |
 | 코드 찍기 `chordMode` | none/triad/seventh/sus4/add9 | none | 없음 | 편집기 입력 도우미. 데이터는 노트 여러 개라 설계서 형식이 그대로다 |
 | 펌핑 기준 `pumpSource` | `demo` / `quarter` | `demo` | 없음 | 사이드체인을 거는 시각. `demo`는 데모 드럼 킥 칸, `quarter`는 소리 없이 매 박 머리(데모 드럼 킥과 겹쳐도 한 번만) |
 | 드럼 볼륨 | 0 ~ 1.5 | 1 | 없음 | |
@@ -105,7 +111,7 @@
 
 | 묶음 | 상수 (값) |
 |---|---|
-| 시간 | `DEFAULT_BPM` 130, `BPM_MIN` 60, `BPM_MAX` 180, `DEFAULT_GRID` 8, `GRIDS` [8, 16], `BEATS` 16 (칸 수·칸 시간·루프 길이는 함수로 계산) |
+| 시간 | `DEFAULT_BPM` 130, `BPM_MIN` 60, `BPM_MAX` 180, `DEFAULT_GRID` 8, `GRIDS` [8, 16], `BEATS` 16, `CYCLE_CHOICES` [1, 2, 4, 8] (칸 수·칸 시간·루프 길이는 함수로 계산) |
 | 편집 | `PITCH_ROWS` 8, `PITCH_ROW_CHOICES` [8, 15], `ROOT_MAX` 11, `OCTAVE_SHIFT_MIN` -2, `OCTAVE_SHIFT_MAX` 2, `SWEEP_DEFAULT_FROM` 0.8, `SWEEP_DEFAULT_TO` 0, `MIX_SLOTS` 5, `NAME_MAX` 30, `DEFAULT_SCALE`, `DEFAULT_PRESET` 'marimba', `VOLUME_MAX` 1.5, `NOTE_LENGTHS` {8: [1,2,4,8], 16: [1,2,4,8,16]}, `RESIZE_HANDLE_PX` 7, `CELL_MIN_PX_8` 16, `CELL_MIN_PX_16` 14 |
 | 세기 | `VELOCITY_LEVELS` 강 1 / 중 0.7 / 약 0.4, 설계서 표기 경계 `VELOCITY_STRONG_MIN` 0.85, `VELOCITY_MEDIUM_MIN` 0.55 |
 | 재생 | `SCHEDULE_MS` 25, `LOOKAHEAD` 0.15, `HIDDEN_LOOKAHEAD` 1.5, `START_DELAY` 0.06, `PREVIEW_GAIN` 0.8 |
@@ -113,6 +119,9 @@
 | 사이드체인 | `SIDECHAIN_ATTACK` 0.01, `SIDECHAIN_RELEASE` 0.2 |
 | 스윙 | `SWING_MAX` 0.5 |
 | 리버브 | `REVERB_SECONDS` 1.6, `REVERB_DECAY_POWER` 3, `REVERB_SEED` (시드 고정이라 렌더마다 같다) |
+| 홀 리버브 | `HALL_SECONDS` 4.0, `HALL_DECAY_POWER` 2.2, `HALL_PREDELAY` 0.03, `HALL_SEED_L`·`HALL_SEED_R`(좌우 다른 시드), `HALL_DARKEN` 0.9(한 단 로우패스 계수가 1에서 0.1까지 줄어 꼬리 뒤쪽이 어둡다), `HALL_RETURN_HIGHPASS` 250, `HALL_RETURN_LOWPASS` 6000 |
+| 코러스 | `CHORUS_DELAY` 0.015, `CHORUS_DEPTH` 0.003, `CHORUS_MAX_DELAY` 0.05, `CHORUS_BARS_PER_CYCLE` 1 |
+| 테이프 | `TAPE_DRIVE_MAX_EXTRA` 4, `TAPE_WOW_DELAY` 0.008, `TAPE_WOW_DEPTH` 0.0006, `TAPE_WOW_BEATS` 2, `TAPE_LOWPASS_MAX` 18000, `TAPE_LOWPASS_MIN` 6000, `TAPE_CURVE_SIZE` 2048 |
 | 딜레이 | `DELAY_NOTES` {'1/8': 0.5, '3/16': 0.75, '1/4': 1, '3/8': 1.5}(박 수), `DEFAULT_DELAY_NOTE` '3/8', `DELAY_MAX_SECONDS` 2 (딜레이가 1초를 넘을 때만, 아니면 최대 1초), `DELAY_FEEDBACK` 0.35, `DELAY_FEEDBACK_LOWPASS` 3000 |
 | 로파이 | `LOFI_BITS_MAX` 12, `LOFI_BITS_MIN` 3, `LOFI_CURVE_SIZE` 8192, `LOFI_CUTOFF_MAX` 18000, `LOFI_CUTOFF_MIN` 2500 (컷오프는 지수, 비트는 선형) |
 | 저음·고음 깎기 | `LOW_CUT_MIN` 20, `HIGH_CUT_MAX` 20000, `CUT_FULL` 800 (값 1의 주파수), `CUT_Q` 0.707 (주파수는 지수) |
@@ -120,7 +129,7 @@
 | 합성 | `NOISE_SECONDS` 2, `DISTORTION_CURVE_SIZE` 2048, `VIBRATO_FADE` 0.08 |
 | 파일 | `WAV_SAMPLE_RATE` 44100, `DOWNLOAD_GAP_MS` 400, `SAVE_DELAY_MS` 300, `STORAGE_PREFIX` 'relicBeatTool.', `SCHEMA` '4bit-prototype-relic-beat-tool/v1' |
 
-### 4-4. 악기 프리셋 (`PRESETS`, 50종)
+### 4-4. 악기 프리셋 (`PRESETS`, 56종)
 
 킥·스네어 음색은 게임의 쿵(A)·짝(S) 판정 소리와 겹쳐 넣지 않는다. 파라미터는 고정이고 UI로 편집하지 않는다. 음높이 악기는 스케일 음 8행(행 0의 옥타브가 프리셋마다 다르다), 타악은 1행이다.
 
@@ -129,14 +138,14 @@
 | 드럼·타악 (`drums`) | `closed_hat` 클로즈드 하이햇, `open_hat` 오픈 하이햇, `ride_cymbal` 라이드 심벌, `mid_tom` 미드 톰, `high_tom` 하이 톰, `tambourine` 탬버린, `shaker` 셰이커, `conga_high` 콩가 (높은), `clave` 클라베, `finger_snap` 핑거 스냅 |
 | 베이스 (`bass`) | `electric_bass` 일렉 베이스 (2), `deep_bass` 딥 베이스 (2), `reese_bass` 리스 베이스 (2, 디튠 톱니 2개의 느린 맥놀이) |
 | 기타 (`guitar`) | `power_chord` 디스토션 파워코드 (2), `palm_mute` 팜뮤트 기타 (2), `clean_guitar` 클린 기타 (3), `lead_guitar` 리드 기타 (4) |
-| 건반 (`keys`) | `acoustic_piano` 어쿠스틱 피아노 (3), `electric_piano` 일렉 피아노 (3), `organ` 오르간 (3), `house_organ` 하우스 오르간 (3, 1칸 스탭용), `warm_rhodes` 따뜻한 로즈 (3), `house_piano` 하우스 피아노 (3, M1 계열 스탭) |
-| 신스 (`synth`) | `synth_bass` 신스 베이스 (2), `synth_pluck` 신스 플럭 (4), `supersaw_lead` 슈퍼소 리드 (4), `sub_808` 808 서브 (2), `chord_stab` 코드 스탭 (3), `wobble_bass` 워블 베이스 (2, 필터 LFO 130/60 = 약 2.17Hz = 130BPM에서 1박에 한 번. 프리셋 값이라 템포를 바꿔도 그대로이므로 130BPM이 아니면 워블이 박과 어긋난다), `vocal_chop` 보컬 챱 (3, `formants` '아' 모음), `future_chord` 퓨처 코드 (3, `spread` 0.6), `supersaw_pad` 슈퍼소 패드 (3, `spread` 0.9) |
+| 건반 (`keys`) | `acoustic_piano` 어쿠스틱 피아노 (3), `electric_piano` 일렉 피아노 (3), `organ` 오르간 (3), `house_organ` 하우스 오르간 (3, 1칸 스탭용), `warm_rhodes` 따뜻한 로즈 (3), `house_piano` 하우스 피아노 (3, M1 계열 스탭), `rhodes_trem` 로즈 트레몰로 (3, `warm_rhodes` + `tremolo` 0.5박·깊이 0.35·좌우 반대 위상) |
+| 신스 (`synth`) | `synth_bass` 신스 베이스 (2), `synth_pluck` 신스 플럭 (4), `supersaw_lead` 슈퍼소 리드 (4), `sub_808` 808 서브 (2), `chord_stab` 코드 스탭 (3), `wobble_bass` 워블 베이스 (2, 필터 LFO 130/60 = 약 2.17Hz = 130BPM에서 1박에 한 번. 프리셋 값이라 템포를 바꿔도 그대로이므로 130BPM이 아니면 워블이 박과 어긋난다), `vocal_chop` 보컬 챱 (3, `formants` '아' 모음), `future_chord` 퓨처 코드 (3, `spread` 0.6), `supersaw_pad` 슈퍼소 패드 (3, `spread` 0.9), `vocal_oo` 보컬 챱 (우) (3), `vocal_oh` 보컬 챱 (오) (3), `vocal_ee` 보컬 챱 (이) (3), `vocal_eh` 보컬 챱 (에) (3), `vocal_pad` 보컬 패드 (우) (3, 디튠 톱니 3개 + spread 0.7, 지속음) |
 | 효과음 (`fx`) | 타악: `noise_riser` 노이즈 라이저(어택 0.85초, 칸보다 길게 울려 빌드업용), `laser_zap` 레이저 잽, `noise_down` 노이즈 다운리프터(밴드패스가 9kHz에서 300Hz로 1초 동안) |
 | 기존 악기 (category 없음, 원래 순서) | 타악: `low_tom` 로우 톰, `hand_clap` 핸드 클랩, `cowbell` 카우벨, `tap_perc` 탭 퍼커션, `scratch_noise` 스크래치 노이즈, `crash_cymbal` 크래시 심벌 / 음높이: `sub_bass` 서브 베이스 (2), `walking_bass` 워킹 베이스 (2), `marimba` 마림바 (4), `glockenspiel` 글로켄슈필 (5), `brass_stab` 브라스 스탭 (3), `flute_lead` 플루트 리드 (5), `arp_synth` 아르페지오 신스 (4), `rising_strings` 상승 스트링 (3), `sustained_pad` 지속 패드 (3) |
 
 행 0의 MIDI = 12 x (옥타브 + 1) + 스케일 첫 음. 행 r의 음 = 스케일 음을 행 0부터 차례로 쌓은 r번째(스케일 길이를 넘으면 한 옥타브 위로). 여기에 키 `root` 반음과 유물의 `octaveShift` x 12를 더하고, 0~127을 벗어나면 옥타브 단위로 안으로 접는다(`rowMidi`).
 
-데모 드럼용 909 킥(`DEMO_DRUM_SOUNDS.kick909`)은 유물 프리셋이 아니다(킥·스네어 정책). 2026-11-08 2차 추가분(보컬 챱 ~ 슈퍼소 패드 7종)의 노트 피크는 모두 0.95 이하다.
+데모 드럼용 909 킥·딥 킥(`DEMO_DRUM_SOUNDS.kick909`·`deep`)은 유물 프리셋이 아니다(킥·스네어 정책). 보컬 모음 4종(우·오·이·에)은 `vocal_chop`과 같은 오실레이터·비브라토·엔벨로프에 숨소리 노이즈(`noise.gain` 0.08)를 더했고, 포먼트는 성인 남녀 평균을 섞은 출발점이다(들어 보고 조정). 2026-11-08 2차 추가분(보컬 챱 ~ 슈퍼소 패드 7종)의 노트 피크는 모두 0.95 이하다.
 
 ### 4-5. 프리셋 파라미터 형식 (`params`)
 
@@ -155,17 +164,18 @@
 | `hold` | 초 | 선택. 게이트의 하한 |
 | `filterLfo` | `{ rate, depth }` | 선택. 사인 LFO가 메인 필터 주파수에 ±depth Hz를 rate Hz로 더한다(`from`/`sweep` 스윕 위에 얹힌다). 노트 시작에 위상 0. 메인 필터가 있어야 하고 depth < `filter.freq`로 정한다. 1박에 한 번 = 130 / 60 = 약 2.17Hz, 1칸에 한 번 = 약 4.33Hz |
 | `spread` | 0 ~ 1 | 선택. 오실레이터마다 StereoPanner를 두어 좌우로 벌린다(첫 오실레이터 -spread, 마지막 +spread, 사이는 고르게). 기존 프리셋에는 없다 |
-| `formants` | `[{ freq, Q, gain }]` | 선택. 있으면 메인 필터 대신 오실레이터 합이 병렬 밴드패스들을 지나 합쳐진다(보컬 모음). `filter`와 같이 있으면 `formants`가 우선하고 `filterLfo`는 쓰지 않는다 |
+| `formants` | `[{ freq, Q, gain }]` | 선택. 있으면 메인 필터 대신 오실레이터 합이 병렬 밴드패스들을 지나 합쳐진다(보컬 모음). `filter`와 같이 있으면 `formants`가 우선하고 `filterLfo`는 쓰지 않는다. 자체 필터가 없는 `noise`도 포먼트 밴드패스를 지난다(숨소리) |
+| `tremolo` | `{ beats, depth, stereo }` | 선택. 노트 게인을 사인 LFO로 1 - depth ~ 1 사이에서 흔든다. 주기는 beats박(템포를 따른다). 위상은 루프 머리 기준(노트 시작 t에서 (t - 루프 머리) / 주기의 소수 부분, PeriodicWave로 준다)이라 같은 칸의 노트가 루프마다 같다. stereo면 좌우를 반대 위상으로(오토팬) |
 
 게이트 = max(노트 길이 x 1칸(스윙 반영), attack + decay, hold). 게이트 끝에서 release 동안 사라진다. 프리셋 하나의 노트 피크는 마스터 전 0.95 이하로 맞춘다(기존 `sub_bass`만 1.06이며 호환성 때문에 그대로 둔다).
 
 ## 5. 소리 경로
 
-- 노트 → 유물 체인: 볼륨 → 사이드체인 덕킹 게인 → (저음 깎기 하이패스) → (고음 깎기 로우패스) → (필터 스윕 로우패스) → (로파이: 계단 WaveShaper → 로우패스) → (팬) → 마스터 입력, 그리고 팬 앞(필터·로파이를 지난 소리)에서 리버브·딜레이 센드. 필터 스윕은 루프 머리마다 `sweepAt`이 램프를 건다(실시간 재생은 칸 0 예약 때, WAV는 두 번째 바퀴 자리에도 걸어 접은 꼬리가 같은 필터를 지난다). 값이 0이면 필터·로파이·센드 노드를 만들지 않아 이전과 소리가 같다. 실시간 재생은 `chainKey`(로파이 값, 필터·센드·팬·필터 스윕 유무)가 바뀌면 체인을 새로 만들고, 필터 주파수·센드 양·팬 값은 바로 바꾼다.
-- 마스터: 입력 게인 0.6 → 압축기 → 리미터. 리버브(감쇠 노이즈 임펄스 컨볼버)와 딜레이(피드백 경로 로우패스) 버스 출력은 입력 게인에 합친다(압축기·리미터 앞). 딜레이 시간은 `delaySeconds()`이고, 재생 중 템포·딜레이 음표를 바꾸면 `Player.syncDelay`가 맞춘다(최대 시간을 넘으면 버스를 새로 만들고 다시 재생).
+- 노트 → 유물 체인: 볼륨 → 사이드체인 덕킹 게인 → (저음 깎기 하이패스) → (고음 깎기 로우패스) → (필터 스윕 로우패스) → (테이프: tanh 포화 → 흔들림 지연 → 로우패스) → (로파이: 계단 WaveShaper → 로우패스) → (코러스: 마른 소리 + 좌우 지연 → ChannelMerger) → (팬) → 마스터 입력, 그리고 팬 앞(코러스를 지난 소리)에서 리버브·홀·딜레이 센드. 필터 스윕은 사이클 안 루프마다 `sweepAt(chain, relic, t, loopIdx)`가 그 루프 구간의 램프를 건다(실시간 재생은 칸 0 예약 때, WAV는 뒤 자리에도 걸어 접은 꼬리가 같은 필터를 지난다). 코러스·테이프 LFO는 `startSyncedLfo`로 루프 머리(재생 시작 시각 또는 0)에서 위상 0이 되게 시작한다(재생 중에 체인이 생기면 다음 주기 머리부터 흔든다). 값이 0이면 그 노드를 만들지 않아 이전과 소리가 같다. 실시간 재생은 `chainKey`(로파이 값, 필터·센드·팬·필터 스윕·코러스·테이프·홀 유무)가 바뀌면 체인을 새로 만들고, 필터 주파수·센드 양·팬·코러스 양·테이프 값은 바로 바꾼다.
+- 마스터: 입력 게인 0.6 → 압축기 → 리미터. 리버브(감쇠 노이즈 임펄스 컨볼버)와 딜레이(피드백 경로 로우패스) 버스 출력은 입력 게인에 합친다(압축기·리미터 앞). 홀 리버브 버스(`makeHall`: 컨볼버 → 하이패스 250Hz → 로우패스 6000Hz)는 hallSend가 있는 체인이 생길 때 `bus.ensureHall()`로 만들고 같은 곳에 합친다. 딜레이 시간은 `delaySeconds()`이고, 재생 중 템포·딜레이 음표를 바꾸면 `Player.syncDelay`가 맞춘다(최대 시간을 넘으면 버스를 새로 만들고 다시 재생).
 - 데모 드럼: 드럼 볼륨 게인 → 마스터 입력. 덕킹·로파이·센드를 거치지 않는다. 칸마다 `drumHits`(킥·스네어 소리)와 `pumpsAt`(덕킹 여부)을 본다.
-- 재생 스케줄러: 25ms마다 AudioContext 시간으로 0.15초(탭이 가려지면 1.5초) 앞까지 예약한다. 노트 시각은 `시작 시각 + stepTime(재생 시작부터 센 칸 번호)`로 매번 계산해 오차가 쌓이지 않는다.
-- WAV(`renderLoop`): ① 한 바퀴 노트를 압축기 앞까지 두 바퀴 길이로 렌더(사이드체인 덕킹은 두 번째 바퀴 자리 킥에도 건다) → ② 루프 끝을 넘은 꼬리를 앞으로 접어 더함 → ③ 그 한 바퀴를 두 번 반복 재생하며 압축기·리미터를 거쳐 두 번째 바퀴를 쓴다. 44.1kHz 16비트 스테레오, 정확히 한 바퀴(`loopSeconds()`, 130BPM이면 약 7.385초, 샘플 수는 반올림), 반복해도 이음매가 없다. 체크한 유물마다 1개 + 체크한 유물 전부를 합친 믹스 1개. 'WAV에 데모 드럼 포함'이면 드럼 소리도 넣고, 사이드체인은 체크와 상관없이 펌핑 기준을 따른다.
+- 재생 스케줄러: 25ms마다 AudioContext 시간으로 0.15초(탭이 가려지면 1.5초) 앞까지 예약한다. 노트 시각은 `시작 시각 + stepTime(재생 시작부터 센 칸 번호)`로 매번 계산해 오차가 쌓이지 않는다. 사이클 안 루프 번호 = floor(칸 번호 / 칸 수) % cycleLoops이고, 등장 루프가 꺼진 유물은 그 루프의 노트를 예약하지 않는다(`Player.stats.loops`에 루프별 번호를 남긴다).
+- WAV(`renderLoop`): ① 반복 단위(한 루프, 또는 '한 사이클'이면 루프 x cycleLoops) 노트를 압축기 앞까지 '자리' 여러 개 길이로 렌더(자리 수 = 홀이 없으면 2, 있으면 ceil((단위 + 홀 프리딜레이 + 4초 + 0.1) / 단위). 사이드체인 덕킹·필터 스윕은 모든 자리에 건다) → ② 뒤 자리들을 모두 첫 자리에 접어 더함(자리 2개면 이전과 같다) → ③ 그 한 바퀴를 두 번 반복 재생하며 압축기·리미터를 거쳐 두 번째 바퀴를 쓴다. 44.1kHz 16비트 스테레오, 정확히 한 바퀴(`loopSeconds()`, 130BPM이면 약 7.385초, 샘플 수는 반올림), 반복해도 이음매가 없다. 체크한 유물마다 1개 + 체크한 유물 전부를 합친 믹스 1개. 'WAV에 데모 드럼 포함'이면 드럼 소리도 넣고, 사이드체인은 체크와 상관없이 펌핑 기준을 따른다.
 
 ## 6. 설계서 양식 (`relic-beats-YYYYMMDD-HHMMSS.md`)
 
@@ -208,6 +218,7 @@
   "grid": 16,
   "root": 9,
   "pitchRows": 15,
+  "cycleLoops": 4,
   "delayNote": "3/16",
   "groove": { "swing": 0.33 },
   "relics": [
@@ -223,10 +234,14 @@
       "delaySend": 0.1,
       "lofi": 0.3,
       "lowCut": 0.5,
+      "chorus": 0.4,
+      "hallSend": 0.3,
+      "tape": 0.2,
       "swing": 0.25,
       "octaveShift": -1,
       "pan": -0.3,
-      "filterSweep": { "from": 0.8, "to": 0 },
+      "filterSweep": { "from": 0.8, "to": 0, "shape": "upDown" },
+      "loops": [false, true, true, true],
       "notes": [
         { "step": 0, "row": 0, "midi": 36, "pitch": "C2" },
         { "step": 3, "row": 2, "midi": 41, "pitch": "F2", "velocity": 0.7 },
@@ -239,7 +254,7 @@
 ```
 
 - 필수: `schema`(정확히 이 문자열), `relics`(1개 이상), 유물의 `name`(겹치지 않음), `preset.id`(`PRESETS`에 있는 id), `notes`. 노트의 `step`(정수, `grid`가 16이면 0~63, 없거나 8이면 0~31), `row`(음높이 악기 0 ~ pitchRows-1, 즉 8행이면 0~7, 15행이면 0~14, 타악 0).
-- 선택(기본값이면 내보낼 때 생략): 최상위 `bpm`(130, 60~180 정수로 맞춤), `grid`(8, 16이 아니면 8), `root`(0, 0~11 정수로 맞춤), `pitchRows`(8, 15가 아니면 8), `delayNote`(`3/8`, 모르는 값이면 기본), `groove.swing`(0), 유물의 `sidechain`·`reverbSend`·`delaySend`·`lofi`·`lowCut`·`highCut`(0)·`swing`(없으면 전체 스윙)·`octaveShift`(0)·`pan`(0)·`filterSweep`(없음, from·to가 둘 다 0이면 없음), 노트의 `velocity`(1)·`length`(1)·`repeat`(1).
+- 선택(기본값이면 내보낼 때 생략): 최상위 `bpm`(130, 60~180 정수로 맞춤), `grid`(8, 16이 아니면 8), `root`(0, 0~11 정수로 맞춤), `pitchRows`(8, 15가 아니면 8), `cycleLoops`(1, 1·2·4·8이 아니면 1), `delayNote`(`3/8`, 모르는 값이면 기본), `groove.swing`(0), 유물의 `sidechain`·`reverbSend`·`delaySend`·`lofi`·`lowCut`·`highCut`(0)·`swing`(없으면 전체 스윙)·`octaveShift`(0)·`pan`(0)·`filterSweep`(없음, from·to가 둘 다 0이면 없음, `shape`는 up이면 생략)·`loops`(없음, 모두 켜짐이면 생략)·`chorus`·`hallSend`·`tape`(0), 노트의 `velocity`(1)·`length`(1)·`repeat`(1).
 - 참고값(불러올 때 쓰지 않음): `timing`(실제 값 `bpm`·`grid`·`stepSeconds`·`steps`·`loopSeconds`를 적지만 불러오기는 최상위 `bpm`·`grid`만 읽는다), `scale.root`·`intervals`, `preset.name`·`pitched`·`octave`·`params`, 노트의 `midi`·`pitch`, `id`, `exportedAt`. 소리는 툴의 프리셋 정의로 만들고 설계서의 `params`는 기록일 뿐이다.
 - `mixSlot`·`mixVolume`: 내보낼 때 믹스 바 정보를 적지만 불러오기는 믹스 바를 바꾸지 않는다.
 
@@ -285,12 +300,12 @@
 |---|---|
 | 상수·데이터 | `TOOL`, `SCALES`, `PRESETS`, `PRESET_CATEGORIES`, `DEMO_DRUM_SOUNDS`, `DEMO_DRUMS` |
 | 상태 | `defaultState`, `loadState`, `saveSoon`/`saveNow`, `normalizeNotes`(칸 수를 인자로 받는다), `convertRelicGrid`·`oddStepNotes`(격자 바꾸기), `highRowNotes`·`dropHighRows`(행 수 바꾸기), `normalizeRelicExtras`·`RELIC_EXTRA_FIELDS`·`relicSwing`(유물 설정), `CHORD_SHAPES`, `relicMix`, `MIX_FIELDS`, `lowCutFreq`/`highCutFreq`, `chainKey`, `noteVelocity`, `noteLength`, `coveringNote` |
-| 합성 | `scheduleNote`(노트 하나, `spread`·`formants` 포함), `makeFilter`, `distortionCurve`, `noiseBuffer` |
-| 경로 | `makeBus`(마스터·리버브·딜레이), `makeDynamics`(압축기·리미터), `makeChain`(유물 체인), `reverbImpulse`, `lofiCurve` |
-| 시간 | `gridSteps`·`stepsPerBeat`·`stepSeconds`·`loopSeconds`·`delaySeconds`·`stepLabel`(격자·템포에서 계산), `stepTime(g, swing)`(칸 시각), `noteGate(step, length, swing)`(노트 게이트), `scheduleRelicStep(ctx, out, relic, step, base, g)`(유물 스윙·길이·롤, 시각은 base + stepTime(g, 유물 스윙)), `drumHits`·`pumpsAt`·`scheduleDrumStep`(데모 드럼·펌핑), `sweepAt`(필터 스윕), `sixteenthInBar`, `duckAt`, `noteRepeat`·`noteLength`·`noteVelocity` |
-| 재생 | `Player`(start/stop/tick/chain/syncDelay/setVinyl/preview/position) |
+| 합성 | `scheduleNote`(노트 하나, `spread`·`formants`·`tremolo` 포함, 마지막 인자 origin = 루프 머리), `connectTremolo`, `makeFilter`, `distortionCurve`, `noiseBuffer` |
+| 경로 | `makeBus`(마스터·리버브·딜레이, `ensureHall`), `makeHall`·`hallImpulse`(홀 리버브), `startSyncedLfo`(템포 동기 LFO), `tapeCurve`, `makeDynamics`(압축기·리미터), `makeChain`(유물 체인), `reverbImpulse`, `lofiCurve` |
+| 시간 | `gridSteps`·`stepsPerBeat`·`stepSeconds`·`loopSeconds`·`delaySeconds`·`stepLabel`(격자·템포에서 계산), `stepTime(g, swing)`(칸 시각), `noteGate(step, length, swing)`(노트 게이트), `scheduleRelicStep(ctx, out, relic, step, base, g)`(유물 스윙·길이·롤, 시각은 base + stepTime(g, 유물 스윙)), `drumHits`·`pumpsAt`·`scheduleDrumStep`(데모 드럼·펌핑), `sweepAt`·`sweepValue`(사이클 필터 스윕), `relicLoopOn`(등장 루프), `sixteenthInBar`, `duckAt`, `noteRepeat`·`noteLength`·`noteVelocity` |
+| 재생 | `Player`(start/stop/tick/chain/syncDelay/setVinyl/preview/position/cycleLoop) |
 | 화면 | `render*`(유물 설정은 `renderRelicSettings`), `setup*`, `setBpm`·`setGrid`·`setPitchRows`·`timingChanged`, 음높이 `rowMidi`(키·옥타브 이동)·`rowCount`·`keyScaleName`, 코드 찍기 `addNote` → `addOneNote`, 편집기 입력 `setupEditorInput`·`addNote`·`paintNotes` |
-| 설계서 | `designData`(JSON), `designMarkdown`(md), `stepText`, `relicSettingsText`, `velocitySuffix`, `mixSettingsText`·`mixValueText`(믹스 값 % 와 Hz), `paramsText`, `featureText` |
+| 설계서 | `designData`(JSON), `designMarkdown`(md), `stepText`, `relicSettingsText`·`loopsText`·`tremoloText`, `velocitySuffix`, `mixSettingsText`·`mixValueText`(믹스 값 % 와 Hz), `paramsText`, `featureText` |
 | 불러오기 | `parseDesign`, `importText` |
 | WAV | `renderLoop`, `encodeWav`, `exportAudio` |
 
@@ -303,6 +318,8 @@
 - **주파수 자동화:** 음높이 슬라이드·FM·비브라토처럼 주파수가 움직이는 오실레이터는 브라우저가 렌더 시각마다 위상을 조금씩 다르게 만든다(일정한 주파수는 같다). 같은 노트도 시각이 다르면 파형이 다르므로, 이런 프리셋은 샘플 단위 비교 대신 RMS로 보고, 루프 이음매는 꼬리를 접는 `renderLoop` 방식으로 맞춘다.
 - **노이즈:** 노이즈 버퍼는 컨텍스트마다 `Math.random`으로 한 번 만든다. 렌더를 비교할 때는 `Math.random`을 시드 고정 함수로 바꿔 렌더한다. 리버브 임펄스는 자체 시드라 영향이 없다.
 - **리버브 렌더 흔들림:** 브라우저의 컨볼버(리버브)는 긴 임펄스의 뒷부분을 별도 스레드에서 처리해, 같은 코드로 같은 설계서를 렌더해도 `reverbSend`가 있으면 결과가 렌더마다 조금 달라진다(샘플 최대 차이 약 6e-3, 50ms 구간 RMS 상대 약 7e-4). 리버브를 끄면 1e-5 이하로 같다. 기준 비교에서 리버브를 쓰는 파일만 이 정도 차이가 나면 이 흔들림이다. 의심되면 한 번 더 렌더하거나 `reverbSend`를 0으로 바꿔 비교한다.
+- **LFO 주기와 이음매:** 시간에 따라 움직이는 것(코러스·테이프 LFO, 트레몰로, 필터 스윕)은 한 바퀴(또는 사이클)에 정수 번 돌도록 주기를 템포에서 계산하고(1마디·2박·beats박) 위상을 루프 머리에 맞춘다. Hz를 고정값으로 두면 템포에 따라 WAV 이음매에서 위상이 튄다. 기존 `wobble_bass`의 `filterLfo`는 프리셋 고정값(130/60Hz)이라 이 규칙 밖이다.
+- **홀 꼬리 접기:** 홀 꼬리(최대 노트 끝 + 4.03초)는 빠른 템포의 한 바퀴보다 길 수 있어 한 번 접기로 모자라다. `renderLoop`는 자리 수를 꼬리 길이에서 계산해 모두 접는다. 홀이 없으면 자리 2개라 이전 렌더와 같다.
 - **피크:** 5층을 모두 150%로 올린 극단적인 믹스는 피크가 0.96~0.99까지 간다(1.0은 넘지 않는다). 리미터 값을 바꾸면 기존 소리가 바뀌므로 함부로 바꾸지 않는다.
 
 ### 9-4. 검증 방법
@@ -311,6 +328,6 @@
 - **기준 렌더:** 이 폴더의 `relic-beats-*.md`를 `parseDesign`으로 읽어 `renderLoop`로 렌더하고(`Math.random` 시드 고정), 50ms 구간 RMS와 유물별 RMS를 기준값으로 저장한다. 수정한 뒤 같은 방법으로 렌더해 상대 오차로 비교한다(같은 코드를 다시 돌려도 1e-6 정도 차이가 난다). 수정 전 코드를 스크래치패드에 복사해 다른 포트로 띄우면 언제든 비교할 수 있다.
 - **노트 하나:** `OfflineAudioContext`에 `scheduleNote(ctx, ctx.destination, preset, midi, t)`로 렌더해 무음 여부, NaN, 피크(0.95 이하)를 본다. 음높이 악기는 스케일 11종 x 15행을 모두 돈다(키·옥타브 이동 극단값에서 MIDI 0~127도 본다).
 - **박자:** `Player.stats`(`late` = 늦게 예약된 노트 수, `firstTimes` = 루프별 첫 칸 시각)로 루프를 여러 번 돌려 늦은 예약 0개, 루프 간격 = `loopSeconds()`를 확인한다(8분/16분 격자 x 여러 템포). 예약 시각은 `scheduleNote`를 감싸 기록하면 볼 수 있다(데모 드럼 칸 위치 확인에도 쓴다).
-- **이음매:** 내보낸 루프의 끝 샘플 → 첫 샘플 변화를 평소 샘플 간 변화와 비교한다.
+- **이음매:** 내보낸 루프의 끝 샘플 → 첫 샘플 변화를 평소 샘플 간 변화와 비교한다. 소리가 큰 구간에서는 1차 변화만으로는 판단이 어려우므로, 이음매의 2차 차분 |x0 - 2x(N-1) + x(N-2)|이 루프 전체 2차 차분의 99% 지점보다 작은지 본다(코러스·홀·테이프·트레몰로·사이클은 100·124·180BPM과 8분·16분 격자에서).
 - **화면 조작:** 편집기 칸에 `MouseEvent`(mousedown/mouseover, `shiftKey`, `button: 2`, 오른쪽 끝 `clientX`)를 보내 확인한다. 다운로드는 `downloadBlob`을 바꿔 가로채 내용만 본다(실제 파일을 내려받지 않는다).
 - 소리의 좋고 나쁨은 코드로 판단할 수 없다. 사용자가 들어볼 수 있게 어떤 유물을 어떤 값으로 들으면 되는지 짧게 알려 준다.
