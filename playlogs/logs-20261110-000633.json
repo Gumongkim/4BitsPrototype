@@ -1,0 +1,6696 @@
+{
+  "exportedAt": "2026-11-09T15:06:33.069Z",
+  "build": "2026.11.07-1",
+  "count": 15,
+  "firstRunId": "mw6go5ws-dsgrof",
+  "lastRunId": "mw9e4asi-n2p9j1",
+  "runs": [
+    {
+      "schema": 1,
+      "runId": "mw6go5ws-dsgrof",
+      "sessionId": "mw6go3dh-t84j8o",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-07T13:56:34.311Z",
+      "playSeconds": 291.683,
+      "weapons": [
+        {
+          "kind": "tresillo_bow",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "boombap_hammer",
+          "tier": 2,
+          "fromWave": 2
+        },
+        {
+          "kind": "kick3and_sword",
+          "tier": 2,
+          "fromWave": 3
+        },
+        {
+          "kind": "ddadang_knuckle",
+          "tier": 3,
+          "fromWave": 5
+        },
+        {
+          "kind": "dembow",
+          "tier": 4,
+          "fromWave": 9
+        },
+        {
+          "kind": "trap_cross",
+          "tier": 3,
+          "fromWave": 10
+        },
+        {
+          "kind": "bossa_mace",
+          "tier": 3,
+          "fromWave": 17
+        },
+        {
+          "kind": "flow8_knuckle",
+          "tier": 4,
+          "fromWave": 18
+        },
+        {
+          "kind": "bossa_mace",
+          "tier": 3,
+          "fromWave": 20
+        },
+        {
+          "kind": "backbeat_bomba",
+          "tier": 4,
+          "fromWave": 21
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "sforzando",
+          "name": "스포르찬도",
+          "fromWave": 4
+        },
+        {
+          "id": "crash_cymbal",
+          "name": "크래시 심벌",
+          "fromWave": 10
+        },
+        {
+          "id": "walking_bass",
+          "name": "워킹 베이스",
+          "fromWave": 13
+        },
+        {
+          "id": "metronome",
+          "name": "메트로놈",
+          "fromWave": 16
+        },
+        {
+          "id": "tap_dance",
+          "name": "탭 댄스",
+          "fromWave": 19
+        }
+      ],
+      "reachedWave": 21,
+      "death": {
+        "enemyKind": "beam",
+        "wave": 21
+      },
+      "judge": {
+        "perfect": 144,
+        "good": 76,
+        "miss": 44
+      },
+      "timing": {
+        "meanError": 0.0099,
+        "meanAbsError": 0.0415
+      },
+      "hits": {
+        "taken": 12,
+        "shieldAbsorbed": 2,
+        "damageByEnemy": {
+          "archer": 3,
+          "shotgun": 3,
+          "mortar": 1,
+          "beam": 3
+        }
+      },
+      "bestHit": 7,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "kungkungjjak_shortsword",
+            "son_clave_sword",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "boombap_hammer"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "kick3and_sword",
+            "four_floor_knife",
+            "keep"
+          ],
+          "chosen": "kick3and_sword"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "sforzando",
+            "kick_solo",
+            "snare_solo",
+            "skip"
+          ],
+          "chosen": "sforzando"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "halftime_longsword",
+            "rumba_rapier",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "ddadang_knuckle",
+            "rumba_rapier",
+            "keep"
+          ],
+          "chosen": "ddadang_knuckle"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "trap_cross",
+            "march",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "repertoire",
+            "air_drum",
+            "crash_cymbal",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "rumba_rapier",
+            "son_clave_sword",
+            "backbeat_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "bossa_mace",
+            "four_floor_knife",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 8,
+          "kind": "weapon",
+          "offered": [
+            "march",
+            "dembow",
+            "backbeat_sword",
+            "keep"
+          ],
+          "chosen": "dembow"
+        },
+        {
+          "wave": 9,
+          "kind": "relic",
+          "offered": [
+            "rehearsal",
+            "repertoire",
+            "crash_cymbal",
+            "skip"
+          ],
+          "chosen": "crash_cymbal"
+        },
+        {
+          "wave": 9,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "halftime_longsword",
+            "trap_cross",
+            "keep"
+          ],
+          "chosen": "trap_cross"
+        },
+        {
+          "wave": 10,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "backbeat_sword",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 11,
+          "kind": "weapon",
+          "offered": [
+            "funk16_sword",
+            "boombap_hammer",
+            "dembow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 12,
+          "kind": "relic",
+          "offered": [
+            "subwoofer",
+            "walking_bass",
+            "metronome",
+            "skip"
+          ],
+          "chosen": "walking_bass"
+        },
+        {
+          "wave": 12,
+          "kind": "weapon",
+          "offered": [
+            "halftime_longsword",
+            "funky_whip",
+            "funk16_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 13,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_bomba",
+            "rumba_rapier",
+            "son_clave_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 14,
+          "kind": "weapon",
+          "offered": [
+            "halftime_longsword",
+            "backbeat_sword",
+            "ddadang_knuckle",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 15,
+          "kind": "relic",
+          "offered": [
+            "freestyle",
+            "metronome",
+            "air_drum",
+            "skip"
+          ],
+          "chosen": "metronome"
+        },
+        {
+          "wave": 15,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "son_clave_sword",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 16,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "kick3and_sword",
+            "bossa_mace",
+            "keep"
+          ],
+          "chosen": "bossa_mace"
+        },
+        {
+          "wave": 17,
+          "kind": "weapon",
+          "offered": [
+            "flow8_knuckle",
+            "boombap_hammer",
+            "trap_cross",
+            "keep"
+          ],
+          "chosen": "flow8_knuckle"
+        },
+        {
+          "wave": 18,
+          "kind": "relic",
+          "offered": [
+            "subwoofer",
+            "tap_dance",
+            "snare_solo",
+            "skip"
+          ],
+          "chosen": "tap_dance"
+        },
+        {
+          "wave": 18,
+          "kind": "weapon",
+          "offered": [
+            "march",
+            "steppers_roar",
+            "son_clave_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 19,
+          "kind": "weapon",
+          "offered": [
+            "bossa_mace",
+            "dembow",
+            "rumba_rapier",
+            "keep"
+          ],
+          "chosen": "bossa_mace"
+        },
+        {
+          "wave": 20,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "backbeat_bomba",
+            "doubletime_sword",
+            "keep"
+          ],
+          "chosen": "backbeat_bomba"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 1,
+          "weaponKind": "tresillo_bow",
+          "cleared": true,
+          "seconds": 9.183,
+          "damageTaken": 0,
+          "perfectRate": 0.714
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 2,
+          "weaponKind": "boombap_hammer",
+          "cleared": true,
+          "seconds": 11.233,
+          "damageTaken": 1,
+          "perfectRate": 0.556
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 3,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 22.933,
+          "damageTaken": 0,
+          "perfectRate": 0.643
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 4,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 3.9,
+          "damageTaken": 0,
+          "perfectRate": 0.75
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 5,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 7.05,
+          "damageTaken": 0,
+          "perfectRate": 0.8
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 6,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 9.367,
+          "damageTaken": 0,
+          "perfectRate": 0.417
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 7,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 8.25,
+          "damageTaken": 1,
+          "perfectRate": 0.692
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 8,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 9,
+          "damageTaken": 0,
+          "perfectRate": 0.769
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 9,
+          "weaponKind": "dembow",
+          "cleared": true,
+          "seconds": 8.5,
+          "damageTaken": 0,
+          "perfectRate": 0.417
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 10,
+          "weaponKind": "trap_cross",
+          "cleared": true,
+          "seconds": 16.083,
+          "damageTaken": 0,
+          "perfectRate": 0.6
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 11,
+          "weaponKind": "trap_cross",
+          "cleared": true,
+          "seconds": 14.533,
+          "damageTaken": 1,
+          "perfectRate": 0.917
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 12,
+          "weaponKind": "trap_cross",
+          "cleared": true,
+          "seconds": 14.5,
+          "damageTaken": 0,
+          "perfectRate": 0.909
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 13,
+          "weaponKind": "trap_cross",
+          "cleared": true,
+          "seconds": 10.533,
+          "damageTaken": 0,
+          "perfectRate": 0.857
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 14,
+          "weaponKind": "trap_cross",
+          "cleared": true,
+          "seconds": 6.1,
+          "damageTaken": 0,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 15,
+          "weaponKind": "trap_cross",
+          "cleared": true,
+          "seconds": 15.7,
+          "damageTaken": 0,
+          "perfectRate": 0.769
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 16,
+          "weaponKind": "trap_cross",
+          "cleared": true,
+          "seconds": 17.267,
+          "damageTaken": 0,
+          "perfectRate": 0.688
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 17,
+          "weaponKind": "bossa_mace",
+          "cleared": true,
+          "seconds": 29.067,
+          "damageTaken": 0,
+          "perfectRate": 0.324
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 18,
+          "weaponKind": "flow8_knuckle",
+          "cleared": true,
+          "seconds": 14.217,
+          "damageTaken": 2,
+          "perfectRate": 0.3
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 19,
+          "weaponKind": "flow8_knuckle",
+          "cleared": true,
+          "seconds": 23.383,
+          "damageTaken": 3,
+          "perfectRate": 0.417
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 20,
+          "weaponKind": "bossa_mace",
+          "cleared": true,
+          "seconds": 35.4,
+          "damageTaken": 1,
+          "perfectRate": 0.182
+        },
+        {
+          "runId": "mw6go5ws-dsgrof",
+          "wave": 21,
+          "weaponKind": "backbeat_bomba",
+          "cleared": false,
+          "seconds": 5.483,
+          "damageTaken": 1,
+          "perfectRate": 0.333
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw6nis2l-jlt4uw",
+      "sessionId": "mw6niqb2-2rddtp",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-07T17:06:50.912Z",
+      "playSeconds": 238.967,
+      "weapons": [
+        {
+          "kind": "backbeat_sword",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "son_clave_sword",
+          "tier": 2,
+          "fromWave": 2
+        },
+        {
+          "kind": "rumba_rapier",
+          "tier": 2,
+          "fromWave": 3
+        },
+        {
+          "kind": "son_clave_sword",
+          "tier": 2,
+          "fromWave": 4
+        },
+        {
+          "kind": "march",
+          "tier": 3,
+          "fromWave": 5
+        },
+        {
+          "kind": "trap_cross",
+          "tier": 3,
+          "fromWave": 6
+        },
+        {
+          "kind": "kick1and_gun",
+          "tier": 3,
+          "fromWave": 7
+        },
+        {
+          "kind": "dembow",
+          "tier": 4,
+          "fromWave": 9
+        },
+        {
+          "kind": "boombap_hammer",
+          "tier": 2,
+          "fromWave": 10
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "sforzando",
+          "name": "스포르찬도",
+          "fromWave": 4
+        },
+        {
+          "id": "walking_bass",
+          "name": "워킹 베이스",
+          "fromWave": 7
+        },
+        {
+          "id": "quantize",
+          "name": "퀀타이즈",
+          "fromWave": 10
+        }
+      ],
+      "reachedWave": 12,
+      "death": {
+        "enemyKind": "spear",
+        "wave": 12
+      },
+      "judge": {
+        "perfect": 96,
+        "good": 78,
+        "miss": 68
+      },
+      "timing": {
+        "meanError": -0.0082,
+        "meanAbsError": 0.0502
+      },
+      "hits": {
+        "taken": 7,
+        "shieldAbsorbed": 0,
+        "damageByEnemy": {
+          "spear": 4,
+          "greatsword": 2,
+          "shotgun": 3,
+          "mortar": 1
+        }
+      },
+      "bestHit": 5,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "son_clave_sword",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "son_clave_sword"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "kungkungjjak_shortsword",
+            "halftime_longsword",
+            "rumba_rapier",
+            "keep"
+          ],
+          "chosen": "rumba_rapier"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "crash_cymbal",
+            "sforzando",
+            "repertoire",
+            "skip"
+          ],
+          "chosen": "sforzando"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "tresillo_bow",
+            "backbeat_sword",
+            "keep"
+          ],
+          "chosen": "son_clave_sword"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "march",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "march"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "trap_cross",
+            "son_clave_sword",
+            "four_floor_knife",
+            "keep"
+          ],
+          "chosen": "trap_cross"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "walking_bass",
+            "subwoofer",
+            "snare_solo",
+            "skip"
+          ],
+          "chosen": "walking_bass"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "kick1and_gun",
+            "steppers_roar",
+            "keep"
+          ],
+          "chosen": "kick1and_gun"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_sword",
+            "son_clave_sword",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 8,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_sword",
+            "son_clave_sword",
+            "dembow",
+            "keep"
+          ],
+          "chosen": "dembow"
+        },
+        {
+          "wave": 9,
+          "kind": "relic",
+          "offered": [
+            "turntable",
+            "crash_cymbal",
+            "quantize",
+            "skip"
+          ],
+          "chosen": "quantize"
+        },
+        {
+          "wave": 9,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "doubletime_sword",
+            "backbeat_bomba",
+            "keep"
+          ],
+          "chosen": "boombap_hammer"
+        },
+        {
+          "wave": 10,
+          "kind": "weapon",
+          "offered": [
+            "electro808",
+            "trap_cross",
+            "kick1and_gun",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 11,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_bomba",
+            "dnb_spear",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw6nis2l-jlt4uw",
+          "wave": 1,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 4.283,
+          "damageTaken": 0,
+          "perfectRate": 0.25
+        },
+        {
+          "runId": "mw6nis2l-jlt4uw",
+          "wave": 2,
+          "weaponKind": "son_clave_sword",
+          "cleared": true,
+          "seconds": 9.317,
+          "damageTaken": 0,
+          "perfectRate": 0.286
+        },
+        {
+          "runId": "mw6nis2l-jlt4uw",
+          "wave": 3,
+          "weaponKind": "rumba_rapier",
+          "cleared": true,
+          "seconds": 7.033,
+          "damageTaken": 0,
+          "perfectRate": 0.571
+        },
+        {
+          "runId": "mw6nis2l-jlt4uw",
+          "wave": 4,
+          "weaponKind": "son_clave_sword",
+          "cleared": true,
+          "seconds": 14.967,
+          "damageTaken": 0,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw6nis2l-jlt4uw",
+          "wave": 5,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 7.633,
+          "damageTaken": 0,
+          "perfectRate": 0.444
+        },
+        {
+          "runId": "mw6nis2l-jlt4uw",
+          "wave": 6,
+          "weaponKind": "trap_cross",
+          "cleared": true,
+          "seconds": 10.283,
+          "damageTaken": 2,
+          "perfectRate": 0.5
+        },
+        {
+          "runId": "mw6nis2l-jlt4uw",
+          "wave": 7,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 25.917,
+          "damageTaken": 0,
+          "perfectRate": 0.611
+        },
+        {
+          "runId": "mw6nis2l-jlt4uw",
+          "wave": 8,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 14.067,
+          "damageTaken": 0,
+          "perfectRate": 0.214
+        },
+        {
+          "runId": "mw6nis2l-jlt4uw",
+          "wave": 9,
+          "weaponKind": "dembow",
+          "cleared": true,
+          "seconds": 60.95,
+          "damageTaken": 2,
+          "perfectRate": 0.217
+        },
+        {
+          "runId": "mw6nis2l-jlt4uw",
+          "wave": 10,
+          "weaponKind": "boombap_hammer",
+          "cleared": true,
+          "seconds": 46.733,
+          "damageTaken": 3,
+          "perfectRate": 0.317
+        },
+        {
+          "runId": "mw6nis2l-jlt4uw",
+          "wave": 11,
+          "weaponKind": "boombap_hammer",
+          "cleared": true,
+          "seconds": 18.717,
+          "damageTaken": 0,
+          "perfectRate": 0.536
+        },
+        {
+          "runId": "mw6nis2l-jlt4uw",
+          "wave": 12,
+          "weaponKind": "boombap_hammer",
+          "cleared": false,
+          "seconds": 19.067,
+          "damageTaken": 3,
+          "perfectRate": 0.5
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw6q3mlp-mfbotb",
+      "sessionId": "mw6niqb2-2rddtp",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-07T18:15:57.743Z",
+      "playSeconds": 68.95,
+      "weapons": [
+        {
+          "kind": "backbeat_sword",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "boombap_hammer",
+          "tier": 2,
+          "fromWave": 6
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "sforzando",
+          "name": "스포르찬도",
+          "fromWave": 7
+        }
+      ],
+      "reachedWave": 7,
+      "death": {
+        "enemyKind": "archer",
+        "wave": 7
+      },
+      "judge": {
+        "perfect": 38,
+        "good": 11,
+        "miss": 2
+      },
+      "timing": {
+        "meanError": 0.0012,
+        "meanAbsError": 0.0358
+      },
+      "hits": {
+        "taken": 7,
+        "shieldAbsorbed": 0,
+        "damageByEnemy": {
+          "archer": 3,
+          "spear": 2,
+          "shotgun": 1,
+          "sword": 2,
+          "twinblade": 2
+        }
+      },
+      "bestHit": 4,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "dnb_spear",
+            "rumba_rapier",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "kungkungjjak_shortsword",
+            "four_floor_knife",
+            "kick3and_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "sforzando",
+            "subwoofer",
+            "snare_solo",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "dnb_spear",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "ddadang_knuckle",
+            "dnb_spear",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "kick3and_sword",
+            "boombap_hammer",
+            "dnb_spear",
+            "keep"
+          ],
+          "chosen": "boombap_hammer"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "crash_cymbal",
+            "repertoire",
+            "sforzando",
+            "skip"
+          ],
+          "chosen": "sforzando"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_sword",
+            "steppers_roar",
+            "dnb_spear",
+            "keep"
+          ],
+          "chosen": "keep"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw6q3mlp-mfbotb",
+          "wave": 1,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 5.65,
+          "damageTaken": 0,
+          "perfectRate": 0.5
+        },
+        {
+          "runId": "mw6q3mlp-mfbotb",
+          "wave": 2,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 10.217,
+          "damageTaken": 1,
+          "perfectRate": 0.7
+        },
+        {
+          "runId": "mw6q3mlp-mfbotb",
+          "wave": 3,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 11.483,
+          "damageTaken": 2,
+          "perfectRate": 0.7
+        },
+        {
+          "runId": "mw6q3mlp-mfbotb",
+          "wave": 4,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 7.433,
+          "damageTaken": 0,
+          "perfectRate": 1
+        },
+        {
+          "runId": "mw6q3mlp-mfbotb",
+          "wave": 5,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 9.483,
+          "damageTaken": 1,
+          "perfectRate": 0.75
+        },
+        {
+          "runId": "mw6q3mlp-mfbotb",
+          "wave": 6,
+          "weaponKind": "boombap_hammer",
+          "cleared": true,
+          "seconds": 10.917,
+          "damageTaken": 1,
+          "perfectRate": 1
+        },
+        {
+          "runId": "mw6q3mlp-mfbotb",
+          "wave": 7,
+          "weaponKind": "boombap_hammer",
+          "cleared": false,
+          "seconds": 13.767,
+          "damageTaken": 5,
+          "perfectRate": 0.5
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw7kll0a-kw1zwo",
+      "sessionId": "mw7klit4-1f1t7c",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-08T08:30:45.277Z",
+      "playSeconds": 125.8,
+      "weapons": [
+        {
+          "kind": "backbeat_sword",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "four_floor_knife",
+          "tier": 1,
+          "fromWave": 2
+        },
+        {
+          "kind": "halftime_longsword",
+          "tier": 1,
+          "fromWave": 4
+        },
+        {
+          "kind": "boombap_hammer",
+          "tier": 2,
+          "fromWave": 5
+        },
+        {
+          "kind": "funk16_sword",
+          "tier": 3,
+          "fromWave": 7
+        },
+        {
+          "kind": "electro808",
+          "tier": 3,
+          "fromWave": 8
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "freestyle",
+          "name": "프리스타일",
+          "fromWave": 4
+        },
+        {
+          "id": "metronome",
+          "name": "메트로놈",
+          "fromWave": 7
+        }
+      ],
+      "reachedWave": 8,
+      "death": {
+        "enemyKind": "shotgun",
+        "wave": 8
+      },
+      "judge": {
+        "perfect": 56,
+        "good": 21,
+        "miss": 10
+      },
+      "timing": {
+        "meanError": 0.0188,
+        "meanAbsError": 0.0378
+      },
+      "hits": {
+        "taken": 6,
+        "shieldAbsorbed": 0,
+        "damageByEnemy": {
+          "spear": 8,
+          "shotgun": 2
+        }
+      },
+      "bestHit": 5,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "dnb_spear",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "four_floor_knife"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "backbeat_sword",
+            "steppers_roar",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "rehearsal",
+            "freestyle",
+            "subwoofer",
+            "skip"
+          ],
+          "chosen": "freestyle"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "halftime_longsword",
+            "backbeat_sword",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "halftime_longsword"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "boombap_hammer",
+            "four_floor_knife",
+            "keep"
+          ],
+          "chosen": "boombap_hammer"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "son_clave_sword",
+            "backbeat_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "metronome",
+            "kick_solo",
+            "rehearsal",
+            "skip"
+          ],
+          "chosen": "metronome"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "kungkungjjak_shortsword",
+            "son_clave_sword",
+            "funk16_sword",
+            "keep"
+          ],
+          "chosen": "funk16_sword"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "kick3and_sword",
+            "rumba_rapier",
+            "electro808",
+            "keep"
+          ],
+          "chosen": "electro808"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw7kll0a-kw1zwo",
+          "wave": 1,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 4.883,
+          "damageTaken": 0,
+          "perfectRate": 0.75
+        },
+        {
+          "runId": "mw7kll0a-kw1zwo",
+          "wave": 2,
+          "weaponKind": "four_floor_knife",
+          "cleared": true,
+          "seconds": 9.033,
+          "damageTaken": 0,
+          "perfectRate": 0.875
+        },
+        {
+          "runId": "mw7kll0a-kw1zwo",
+          "wave": 3,
+          "weaponKind": "four_floor_knife",
+          "cleared": true,
+          "seconds": 24.833,
+          "damageTaken": 2,
+          "perfectRate": 0.619
+        },
+        {
+          "runId": "mw7kll0a-kw1zwo",
+          "wave": 4,
+          "weaponKind": "halftime_longsword",
+          "cleared": true,
+          "seconds": 23.683,
+          "damageTaken": 4,
+          "perfectRate": 0.556
+        },
+        {
+          "runId": "mw7kll0a-kw1zwo",
+          "wave": 5,
+          "weaponKind": "boombap_hammer",
+          "cleared": true,
+          "seconds": 13.95,
+          "damageTaken": 0,
+          "perfectRate": 0.583
+        },
+        {
+          "runId": "mw7kll0a-kw1zwo",
+          "wave": 6,
+          "weaponKind": "boombap_hammer",
+          "cleared": true,
+          "seconds": 16.283,
+          "damageTaken": 0,
+          "perfectRate": 0.9
+        },
+        {
+          "runId": "mw7kll0a-kw1zwo",
+          "wave": 7,
+          "weaponKind": "funk16_sword",
+          "cleared": true,
+          "seconds": 22.25,
+          "damageTaken": 2,
+          "perfectRate": 0.467
+        },
+        {
+          "runId": "mw7kll0a-kw1zwo",
+          "wave": 8,
+          "weaponKind": "electro808",
+          "cleared": false,
+          "seconds": 10.883,
+          "damageTaken": 2,
+          "perfectRate": 0.625
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw7koltn-ow9ttv",
+      "sessionId": "mw7klit4-1f1t7c",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-08T08:37:32.371Z",
+      "playSeconds": 301.017,
+      "weapons": [
+        {
+          "kind": "four_floor_knife",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "kick3and_sword",
+          "tier": 2,
+          "fromWave": 3
+        },
+        {
+          "kind": "bossa_mace",
+          "tier": 3,
+          "fromWave": 6
+        },
+        {
+          "kind": "ddadang_knuckle",
+          "tier": 3,
+          "fromWave": 8
+        },
+        {
+          "kind": "kick1and_gun",
+          "tier": 3,
+          "fromWave": 12
+        },
+        {
+          "kind": "backbeat_bomba",
+          "tier": 4,
+          "fromWave": 17
+        },
+        {
+          "kind": "funky_whip",
+          "tier": 4,
+          "fromWave": 18
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "crescendo",
+          "name": "크레센도",
+          "fromWave": 16
+        }
+      ],
+      "reachedWave": 20,
+      "death": {
+        "enemyKind": "beam",
+        "wave": 20
+      },
+      "judge": {
+        "perfect": 193,
+        "good": 75,
+        "miss": 45
+      },
+      "timing": {
+        "meanError": 0.0087,
+        "meanAbsError": 0.037
+      },
+      "hits": {
+        "taken": 8,
+        "shieldAbsorbed": 0,
+        "damageByEnemy": {
+          "archer": 1,
+          "shotgun": 3,
+          "spear": 2,
+          "twinblade": 2,
+          "beam": 2
+        }
+      },
+      "bestHit": 8,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "dnb_spear",
+            "kick3and_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "kick3and_sword",
+            "dnb_spear",
+            "backbeat_sword",
+            "keep"
+          ],
+          "chosen": "kick3and_sword"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "air_drum",
+            "kick_solo",
+            "snare_solo",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_sword",
+            "son_clave_sword",
+            "steppers_roar",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "bossa_mace",
+            "dnb_spear",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_sword",
+            "bossa_mace",
+            "dnb_spear",
+            "keep"
+          ],
+          "chosen": "bossa_mace"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "kick_solo",
+            "repertoire",
+            "rehearsal",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "boombap_hammer",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "ddadang_knuckle",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "ddadang_knuckle"
+        },
+        {
+          "wave": 8,
+          "kind": "weapon",
+          "offered": [
+            "doubletime_sword",
+            "trap_cross",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 9,
+          "kind": "relic",
+          "offered": [
+            "air_drum",
+            "snare_solo",
+            "metronome",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 9,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "tresillo_bow",
+            "kick1and_gun",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 10,
+          "kind": "weapon",
+          "offered": [
+            "funk16_sword",
+            "son_clave_sword",
+            "funky_whip",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 11,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "kick1and_gun",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "kick1and_gun"
+        },
+        {
+          "wave": 12,
+          "kind": "relic",
+          "offered": [
+            "air_drum",
+            "rehearsal",
+            "crash_cymbal",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 12,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "ddadang_knuckle",
+            "steppers_roar",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 13,
+          "kind": "weapon",
+          "offered": [
+            "kungkungjjak_shortsword",
+            "rumba_rapier",
+            "electro808",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 14,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "tresillo_bow",
+            "trap_cross",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 15,
+          "kind": "relic",
+          "offered": [
+            "metronome",
+            "repertoire",
+            "crescendo",
+            "skip"
+          ],
+          "chosen": "crescendo"
+        },
+        {
+          "wave": 15,
+          "kind": "weapon",
+          "offered": [
+            "trap_cross",
+            "flow8_knuckle",
+            "backbeat_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 16,
+          "kind": "weapon",
+          "offered": [
+            "break_sword",
+            "four_floor_knife",
+            "backbeat_bomba",
+            "keep"
+          ],
+          "chosen": "backbeat_bomba"
+        },
+        {
+          "wave": 17,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "funky_whip",
+            "son_clave_sword",
+            "keep"
+          ],
+          "chosen": "funky_whip"
+        },
+        {
+          "wave": 18,
+          "kind": "relic",
+          "offered": [
+            "repertoire",
+            "counterpoint",
+            "crash_cymbal",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 18,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "trap_cross",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 19,
+          "kind": "weapon",
+          "offered": [
+            "funk16_sword",
+            "halftime_longsword",
+            "son_clave_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 1,
+          "weaponKind": "four_floor_knife",
+          "cleared": true,
+          "seconds": 9.867,
+          "damageTaken": 0,
+          "perfectRate": 0.6
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 2,
+          "weaponKind": "four_floor_knife",
+          "cleared": true,
+          "seconds": 20.95,
+          "damageTaken": 1,
+          "perfectRate": 0.786
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 3,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 6.733,
+          "damageTaken": 0,
+          "perfectRate": 0.571
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 4,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 10.75,
+          "damageTaken": 0,
+          "perfectRate": 0.273
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 5,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 10.15,
+          "damageTaken": 0,
+          "perfectRate": 0.9
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 6,
+          "weaponKind": "bossa_mace",
+          "cleared": true,
+          "seconds": 12.167,
+          "damageTaken": 0,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 7,
+          "weaponKind": "bossa_mace",
+          "cleared": true,
+          "seconds": 14.233,
+          "damageTaken": 1,
+          "perfectRate": 0.353
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 8,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 13.233,
+          "damageTaken": 1,
+          "perfectRate": 0.538
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 9,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 8.7,
+          "damageTaken": 0,
+          "perfectRate": 0.786
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 10,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 10.6,
+          "damageTaken": 0,
+          "perfectRate": 0.778
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 11,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 15.983,
+          "damageTaken": 0,
+          "perfectRate": 0.654
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 12,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 20.7,
+          "damageTaken": 0,
+          "perfectRate": 0.75
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 13,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 9.733,
+          "damageTaken": 0,
+          "perfectRate": 0.909
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 14,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 28.633,
+          "damageTaken": 0,
+          "perfectRate": 0.625
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 15,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 13.967,
+          "damageTaken": 0,
+          "perfectRate": 0.722
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 16,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 17.217,
+          "damageTaken": 2,
+          "perfectRate": 0.556
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 17,
+          "weaponKind": "backbeat_bomba",
+          "cleared": true,
+          "seconds": 12.833,
+          "damageTaken": 1,
+          "perfectRate": 0.455
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 18,
+          "weaponKind": "funky_whip",
+          "cleared": true,
+          "seconds": 22.2,
+          "damageTaken": 0,
+          "perfectRate": 0.4
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 19,
+          "weaponKind": "funky_whip",
+          "cleared": true,
+          "seconds": 17.35,
+          "damageTaken": 2,
+          "perfectRate": 0.5
+        },
+        {
+          "runId": "mw7koltn-ow9ttv",
+          "wave": 20,
+          "weaponKind": "funky_whip",
+          "cleared": false,
+          "seconds": 25.017,
+          "damageTaken": 2,
+          "perfectRate": 0.5
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw7kxo55-s8fzeu",
+      "sessionId": "mw7klit4-1f1t7c",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-08T08:40:41.760Z",
+      "playSeconds": 158.667,
+      "weapons": [
+        {
+          "kind": "tresillo_bow",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "ddadang_knuckle",
+          "tier": 3,
+          "fromWave": 5
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "walking_bass",
+          "name": "워킹 베이스",
+          "fromWave": 4
+        }
+      ],
+      "reachedWave": 12,
+      "death": {
+        "enemyKind": "greatsword",
+        "wave": 12
+      },
+      "judge": {
+        "perfect": 110,
+        "good": 48,
+        "miss": 15
+      },
+      "timing": {
+        "meanError": 0.0105,
+        "meanAbsError": 0.0372
+      },
+      "hits": {
+        "taken": 7,
+        "shieldAbsorbed": 0,
+        "damageByEnemy": {
+          "spear": 4,
+          "sword": 2,
+          "shotgun": 2,
+          "archer": 1,
+          "greatsword": 1
+        }
+      },
+      "bestHit": 8,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "rumba_rapier",
+            "son_clave_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_sword",
+            "dnb_spear",
+            "steppers_roar",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "air_drum",
+            "walking_bass",
+            "crash_cymbal",
+            "skip"
+          ],
+          "chosen": "walking_bass"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "backbeat_sword",
+            "rumba_rapier",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "ddadang_knuckle",
+            "march",
+            "keep"
+          ],
+          "chosen": "ddadang_knuckle"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "dnb_spear",
+            "trap_cross",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "kick_solo",
+            "freestyle",
+            "subwoofer",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "kick3and_sword",
+            "electro808",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "funk16_sword",
+            "kungkungjjak_shortsword",
+            "march",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 8,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "electro808",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 9,
+          "kind": "relic",
+          "offered": [
+            "fermata",
+            "rehearsal",
+            "kick_solo",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 9,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "backbeat_sword",
+            "rumba_rapier",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 10,
+          "kind": "weapon",
+          "offered": [
+            "electro808",
+            "tresillo_bow",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 11,
+          "kind": "weapon",
+          "offered": [
+            "bossa_mace",
+            "boombap_hammer",
+            "dembow",
+            "keep"
+          ],
+          "chosen": "keep"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw7kxo55-s8fzeu",
+          "wave": 1,
+          "weaponKind": "tresillo_bow",
+          "cleared": true,
+          "seconds": 6.733,
+          "damageTaken": 0,
+          "perfectRate": 1
+        },
+        {
+          "runId": "mw7kxo55-s8fzeu",
+          "wave": 2,
+          "weaponKind": "tresillo_bow",
+          "cleared": true,
+          "seconds": 11.333,
+          "damageTaken": 0,
+          "perfectRate": 0.556
+        },
+        {
+          "runId": "mw7kxo55-s8fzeu",
+          "wave": 3,
+          "weaponKind": "tresillo_bow",
+          "cleared": true,
+          "seconds": 26.933,
+          "damageTaken": 0,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw7kxo55-s8fzeu",
+          "wave": 4,
+          "weaponKind": "tresillo_bow",
+          "cleared": true,
+          "seconds": 18.033,
+          "damageTaken": 2,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw7kxo55-s8fzeu",
+          "wave": 5,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 9.483,
+          "damageTaken": 2,
+          "perfectRate": 0.563
+        },
+        {
+          "runId": "mw7kxo55-s8fzeu",
+          "wave": 6,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 16.767,
+          "damageTaken": 0,
+          "perfectRate": 0.786
+        },
+        {
+          "runId": "mw7kxo55-s8fzeu",
+          "wave": 7,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 8.417,
+          "damageTaken": 0,
+          "perfectRate": 0.643
+        },
+        {
+          "runId": "mw7kxo55-s8fzeu",
+          "wave": 8,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 8,
+          "damageTaken": 0,
+          "perfectRate": 0.923
+        },
+        {
+          "runId": "mw7kxo55-s8fzeu",
+          "wave": 9,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 11.8,
+          "damageTaken": 2,
+          "perfectRate": 0.647
+        },
+        {
+          "runId": "mw7kxo55-s8fzeu",
+          "wave": 10,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 15.2,
+          "damageTaken": 2,
+          "perfectRate": 0.4
+        },
+        {
+          "runId": "mw7kxo55-s8fzeu",
+          "wave": 11,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 19.25,
+          "damageTaken": 1,
+          "perfectRate": 0.409
+        },
+        {
+          "runId": "mw7kxo55-s8fzeu",
+          "wave": 12,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": false,
+          "seconds": 6.717,
+          "damageTaken": 1,
+          "perfectRate": 0.9
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw7l2jfw-e05dui",
+      "sessionId": "mw7klit4-1f1t7c",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-08T08:48:18.984Z",
+      "playSeconds": 224.45,
+      "weapons": [
+        {
+          "kind": "tresillo_bow",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "kick3and_sword",
+          "tier": 2,
+          "fromWave": 3
+        },
+        {
+          "kind": "kick1and_gun",
+          "tier": 3,
+          "fromWave": 8
+        },
+        {
+          "kind": "bossa_mace",
+          "tier": 3,
+          "fromWave": 18
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "subwoofer",
+          "name": "서브우퍼",
+          "fromWave": 4
+        },
+        {
+          "id": "sforzando",
+          "name": "스포르찬도",
+          "fromWave": 10
+        }
+      ],
+      "reachedWave": 18,
+      "death": {
+        "enemyKind": "twinblade",
+        "wave": 18
+      },
+      "judge": {
+        "perfect": 143,
+        "good": 60,
+        "miss": 18
+      },
+      "timing": {
+        "meanError": -0.0165,
+        "meanAbsError": 0.0381
+      },
+      "hits": {
+        "taken": 8,
+        "shieldAbsorbed": 0,
+        "damageByEnemy": {
+          "shotgun": 4,
+          "mortar": 1,
+          "twinblade": 4,
+          "beam": 1
+        }
+      },
+      "bestHit": 5,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "kungkungjjak_shortsword",
+            "kick3and_sword",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "halftime_longsword",
+            "kick3and_sword",
+            "backbeat_sword",
+            "keep"
+          ],
+          "chosen": "kick3and_sword"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "subwoofer",
+            "sforzando",
+            "rehearsal",
+            "skip"
+          ],
+          "chosen": "subwoofer"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "rumba_rapier",
+            "son_clave_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "rumba_rapier",
+            "ddadang_knuckle",
+            "four_floor_knife",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "son_clave_sword",
+            "backbeat_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "freestyle",
+            "rehearsal",
+            "turntable",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "backbeat_sword",
+            "ddadang_knuckle",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "kick1and_gun",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "kick1and_gun"
+        },
+        {
+          "wave": 8,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "bossa_mace",
+            "ddadang_knuckle",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 9,
+          "kind": "relic",
+          "offered": [
+            "sforzando",
+            "tap_dance",
+            "air_drum",
+            "skip"
+          ],
+          "chosen": "sforzando"
+        },
+        {
+          "wave": 9,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "halftime_longsword",
+            "kick3and_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 10,
+          "kind": "weapon",
+          "offered": [
+            "electro808",
+            "doubletime_sword",
+            "march",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 11,
+          "kind": "weapon",
+          "offered": [
+            "electro808",
+            "backbeat_sword",
+            "trap_cross",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 12,
+          "kind": "relic",
+          "offered": [
+            "freestyle",
+            "repertoire",
+            "kick_solo",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 12,
+          "kind": "weapon",
+          "offered": [
+            "funk16_sword",
+            "dnb_spear",
+            "electro808",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 13,
+          "kind": "weapon",
+          "offered": [
+            "rumba_rapier",
+            "ddadang_knuckle",
+            "dnb_spear",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 14,
+          "kind": "weapon",
+          "offered": [
+            "rumba_rapier",
+            "boombap_hammer",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 15,
+          "kind": "relic",
+          "offered": [
+            "rehearsal",
+            "kick_solo",
+            "repertoire",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 15,
+          "kind": "weapon",
+          "offered": [
+            "trap_cross",
+            "kungkungjjak_shortsword",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 16,
+          "kind": "weapon",
+          "offered": [
+            "funk16_sword",
+            "march",
+            "doubletime_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 17,
+          "kind": "weapon",
+          "offered": [
+            "funk16_sword",
+            "bossa_mace",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "bossa_mace"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 1,
+          "weaponKind": "tresillo_bow",
+          "cleared": true,
+          "seconds": 8.65,
+          "damageTaken": 0,
+          "perfectRate": 0.571
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 2,
+          "weaponKind": "tresillo_bow",
+          "cleared": true,
+          "seconds": 18.1,
+          "damageTaken": 0,
+          "perfectRate": 0.688
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 3,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 14.117,
+          "damageTaken": 0,
+          "perfectRate": 0.538
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 4,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 10.717,
+          "damageTaken": 0,
+          "perfectRate": 0.5
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 5,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 9.667,
+          "damageTaken": 0,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 6,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 14.817,
+          "damageTaken": 0,
+          "perfectRate": 0.889
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 7,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 29.267,
+          "damageTaken": 3,
+          "perfectRate": 0.846
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 8,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 9.833,
+          "damageTaken": 0,
+          "perfectRate": 0.4
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 9,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 10.483,
+          "damageTaken": 0,
+          "perfectRate": 0.643
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 10,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 11.233,
+          "damageTaken": 0,
+          "perfectRate": 0.929
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 11,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 14.783,
+          "damageTaken": 3,
+          "perfectRate": 0.467
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 12,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 16.05,
+          "damageTaken": 0,
+          "perfectRate": 0.6
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 13,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 11.05,
+          "damageTaken": 1,
+          "perfectRate": 0.556
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 14,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 3.517,
+          "damageTaken": 0,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 15,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 6.15,
+          "damageTaken": 0,
+          "perfectRate": 0.778
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 16,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 17.333,
+          "damageTaken": 0,
+          "perfectRate": 0.565
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 17,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 6.617,
+          "damageTaken": 1,
+          "perfectRate": 0.818
+        },
+        {
+          "runId": "mw7l2jfw-e05dui",
+          "wave": 18,
+          "weaponKind": "bossa_mace",
+          "cleared": false,
+          "seconds": 12.067,
+          "damageTaken": 2,
+          "perfectRate": 0.6
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw7lpbe5-jje5rv",
+      "sessionId": "mw7klit4-1f1t7c",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-08T09:08:56.864Z",
+      "playSeconds": 327.867,
+      "weapons": [
+        {
+          "kind": "halftime_longsword",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "kungkungjjak_shortsword",
+          "tier": 2,
+          "fromWave": 2
+        },
+        {
+          "kind": "boombap_hammer",
+          "tier": 2,
+          "fromWave": 5
+        },
+        {
+          "kind": "son_clave_sword",
+          "tier": 2,
+          "fromWave": 6
+        },
+        {
+          "kind": "funk16_sword",
+          "tier": 3,
+          "fromWave": 7
+        },
+        {
+          "kind": "halftime_longsword",
+          "tier": 1,
+          "fromWave": 12
+        },
+        {
+          "kind": "kungkungjjak_shortsword",
+          "tier": 2,
+          "fromWave": 13
+        },
+        {
+          "kind": "four_floor_knife",
+          "tier": 1,
+          "fromWave": 20
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "crash_cymbal",
+          "name": "크래시 심벌",
+          "fromWave": 7
+        },
+        {
+          "id": "repertoire",
+          "name": "레퍼토리",
+          "fromWave": 10
+        },
+        {
+          "id": "crescendo",
+          "name": "크레센도",
+          "fromWave": 13
+        },
+        {
+          "id": "fermata",
+          "name": "페르마타",
+          "fromWave": 16
+        },
+        {
+          "id": "walking_bass",
+          "name": "워킹 베이스",
+          "fromWave": 19
+        }
+      ],
+      "reachedWave": 20,
+      "death": {
+        "enemyKind": "mortar",
+        "wave": 20
+      },
+      "judge": {
+        "perfect": 214,
+        "good": 80,
+        "miss": 21
+      },
+      "timing": {
+        "meanError": -0.0134,
+        "meanAbsError": 0.0353
+      },
+      "hits": {
+        "taken": 8,
+        "shieldAbsorbed": 0,
+        "damageByEnemy": {
+          "shotgun": 2,
+          "beam": 1,
+          "twinblade": 2,
+          "sword": 2,
+          "archer": 2,
+          "mortar": 1
+        }
+      },
+      "bestHit": 6,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "son_clave_sword",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "kungkungjjak_shortsword"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "rumba_rapier",
+            "dnb_spear",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "kick_solo",
+            "metronome",
+            "freestyle",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "rumba_rapier",
+            "halftime_longsword",
+            "kick3and_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "march",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "boombap_hammer"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "electro808",
+            "son_clave_sword",
+            "bossa_mace",
+            "keep"
+          ],
+          "chosen": "son_clave_sword"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "snare_solo",
+            "subwoofer",
+            "crash_cymbal",
+            "skip"
+          ],
+          "chosen": "crash_cymbal"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "electro808",
+            "kick3and_sword",
+            "funk16_sword",
+            "keep"
+          ],
+          "chosen": "funk16_sword"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "electro808",
+            "kungkungjjak_shortsword",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 8,
+          "kind": "weapon",
+          "offered": [
+            "trap_cross",
+            "break_sword",
+            "kick3and_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 9,
+          "kind": "relic",
+          "offered": [
+            "counterpoint",
+            "kick_solo",
+            "repertoire",
+            "skip"
+          ],
+          "chosen": "repertoire"
+        },
+        {
+          "wave": 9,
+          "kind": "weapon",
+          "offered": [
+            "electro808",
+            "ddadang_knuckle",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 10,
+          "kind": "weapon",
+          "offered": [
+            "march",
+            "steppers_roar",
+            "ddadang_knuckle",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 11,
+          "kind": "weapon",
+          "offered": [
+            "halftime_longsword",
+            "march",
+            "kick3and_sword",
+            "keep"
+          ],
+          "chosen": "halftime_longsword"
+        },
+        {
+          "wave": 12,
+          "kind": "relic",
+          "offered": [
+            "crescendo",
+            "snare_solo",
+            "kick_solo",
+            "skip"
+          ],
+          "chosen": "crescendo"
+        },
+        {
+          "wave": 12,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "dnb_spear",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "kungkungjjak_shortsword"
+        },
+        {
+          "wave": 13,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_sword",
+            "rumba_rapier",
+            "doubletime_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 14,
+          "kind": "weapon",
+          "offered": [
+            "kick3and_sword",
+            "flow8_knuckle",
+            "son_clave_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 15,
+          "kind": "relic",
+          "offered": [
+            "rehearsal",
+            "fermata",
+            "metronome",
+            "skip"
+          ],
+          "chosen": "fermata"
+        },
+        {
+          "wave": 15,
+          "kind": "weapon",
+          "offered": [
+            "ddadang_knuckle",
+            "son_clave_sword",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 16,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "ddadang_knuckle",
+            "dembow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 17,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "kick3and_sword",
+            "flow8_knuckle",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 18,
+          "kind": "relic",
+          "offered": [
+            "tap_dance",
+            "kick_solo",
+            "walking_bass",
+            "skip"
+          ],
+          "chosen": "walking_bass"
+        },
+        {
+          "wave": 18,
+          "kind": "weapon",
+          "offered": [
+            "march",
+            "trap_cross",
+            "steppers_roar",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 19,
+          "kind": "weapon",
+          "offered": [
+            "trap_cross",
+            "four_floor_knife",
+            "electro808",
+            "keep"
+          ],
+          "chosen": "four_floor_knife"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 1,
+          "weaponKind": "halftime_longsword",
+          "cleared": true,
+          "seconds": 7.6,
+          "damageTaken": 0,
+          "perfectRate": 0.5
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 2,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 9.25,
+          "damageTaken": 0,
+          "perfectRate": 0.3
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 3,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 16.067,
+          "damageTaken": 0,
+          "perfectRate": 0.421
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 4,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 13.9,
+          "damageTaken": 0,
+          "perfectRate": 0.895
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 5,
+          "weaponKind": "boombap_hammer",
+          "cleared": true,
+          "seconds": 20.833,
+          "damageTaken": 0,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 6,
+          "weaponKind": "son_clave_sword",
+          "cleared": true,
+          "seconds": 29.783,
+          "damageTaken": 0,
+          "perfectRate": 0.538
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 7,
+          "weaponKind": "funk16_sword",
+          "cleared": true,
+          "seconds": 9.45,
+          "damageTaken": 0,
+          "perfectRate": 0.7
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 8,
+          "weaponKind": "funk16_sword",
+          "cleared": true,
+          "seconds": 9.667,
+          "damageTaken": 0,
+          "perfectRate": 0.545
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 9,
+          "weaponKind": "funk16_sword",
+          "cleared": true,
+          "seconds": 9.883,
+          "damageTaken": 1,
+          "perfectRate": 0.636
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 10,
+          "weaponKind": "funk16_sword",
+          "cleared": true,
+          "seconds": 7.9,
+          "damageTaken": 0,
+          "perfectRate": 0.444
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 11,
+          "weaponKind": "funk16_sword",
+          "cleared": true,
+          "seconds": 7.8,
+          "damageTaken": 1,
+          "perfectRate": 0.5
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 12,
+          "weaponKind": "halftime_longsword",
+          "cleared": true,
+          "seconds": 20.033,
+          "damageTaken": 0,
+          "perfectRate": 0.8
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 13,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 14.133,
+          "damageTaken": 1,
+          "perfectRate": 0.824
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 14,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 10.95,
+          "damageTaken": 0,
+          "perfectRate": 1
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 15,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 24.467,
+          "damageTaken": 0,
+          "perfectRate": 0.619
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 16,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 23.617,
+          "damageTaken": 2,
+          "perfectRate": 0.846
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 17,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 19.067,
+          "damageTaken": 0,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 18,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 24.1,
+          "damageTaken": 2,
+          "perfectRate": 0.68
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 19,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 19.6,
+          "damageTaken": 2,
+          "perfectRate": 0.773
+        },
+        {
+          "runId": "mw7lpbe5-jje5rv",
+          "wave": 20,
+          "weaponKind": "four_floor_knife",
+          "cleared": false,
+          "seconds": 29.767,
+          "damageTaken": 1,
+          "perfectRate": 0.875
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw7m1ydb-of67uf",
+      "sessionId": "mw7klit4-1f1t7c",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-08T09:16:40.388Z",
+      "playSeconds": 347.583,
+      "weapons": [
+        {
+          "kind": "halftime_longsword",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "kick3and_sword",
+          "tier": 2,
+          "fromWave": 3
+        },
+        {
+          "kind": "bossa_mace",
+          "tier": 3,
+          "fromWave": 7
+        },
+        {
+          "kind": "doubletime_sword",
+          "tier": 4,
+          "fromWave": 13
+        },
+        {
+          "kind": "trap_cross",
+          "tier": 3,
+          "fromWave": 15
+        },
+        {
+          "kind": "four_floor_knife",
+          "tier": 1,
+          "fromWave": 18
+        },
+        {
+          "kind": "backbeat_sword",
+          "tier": 1,
+          "fromWave": 19
+        },
+        {
+          "kind": "kungkungjjak_shortsword",
+          "tier": 2,
+          "fromWave": 20
+        },
+        {
+          "kind": "funky_whip",
+          "tier": 4,
+          "fromWave": 21
+        }
+      ],
+      "weaponSwitches": 7,
+      "relics": [
+        {
+          "id": "counterpoint",
+          "name": "카운터포인트",
+          "fromWave": 4
+        },
+        {
+          "id": "walking_bass",
+          "name": "워킹 베이스",
+          "fromWave": 19
+        },
+        {
+          "id": "freestyle",
+          "name": "프리스타일",
+          "fromWave": 10
+        },
+        {
+          "id": "turntable",
+          "name": "턴테이블",
+          "fromWave": 13
+        },
+        {
+          "id": "fermata",
+          "name": "페르마타",
+          "fromWave": 16
+        }
+      ],
+      "reachedWave": 21,
+      "death": {
+        "enemyKind": "mortar",
+        "wave": 21
+      },
+      "judge": {
+        "perfect": 161,
+        "good": 98,
+        "miss": 34
+      },
+      "timing": {
+        "meanError": -0.0064,
+        "meanAbsError": 0.0426
+      },
+      "hits": {
+        "taken": 8,
+        "shieldAbsorbed": 0,
+        "damageByEnemy": {
+          "shotgun": 3,
+          "greatsword": 2,
+          "mortar": 3,
+          "spear": 2
+        }
+      },
+      "bestHit": 6,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "four_floor_knife",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "kick3and_sword",
+            "backbeat_sword",
+            "keep"
+          ],
+          "chosen": "kick3and_sword"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "counterpoint",
+            "freestyle",
+            "tap_dance",
+            "skip"
+          ],
+          "chosen": "counterpoint"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_sword",
+            "steppers_roar",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "kungkungjjak_shortsword",
+            "backbeat_sword",
+            "rumba_rapier",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "halftime_longsword",
+            "rumba_rapier",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "crash_cymbal",
+            "repertoire",
+            "kick_solo",
+            "skip"
+          ],
+          "chosen": "kick_solo"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "kick1and_gun",
+            "trap_cross",
+            "bossa_mace",
+            "keep"
+          ],
+          "chosen": "bossa_mace"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_sword",
+            "tresillo_bow",
+            "four_floor_knife",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 8,
+          "kind": "weapon",
+          "offered": [
+            "kungkungjjak_shortsword",
+            "funk16_sword",
+            "steppers_roar",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 9,
+          "kind": "relic",
+          "offered": [
+            "freestyle",
+            "repertoire",
+            "air_drum",
+            "skip"
+          ],
+          "chosen": "freestyle"
+        },
+        {
+          "wave": 9,
+          "kind": "weapon",
+          "offered": [
+            "funk16_sword",
+            "backbeat_bomba",
+            "steppers_roar",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 10,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "steppers_roar",
+            "trap_cross",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 11,
+          "kind": "weapon",
+          "offered": [
+            "rumba_rapier",
+            "march",
+            "dnb_spear",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 12,
+          "kind": "relic",
+          "offered": [
+            "turntable",
+            "crash_cymbal",
+            "repertoire",
+            "skip"
+          ],
+          "chosen": "turntable"
+        },
+        {
+          "wave": 12,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "doubletime_sword",
+            "son_clave_sword",
+            "keep"
+          ],
+          "chosen": "doubletime_sword",
+          "added": true
+        },
+        {
+          "wave": 13,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "son_clave_sword",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 14,
+          "kind": "weapon",
+          "offered": [
+            "ddadang_knuckle",
+            "halftime_longsword",
+            "trap_cross",
+            "keep"
+          ],
+          "chosen": "trap_cross",
+          "replacedSlot": 1
+        },
+        {
+          "wave": 15,
+          "kind": "relic",
+          "offered": [
+            "walking_bass",
+            "fermata",
+            "rehearsal",
+            "skip"
+          ],
+          "chosen": "fermata"
+        },
+        {
+          "wave": 15,
+          "kind": "weapon",
+          "offered": [
+            "ddadang_knuckle",
+            "electro808",
+            "son_clave_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 16,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "kungkungjjak_shortsword",
+            "rumba_rapier",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 17,
+          "kind": "weapon",
+          "offered": [
+            "funk16_sword",
+            "four_floor_knife",
+            "dnb_spear",
+            "keep"
+          ],
+          "chosen": "four_floor_knife",
+          "replacedSlot": 1
+        },
+        {
+          "wave": 18,
+          "kind": "relic",
+          "offered": [
+            "rehearsal",
+            "walking_bass",
+            "repertoire",
+            "skip"
+          ],
+          "chosen": "walking_bass",
+          "replaced": "kick_solo"
+        },
+        {
+          "wave": 18,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "backbeat_sword",
+            "march",
+            "keep"
+          ],
+          "chosen": "backbeat_sword",
+          "replacedSlot": 1
+        },
+        {
+          "wave": 19,
+          "kind": "weapon",
+          "offered": [
+            "kick1and_gun",
+            "kungkungjjak_shortsword",
+            "rumba_rapier",
+            "keep"
+          ],
+          "chosen": "kungkungjjak_shortsword",
+          "replacedSlot": 1
+        },
+        {
+          "wave": 20,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "funky_whip",
+            "ddadang_knuckle",
+            "keep"
+          ],
+          "chosen": "funky_whip",
+          "replacedSlot": 2
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 1,
+          "weaponKind": "halftime_longsword",
+          "cleared": true,
+          "seconds": 6.083,
+          "damageTaken": 0,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 2,
+          "weaponKind": "halftime_longsword",
+          "cleared": true,
+          "seconds": 23.3,
+          "damageTaken": 0,
+          "perfectRate": 0.455
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 3,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 12.183,
+          "damageTaken": 0,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 4,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 14.583,
+          "damageTaken": 0,
+          "perfectRate": 0.8
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 5,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 8.35,
+          "damageTaken": 0,
+          "perfectRate": 0.625
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 6,
+          "weaponKind": "kick3and_sword",
+          "cleared": true,
+          "seconds": 10.333,
+          "damageTaken": 0,
+          "perfectRate": 0.545
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 7,
+          "weaponKind": "bossa_mace",
+          "cleared": true,
+          "seconds": 22.783,
+          "damageTaken": 0,
+          "perfectRate": 0.417
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 8,
+          "weaponKind": "bossa_mace",
+          "cleared": true,
+          "seconds": 19.217,
+          "damageTaken": 0,
+          "perfectRate": 0.571
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 9,
+          "weaponKind": "bossa_mace",
+          "cleared": true,
+          "seconds": 16.317,
+          "damageTaken": 0,
+          "perfectRate": 0.5
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 10,
+          "weaponKind": "bossa_mace",
+          "cleared": true,
+          "seconds": 8.267,
+          "damageTaken": 0,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 11,
+          "weaponKind": "bossa_mace",
+          "cleared": true,
+          "seconds": 11.983,
+          "damageTaken": 0,
+          "perfectRate": 0.583
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 12,
+          "weaponKind": "bossa_mace",
+          "cleared": true,
+          "seconds": 9.533,
+          "damageTaken": 1,
+          "perfectRate": 0.533
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 13,
+          "weaponKind": "doubletime_sword",
+          "cleared": true,
+          "seconds": 28.433,
+          "damageTaken": 2,
+          "perfectRate": 0.5
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 14,
+          "weaponKind": "doubletime_sword",
+          "cleared": true,
+          "seconds": 15.533,
+          "damageTaken": 0,
+          "perfectRate": 0.294
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 15,
+          "weaponKind": "trap_cross",
+          "cleared": true,
+          "seconds": 18.367,
+          "damageTaken": 0,
+          "perfectRate": 0.333
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 16,
+          "weaponKind": "trap_cross",
+          "cleared": true,
+          "seconds": 19.55,
+          "damageTaken": 0,
+          "perfectRate": 0.3
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 17,
+          "weaponKind": "doubletime_sword",
+          "cleared": true,
+          "seconds": 16.417,
+          "damageTaken": 0,
+          "perfectRate": 0.5
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 18,
+          "weaponKind": "four_floor_knife",
+          "cleared": true,
+          "seconds": 30.633,
+          "damageTaken": 3,
+          "perfectRate": 0.684
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 19,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 22.35,
+          "damageTaken": 2,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 20,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 22.383,
+          "damageTaken": 1,
+          "perfectRate": 0.739
+        },
+        {
+          "runId": "mw7m1ydb-of67uf",
+          "wave": 21,
+          "weaponKind": "funky_whip",
+          "cleared": false,
+          "seconds": 10.983,
+          "damageTaken": 1,
+          "perfectRate": 0.4
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw7oo4wg-6xlx47",
+      "sessionId": "mw7oo2x5-j4rdsq",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-08T10:26:19.163Z",
+      "playSeconds": 215.667,
+      "weapons": [
+        {
+          "kind": "tresillo_bow",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "kungkungjjak_shortsword",
+          "tier": 2,
+          "fromWave": 4
+        },
+        {
+          "kind": "ddadang_knuckle",
+          "tier": 3,
+          "fromWave": 8
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "walking_bass",
+          "name": "워킹 베이스",
+          "fromWave": 4
+        },
+        {
+          "id": "snare_solo",
+          "name": "스네어 솔로",
+          "fromWave": 7
+        },
+        {
+          "id": "freestyle",
+          "name": "프리스타일",
+          "fromWave": 10
+        }
+      ],
+      "reachedWave": 15,
+      "death": {
+        "enemyKind": "twinblade",
+        "wave": 15
+      },
+      "judge": {
+        "perfect": 147,
+        "good": 64,
+        "miss": 20
+      },
+      "timing": {
+        "meanError": -0.0084,
+        "meanAbsError": 0.0377
+      },
+      "hits": {
+        "taken": 6,
+        "shieldAbsorbed": 0,
+        "damageByEnemy": {
+          "archer": 1,
+          "spear": 2,
+          "sword": 2,
+          "twinblade": 4,
+          "shotgun": 1
+        }
+      },
+      "bestHit": 8,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "backbeat_sword",
+            "dnb_spear",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "rumba_rapier",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "crash_cymbal",
+            "turntable",
+            "walking_bass",
+            "skip"
+          ],
+          "chosen": "walking_bass"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "son_clave_sword",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "kungkungjjak_shortsword"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "kick1and_gun",
+            "dnb_spear",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "rumba_rapier",
+            "ddadang_knuckle",
+            "trap_cross",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "rehearsal",
+            "crash_cymbal",
+            "snare_solo",
+            "skip"
+          ],
+          "chosen": "snare_solo"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "steppers_roar",
+            "march",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "son_clave_sword",
+            "ddadang_knuckle",
+            "keep"
+          ],
+          "chosen": "ddadang_knuckle"
+        },
+        {
+          "wave": 8,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "electro808",
+            "kick3and_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 9,
+          "kind": "relic",
+          "offered": [
+            "crash_cymbal",
+            "rehearsal",
+            "freestyle",
+            "skip"
+          ],
+          "chosen": "freestyle"
+        },
+        {
+          "wave": 9,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "funk16_sword",
+            "doubletime_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 10,
+          "kind": "weapon",
+          "offered": [
+            "kick3and_sword",
+            "tresillo_bow",
+            "steppers_roar",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 11,
+          "kind": "weapon",
+          "offered": [
+            "kick1and_gun",
+            "kick3and_sword",
+            "trap_cross",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 12,
+          "kind": "relic",
+          "offered": [
+            "rehearsal",
+            "air_drum",
+            "turntable",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 12,
+          "kind": "weapon",
+          "offered": [
+            "funk16_sword",
+            "boombap_hammer",
+            "son_clave_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 13,
+          "kind": "weapon",
+          "offered": [
+            "kick3and_sword",
+            "trap_cross",
+            "kick1and_gun",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 14,
+          "kind": "weapon",
+          "offered": [
+            "kick1and_gun",
+            "tresillo_bow",
+            "bossa_mace",
+            "keep"
+          ],
+          "chosen": "keep"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 1,
+          "weaponKind": "tresillo_bow",
+          "cleared": true,
+          "seconds": 5.733,
+          "damageTaken": 0,
+          "perfectRate": 0.6
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 2,
+          "weaponKind": "tresillo_bow",
+          "cleared": true,
+          "seconds": 15.833,
+          "damageTaken": 1,
+          "perfectRate": 0.786
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 3,
+          "weaponKind": "tresillo_bow",
+          "cleared": true,
+          "seconds": 9.767,
+          "damageTaken": 2,
+          "perfectRate": 0.7
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 4,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 25.467,
+          "damageTaken": 0,
+          "perfectRate": 0.833
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 5,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 14.5,
+          "damageTaken": 2,
+          "perfectRate": 0.632
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 6,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 17.75,
+          "damageTaken": 0,
+          "perfectRate": 0.7
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 7,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 21.683,
+          "damageTaken": 2,
+          "perfectRate": 0.429
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 8,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 22.467,
+          "damageTaken": 1,
+          "perfectRate": 0.7
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 9,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 13.283,
+          "damageTaken": 0,
+          "perfectRate": 0.714
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 10,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 9.933,
+          "damageTaken": 0,
+          "perfectRate": 0.538
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 11,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 10.15,
+          "damageTaken": 0,
+          "perfectRate": 0.714
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 12,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 11.883,
+          "damageTaken": 0,
+          "perfectRate": 0.714
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 13,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 21.7,
+          "damageTaken": 0,
+          "perfectRate": 0.318
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 14,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 8.35,
+          "damageTaken": 0,
+          "perfectRate": 0.625
+        },
+        {
+          "runId": "mw7oo4wg-6xlx47",
+          "wave": 15,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": false,
+          "seconds": 7.167,
+          "damageTaken": 2,
+          "perfectRate": 0.727
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw7rzuxy-5a4hd6",
+      "sessionId": "mw7rzsvt-adnpq0",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-08T12:00:49.838Z",
+      "playSeconds": 277.783,
+      "weapons": [
+        {
+          "kind": "tresillo_bow",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "son_clave_sword",
+          "tier": 2,
+          "fromWave": 3
+        },
+        {
+          "kind": "boombap_hammer",
+          "tier": 2,
+          "fromWave": 8
+        },
+        {
+          "kind": "doubletime_sword",
+          "tier": 4,
+          "fromWave": 9
+        },
+        {
+          "kind": "funk16_sword",
+          "tier": 3,
+          "fromWave": 12
+        },
+        {
+          "kind": "doubletime_sword",
+          "tier": 4,
+          "fromWave": 15
+        },
+        {
+          "kind": "funk16_sword",
+          "tier": 3,
+          "fromWave": 16
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "metronome",
+          "name": "메트로놈",
+          "fromWave": 7
+        },
+        {
+          "id": "subwoofer",
+          "name": "서브우퍼",
+          "fromWave": 10
+        },
+        {
+          "id": "freestyle",
+          "name": "프리스타일",
+          "fromWave": 13
+        }
+      ],
+      "reachedWave": 16,
+      "death": {
+        "enemyKind": "spear",
+        "wave": 16
+      },
+      "judge": {
+        "perfect": 138,
+        "good": 95,
+        "miss": 38
+      },
+      "timing": {
+        "meanError": 0.0054,
+        "meanAbsError": 0.0454
+      },
+      "hits": {
+        "taken": 9,
+        "shieldAbsorbed": 6,
+        "damageByEnemy": {
+          "shotgun": 2,
+          "twinblade": 3,
+          "sword": 3,
+          "spear": 2
+        }
+      },
+      "bestHit": 6,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "rumba_rapier",
+            "son_clave_sword",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "kick3and_sword",
+            "son_clave_sword",
+            "backbeat_sword",
+            "keep"
+          ],
+          "chosen": "son_clave_sword"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "air_drum",
+            "snare_solo",
+            "repertoire",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "dnb_spear",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "kungkungjjak_shortsword",
+            "rumba_rapier",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "bossa_mace",
+            "ddadang_knuckle",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "rehearsal",
+            "repertoire",
+            "metronome",
+            "skip"
+          ],
+          "chosen": "metronome"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "dnb_spear",
+            "kick3and_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "trap_cross",
+            "backbeat_sword",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "boombap_hammer"
+        },
+        {
+          "wave": 8,
+          "kind": "weapon",
+          "offered": [
+            "doubletime_sword",
+            "steppers_roar",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "doubletime_sword"
+        },
+        {
+          "wave": 9,
+          "kind": "relic",
+          "offered": [
+            "walking_bass",
+            "subwoofer",
+            "snare_solo",
+            "skip"
+          ],
+          "chosen": "subwoofer"
+        },
+        {
+          "wave": 9,
+          "kind": "weapon",
+          "offered": [
+            "bossa_mace",
+            "son_clave_sword",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 10,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "rumba_rapier",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 11,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "kick3and_sword",
+            "funk16_sword",
+            "keep"
+          ],
+          "chosen": "funk16_sword"
+        },
+        {
+          "wave": 12,
+          "kind": "relic",
+          "offered": [
+            "snare_solo",
+            "freestyle",
+            "walking_bass",
+            "skip"
+          ],
+          "chosen": "freestyle"
+        },
+        {
+          "wave": 12,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "kick1and_gun",
+            "march",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 13,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "backbeat_sword",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 14,
+          "kind": "weapon",
+          "offered": [
+            "halftime_longsword",
+            "doubletime_sword",
+            "son_clave_sword",
+            "keep"
+          ],
+          "chosen": "doubletime_sword"
+        },
+        {
+          "wave": 15,
+          "kind": "relic",
+          "offered": [
+            "crash_cymbal",
+            "repertoire",
+            "kick_solo",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 15,
+          "kind": "weapon",
+          "offered": [
+            "funk16_sword",
+            "flow8_knuckle",
+            "trap_cross",
+            "keep"
+          ],
+          "chosen": "funk16_sword"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 1,
+          "weaponKind": "tresillo_bow",
+          "cleared": true,
+          "seconds": 7.883,
+          "damageTaken": 0,
+          "perfectRate": 0.8
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 2,
+          "weaponKind": "tresillo_bow",
+          "cleared": true,
+          "seconds": 9.183,
+          "damageTaken": 0,
+          "perfectRate": 0.75
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 3,
+          "weaponKind": "son_clave_sword",
+          "cleared": true,
+          "seconds": 18.567,
+          "damageTaken": 0,
+          "perfectRate": 0.625
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 4,
+          "weaponKind": "son_clave_sword",
+          "cleared": true,
+          "seconds": 12.267,
+          "damageTaken": 0,
+          "perfectRate": 0.538
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 5,
+          "weaponKind": "son_clave_sword",
+          "cleared": true,
+          "seconds": 12.75,
+          "damageTaken": 1,
+          "perfectRate": 0.733
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 6,
+          "weaponKind": "son_clave_sword",
+          "cleared": true,
+          "seconds": 23.55,
+          "damageTaken": 0,
+          "perfectRate": 0.565
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 7,
+          "weaponKind": "son_clave_sword",
+          "cleared": true,
+          "seconds": 27.883,
+          "damageTaken": 1,
+          "perfectRate": 0.636
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 8,
+          "weaponKind": "boombap_hammer",
+          "cleared": true,
+          "seconds": 17.067,
+          "damageTaken": 0,
+          "perfectRate": 0.714
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 9,
+          "weaponKind": "doubletime_sword",
+          "cleared": true,
+          "seconds": 18.383,
+          "damageTaken": 3,
+          "perfectRate": 0.28
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 10,
+          "weaponKind": "doubletime_sword",
+          "cleared": true,
+          "seconds": 20.533,
+          "damageTaken": 1,
+          "perfectRate": 0.407
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 11,
+          "weaponKind": "doubletime_sword",
+          "cleared": true,
+          "seconds": 25,
+          "damageTaken": 0,
+          "perfectRate": 0.5
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 12,
+          "weaponKind": "funk16_sword",
+          "cleared": true,
+          "seconds": 18.067,
+          "damageTaken": 0,
+          "perfectRate": 0.118
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 13,
+          "weaponKind": "funk16_sword",
+          "cleared": true,
+          "seconds": 14.067,
+          "damageTaken": 0,
+          "perfectRate": 0.9
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 14,
+          "weaponKind": "funk16_sword",
+          "cleared": true,
+          "seconds": 21.717,
+          "damageTaken": 0,
+          "perfectRate": 0.538
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 15,
+          "weaponKind": "doubletime_sword",
+          "cleared": true,
+          "seconds": 17.15,
+          "damageTaken": 0,
+          "perfectRate": 0.19
+        },
+        {
+          "runId": "mw7rzuxy-5a4hd6",
+          "wave": 16,
+          "weaponKind": "funk16_sword",
+          "cleared": false,
+          "seconds": 13.717,
+          "damageTaken": 4,
+          "perfectRate": 0.7
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw7sdz3t-dt9fk8",
+      "sessionId": "mw7rzsvt-adnpq0",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-08T12:12:26.982Z",
+      "playSeconds": 285.117,
+      "weapons": [
+        {
+          "kind": "halftime_longsword",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "boombap_hammer",
+          "tier": 2,
+          "fromWave": 4
+        },
+        {
+          "kind": "march",
+          "tier": 3,
+          "fromWave": 5
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "counterpoint",
+          "name": "카운터포인트",
+          "fromWave": 4
+        },
+        {
+          "id": "crash_cymbal",
+          "name": "크래시 심벌",
+          "fromWave": 7
+        },
+        {
+          "id": "rehearsal",
+          "name": "리허설",
+          "fromWave": 13
+        },
+        {
+          "id": "quantize",
+          "name": "퀀타이즈",
+          "fromWave": 22
+        },
+        {
+          "id": "fermata",
+          "name": "페르마타",
+          "fromWave": 19
+        }
+      ],
+      "reachedWave": 23,
+      "death": {
+        "enemyKind": "greatsword",
+        "wave": 23
+      },
+      "judge": {
+        "perfect": 198,
+        "good": 106,
+        "miss": 36
+      },
+      "timing": {
+        "meanError": 0.0035,
+        "meanAbsError": 0.0419
+      },
+      "hits": {
+        "taken": 8,
+        "shieldAbsorbed": 0,
+        "damageByEnemy": {
+          "archer": 1,
+          "twinblade": 4,
+          "mortar": 3,
+          "shotgun": 1,
+          "greatsword": 1
+        }
+      },
+      "bestHit": 6,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "kick3and_sword",
+            "rumba_rapier",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "boombap_hammer",
+            "dnb_spear",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "counterpoint",
+            "kick_solo",
+            "freestyle",
+            "skip"
+          ],
+          "chosen": "counterpoint"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "steppers_roar",
+            "son_clave_sword",
+            "keep"
+          ],
+          "chosen": "boombap_hammer"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "march",
+            "funk16_sword",
+            "keep"
+          ],
+          "chosen": "march"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "bossa_mace",
+            "backbeat_sword",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "air_drum",
+            "freestyle",
+            "crash_cymbal",
+            "skip"
+          ],
+          "chosen": "crash_cymbal"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "trap_cross",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_sword",
+            "funk16_sword",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 8,
+          "kind": "weapon",
+          "offered": [
+            "kungkungjjak_shortsword",
+            "dnb_spear",
+            "son_clave_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 9,
+          "kind": "relic",
+          "offered": [
+            "repertoire",
+            "subwoofer",
+            "snare_solo",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 9,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "kick1and_gun",
+            "trap_cross",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 10,
+          "kind": "weapon",
+          "offered": [
+            "electro808",
+            "halftime_longsword",
+            "bossa_mace",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 11,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_bomba",
+            "kick1and_gun",
+            "dembow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 12,
+          "kind": "relic",
+          "offered": [
+            "kick_solo",
+            "rehearsal",
+            "tap_dance",
+            "skip"
+          ],
+          "chosen": "rehearsal"
+        },
+        {
+          "wave": 12,
+          "kind": "weapon",
+          "offered": [
+            "funk16_sword",
+            "flow8_knuckle",
+            "four_floor_knife",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 13,
+          "kind": "weapon",
+          "offered": [
+            "kick3and_sword",
+            "boombap_hammer",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 14,
+          "kind": "weapon",
+          "offered": [
+            "ddadang_knuckle",
+            "dembow",
+            "rumba_rapier",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 15,
+          "kind": "relic",
+          "offered": [
+            "air_drum",
+            "kick_solo",
+            "freestyle",
+            "skip"
+          ],
+          "chosen": "kick_solo"
+        },
+        {
+          "wave": 15,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "halftime_longsword",
+            "bossa_mace",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 16,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "backbeat_sword",
+            "funky_whip",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 17,
+          "kind": "weapon",
+          "offered": [
+            "kick3and_sword",
+            "four_floor_knife",
+            "funk16_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 18,
+          "kind": "relic",
+          "offered": [
+            "fermata",
+            "air_drum",
+            "subwoofer",
+            "skip"
+          ],
+          "chosen": "fermata"
+        },
+        {
+          "wave": 18,
+          "kind": "weapon",
+          "offered": [
+            "funk16_sword",
+            "kungkungjjak_shortsword",
+            "kick3and_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 19,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "boombap_hammer",
+            "kick1and_gun",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 20,
+          "kind": "weapon",
+          "offered": [
+            "bossa_mace",
+            "son_clave_sword",
+            "trap_cross",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 21,
+          "kind": "relic",
+          "offered": [
+            "snare_solo",
+            "quantize",
+            "repertoire",
+            "skip"
+          ],
+          "chosen": "quantize",
+          "replaced": "kick_solo"
+        },
+        {
+          "wave": 21,
+          "kind": "weapon",
+          "offered": [
+            "trap_cross",
+            "break_sword",
+            "funk16_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 22,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "dembow",
+            "electro808",
+            "keep"
+          ],
+          "chosen": "keep"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 1,
+          "weaponKind": "halftime_longsword",
+          "cleared": true,
+          "seconds": 7.167,
+          "damageTaken": 0,
+          "perfectRate": 0.25
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 2,
+          "weaponKind": "halftime_longsword",
+          "cleared": true,
+          "seconds": 17.65,
+          "damageTaken": 1,
+          "perfectRate": 0.545
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 3,
+          "weaponKind": "halftime_longsword",
+          "cleared": true,
+          "seconds": 14.55,
+          "damageTaken": 0,
+          "perfectRate": 0.75
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 4,
+          "weaponKind": "boombap_hammer",
+          "cleared": true,
+          "seconds": 14.35,
+          "damageTaken": 0,
+          "perfectRate": 0.5
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 5,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 13.95,
+          "damageTaken": 0,
+          "perfectRate": 0.533
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 6,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 8.367,
+          "damageTaken": 0,
+          "perfectRate": 0.545
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 7,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 4.133,
+          "damageTaken": 0,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 8,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 8.8,
+          "damageTaken": 2,
+          "perfectRate": 0.545
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 9,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 8.9,
+          "damageTaken": 0,
+          "perfectRate": 0.692
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 10,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 20.683,
+          "damageTaken": 0,
+          "perfectRate": 0.429
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 11,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 10.2,
+          "damageTaken": 1,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 12,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 15,
+          "damageTaken": 0,
+          "perfectRate": 0.4
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 13,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 10.633,
+          "damageTaken": 0,
+          "perfectRate": 0.786
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 14,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 15.967,
+          "damageTaken": 0,
+          "perfectRate": 0.706
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 15,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 7.25,
+          "damageTaken": 0,
+          "perfectRate": 0.636
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 16,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 13.133,
+          "damageTaken": 2,
+          "perfectRate": 0.571
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 17,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 10.117,
+          "damageTaken": 0,
+          "perfectRate": 0.538
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 18,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 8.35,
+          "damageTaken": 1,
+          "perfectRate": 0.818
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 19,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 10.817,
+          "damageTaken": 0,
+          "perfectRate": 0.765
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 20,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 16.967,
+          "damageTaken": 0,
+          "perfectRate": 0.6
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 21,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 12.05,
+          "damageTaken": 0,
+          "perfectRate": 0.615
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 22,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 27.433,
+          "damageTaken": 2,
+          "perfectRate": 0.463
+        },
+        {
+          "runId": "mw7sdz3t-dt9fk8",
+          "wave": 23,
+          "weaponKind": "march",
+          "cleared": false,
+          "seconds": 8.65,
+          "damageTaken": 1,
+          "perfectRate": 0.615
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw7w2ldd-rjhxgp",
+      "sessionId": "mw7w2kc6-pr4lpa",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-08T13:52:53.719Z",
+      "playSeconds": 182.417,
+      "weapons": [
+        {
+          "kind": "backbeat_sword",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "break_sword",
+          "tier": 4,
+          "fromWave": 11
+        },
+        {
+          "kind": "kungkungjjak_shortsword",
+          "tier": 2,
+          "fromWave": 12
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "walking_bass",
+          "name": "워킹 베이스",
+          "fromWave": 10
+        }
+      ],
+      "reachedWave": 12,
+      "death": {
+        "enemyKind": "twinblade",
+        "wave": 12
+      },
+      "judge": {
+        "perfect": 103,
+        "good": 28,
+        "miss": 19
+      },
+      "timing": {
+        "meanError": -0.0035,
+        "meanAbsError": 0.033
+      },
+      "hits": {
+        "taken": 7,
+        "shieldAbsorbed": 0,
+        "damageByEnemy": {
+          "sword": 2,
+          "shotgun": 3,
+          "twinblade": 4,
+          "mortar": 1
+        }
+      },
+      "bestHit": 4,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "boombap_hammer",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "halftime_longsword",
+            "boombap_hammer",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "counterpoint",
+            "rehearsal",
+            "crash_cymbal",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "rumba_rapier",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "son_clave_sword",
+            "kick1and_gun",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "kick3and_sword",
+            "son_clave_sword",
+            "bossa_mace",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "air_drum",
+            "kick_solo",
+            "rehearsal",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "march",
+            "kick1and_gun",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "halftime_longsword",
+            "ddadang_knuckle",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 8,
+          "kind": "weapon",
+          "offered": [
+            "halftime_longsword",
+            "doubletime_sword",
+            "dnb_spear",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 9,
+          "kind": "relic",
+          "offered": [
+            "crash_cymbal",
+            "walking_bass",
+            "rehearsal",
+            "skip"
+          ],
+          "chosen": "walking_bass"
+        },
+        {
+          "wave": 9,
+          "kind": "weapon",
+          "offered": [
+            "ddadang_knuckle",
+            "backbeat_bomba",
+            "break_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 10,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "kick1and_gun",
+            "break_sword",
+            "keep"
+          ],
+          "chosen": "break_sword"
+        },
+        {
+          "wave": 11,
+          "kind": "weapon",
+          "offered": [
+            "trap_cross",
+            "dnb_spear",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "kungkungjjak_shortsword"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw7w2ldd-rjhxgp",
+          "wave": 1,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 4.583,
+          "damageTaken": 0,
+          "perfectRate": 0.75
+        },
+        {
+          "runId": "mw7w2ldd-rjhxgp",
+          "wave": 2,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 7.083,
+          "damageTaken": 0,
+          "perfectRate": 0.571
+        },
+        {
+          "runId": "mw7w2ldd-rjhxgp",
+          "wave": 3,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 8.733,
+          "damageTaken": 0,
+          "perfectRate": 0.875
+        },
+        {
+          "runId": "mw7w2ldd-rjhxgp",
+          "wave": 4,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 13.75,
+          "damageTaken": 0,
+          "perfectRate": 0.909
+        },
+        {
+          "runId": "mw7w2ldd-rjhxgp",
+          "wave": 5,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 13.667,
+          "damageTaken": 3,
+          "perfectRate": 0.9
+        },
+        {
+          "runId": "mw7w2ldd-rjhxgp",
+          "wave": 6,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 10.033,
+          "damageTaken": 0,
+          "perfectRate": 1
+        },
+        {
+          "runId": "mw7w2ldd-rjhxgp",
+          "wave": 7,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 14.3,
+          "damageTaken": 0,
+          "perfectRate": 0.357
+        },
+        {
+          "runId": "mw7w2ldd-rjhxgp",
+          "wave": 8,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 11.917,
+          "damageTaken": 2,
+          "perfectRate": 0.545
+        },
+        {
+          "runId": "mw7w2ldd-rjhxgp",
+          "wave": 9,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 19.283,
+          "damageTaken": 2,
+          "perfectRate": 0.938
+        },
+        {
+          "runId": "mw7w2ldd-rjhxgp",
+          "wave": 10,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 29.733,
+          "damageTaken": 0,
+          "perfectRate": 0.75
+        },
+        {
+          "runId": "mw7w2ldd-rjhxgp",
+          "wave": 11,
+          "weaponKind": "break_sword",
+          "cleared": true,
+          "seconds": 31.417,
+          "damageTaken": 1,
+          "perfectRate": 0.346
+        },
+        {
+          "runId": "mw7w2ldd-rjhxgp",
+          "wave": 12,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": false,
+          "seconds": 17.917,
+          "damageTaken": 2,
+          "perfectRate": 0.765
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw7xa8oh-ptnts0",
+      "sessionId": "mw7w2kc6-pr4lpa",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-08T14:33:34.436Z",
+      "playSeconds": 227.833,
+      "weapons": [
+        {
+          "kind": "backbeat_sword",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "electro808",
+          "tier": 3,
+          "fromWave": 5
+        },
+        {
+          "kind": "march",
+          "tier": 3,
+          "fromWave": 8
+        },
+        {
+          "kind": "dembow",
+          "tier": 4,
+          "fromWave": 9
+        },
+        {
+          "kind": "kungkungjjak_shortsword",
+          "tier": 2,
+          "fromWave": 11
+        },
+        {
+          "kind": "ddadang_knuckle",
+          "tier": 3,
+          "fromWave": 12
+        },
+        {
+          "kind": "funky_whip",
+          "tier": 4,
+          "fromWave": 13
+        },
+        {
+          "kind": "dnb_spear",
+          "tier": 2,
+          "fromWave": 15
+        },
+        {
+          "kind": "bossa_mace",
+          "tier": 3,
+          "fromWave": 17
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "air_drum",
+          "name": "에어 드럼",
+          "fromWave": 7
+        },
+        {
+          "id": "subwoofer",
+          "name": "서브우퍼",
+          "fromWave": 13
+        },
+        {
+          "id": "fermata",
+          "name": "페르마타",
+          "fromWave": 16
+        }
+      ],
+      "reachedWave": 18,
+      "death": {
+        "enemyKind": "shotgun",
+        "wave": 18
+      },
+      "judge": {
+        "perfect": 121,
+        "good": 65,
+        "miss": 35
+      },
+      "timing": {
+        "meanError": -0.0048,
+        "meanAbsError": 0.0422
+      },
+      "hits": {
+        "taken": 8,
+        "shieldAbsorbed": 0,
+        "damageByEnemy": {
+          "shotgun": 3,
+          "beam": 2,
+          "greatsword": 2,
+          "sword": 2,
+          "mortar": 1
+        }
+      },
+      "bestHit": 6,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "kungkungjjak_shortsword",
+            "kick3and_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "son_clave_sword",
+            "steppers_roar",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "turntable",
+            "repertoire",
+            "counterpoint",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "kungkungjjak_shortsword",
+            "steppers_roar",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "four_floor_knife",
+            "steppers_roar",
+            "electro808",
+            "keep"
+          ],
+          "chosen": "electro808"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "kick3and_sword",
+            "steppers_roar",
+            "backbeat_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "air_drum",
+            "rehearsal",
+            "crash_cymbal",
+            "skip"
+          ],
+          "chosen": "air_drum"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_sword",
+            "rumba_rapier",
+            "halftime_longsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "kick1and_gun",
+            "bossa_mace",
+            "march",
+            "keep"
+          ],
+          "chosen": "march"
+        },
+        {
+          "wave": 8,
+          "kind": "weapon",
+          "offered": [
+            "trap_cross",
+            "backbeat_sword",
+            "dembow",
+            "keep"
+          ],
+          "chosen": "dembow"
+        },
+        {
+          "wave": 9,
+          "kind": "relic",
+          "offered": [
+            "snare_solo",
+            "crash_cymbal",
+            "subwoofer",
+            "skip"
+          ],
+          "chosen": "skip"
+        },
+        {
+          "wave": 9,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "electro808",
+            "doubletime_sword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 10,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_bomba",
+            "kungkungjjak_shortsword",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "kungkungjjak_shortsword"
+        },
+        {
+          "wave": 11,
+          "kind": "weapon",
+          "offered": [
+            "funky_whip",
+            "kick3and_sword",
+            "ddadang_knuckle",
+            "keep"
+          ],
+          "chosen": "ddadang_knuckle"
+        },
+        {
+          "wave": 12,
+          "kind": "relic",
+          "offered": [
+            "subwoofer",
+            "kick_solo",
+            "turntable",
+            "skip"
+          ],
+          "chosen": "subwoofer"
+        },
+        {
+          "wave": 12,
+          "kind": "weapon",
+          "offered": [
+            "rumba_rapier",
+            "son_clave_sword",
+            "funky_whip",
+            "keep"
+          ],
+          "chosen": "funky_whip"
+        },
+        {
+          "wave": 13,
+          "kind": "weapon",
+          "offered": [
+            "trap_cross",
+            "halftime_longsword",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 14,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "kungkungjjak_shortsword",
+            "dnb_spear",
+            "keep"
+          ],
+          "chosen": "dnb_spear"
+        },
+        {
+          "wave": 15,
+          "kind": "relic",
+          "offered": [
+            "repertoire",
+            "sforzando",
+            "fermata",
+            "skip"
+          ],
+          "chosen": "fermata"
+        },
+        {
+          "wave": 15,
+          "kind": "weapon",
+          "offered": [
+            "bossa_mace",
+            "funky_whip",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 16,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "bossa_mace",
+            "dembow",
+            "keep"
+          ],
+          "chosen": "bossa_mace"
+        },
+        {
+          "wave": 17,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "rumba_rapier",
+            "dnb_spear",
+            "keep"
+          ],
+          "chosen": "keep"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 1,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 5.617,
+          "damageTaken": 0,
+          "perfectRate": 0.75
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 2,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 9.983,
+          "damageTaken": 0,
+          "perfectRate": 0.714
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 3,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 8.933,
+          "damageTaken": 0,
+          "perfectRate": 0.556
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 4,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 10.85,
+          "damageTaken": 0,
+          "perfectRate": 0.714
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 5,
+          "weaponKind": "electro808",
+          "cleared": true,
+          "seconds": 8.883,
+          "damageTaken": 0,
+          "perfectRate": 0.714
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 6,
+          "weaponKind": "electro808",
+          "cleared": true,
+          "seconds": 6.55,
+          "damageTaken": 0,
+          "perfectRate": 1
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 7,
+          "weaponKind": "electro808",
+          "cleared": true,
+          "seconds": 7.883,
+          "damageTaken": 1,
+          "perfectRate": 0.75
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 8,
+          "weaponKind": "march",
+          "cleared": true,
+          "seconds": 12.483,
+          "damageTaken": 1,
+          "perfectRate": 0.6
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 9,
+          "weaponKind": "dembow",
+          "cleared": true,
+          "seconds": 11.533,
+          "damageTaken": 0,
+          "perfectRate": 0.211
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 10,
+          "weaponKind": "dembow",
+          "cleared": true,
+          "seconds": 14.483,
+          "damageTaken": 0,
+          "perfectRate": 0.3
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 11,
+          "weaponKind": "kungkungjjak_shortsword",
+          "cleared": true,
+          "seconds": 14.7,
+          "damageTaken": 0,
+          "perfectRate": 0.737
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 12,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 15.883,
+          "damageTaken": 0,
+          "perfectRate": 0.476
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 13,
+          "weaponKind": "funky_whip",
+          "cleared": true,
+          "seconds": 23.217,
+          "damageTaken": 1,
+          "perfectRate": 0.429
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 14,
+          "weaponKind": "funky_whip",
+          "cleared": true,
+          "seconds": 17,
+          "damageTaken": 3,
+          "perfectRate": 0.471
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 15,
+          "weaponKind": "dnb_spear",
+          "cleared": true,
+          "seconds": 6.95,
+          "damageTaken": 0,
+          "perfectRate": 0.714
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 16,
+          "weaponKind": "dnb_spear",
+          "cleared": true,
+          "seconds": 15.65,
+          "damageTaken": 0,
+          "perfectRate": 0.917
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 17,
+          "weaponKind": "bossa_mace",
+          "cleared": true,
+          "seconds": 20.3,
+          "damageTaken": 3,
+          "perfectRate": 0.476
+        },
+        {
+          "runId": "mw7xa8oh-ptnts0",
+          "wave": 18,
+          "weaponKind": "bossa_mace",
+          "cleared": false,
+          "seconds": 16.933,
+          "damageTaken": 1,
+          "perfectRate": 0.375
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "runId": "mw9e4asi-n2p9j1",
+      "sessionId": "mw9e477a-9el5th",
+      "build": "2026.11.07-1",
+      "endedAt": "2026-11-09T15:06:26.837Z",
+      "playSeconds": 201.05,
+      "weapons": [
+        {
+          "kind": "backbeat_sword",
+          "tier": 1,
+          "fromWave": 1
+        },
+        {
+          "kind": "steppers_roar",
+          "tier": 2,
+          "fromWave": 2
+        },
+        {
+          "kind": "rumba_rapier",
+          "tier": 2,
+          "fromWave": 3
+        },
+        {
+          "kind": "trap_cross",
+          "tier": 3,
+          "fromWave": 5
+        },
+        {
+          "kind": "kick1and_gun",
+          "tier": 3,
+          "fromWave": 7
+        },
+        {
+          "kind": "break_sword",
+          "tier": 4,
+          "fromWave": 10
+        },
+        {
+          "kind": "rumba_rapier",
+          "tier": 2,
+          "fromWave": 11
+        },
+        {
+          "kind": "backbeat_bomba",
+          "tier": 4,
+          "fromWave": 12
+        },
+        {
+          "kind": "ddadang_knuckle",
+          "tier": 3,
+          "fromWave": 15
+        }
+      ],
+      "weaponSwitches": 0,
+      "relics": [
+        {
+          "id": "snare_solo",
+          "name": "스네어 솔로",
+          "fromWave": 4
+        },
+        {
+          "id": "air_drum",
+          "name": "에어 드럼",
+          "fromWave": 7
+        },
+        {
+          "id": "kick_solo",
+          "name": "킥 솔로",
+          "fromWave": 10
+        },
+        {
+          "id": "fermata",
+          "name": "페르마타",
+          "fromWave": 13
+        },
+        {
+          "id": "sforzando",
+          "name": "스포르찬도",
+          "fromWave": 16
+        }
+      ],
+      "reachedWave": 16,
+      "death": {
+        "enemyKind": "mortar",
+        "wave": 16
+      },
+      "judge": {
+        "perfect": 105,
+        "good": 51,
+        "miss": 18
+      },
+      "timing": {
+        "meanError": -0.0022,
+        "meanAbsError": 0.0385
+      },
+      "hits": {
+        "taken": 7,
+        "shieldAbsorbed": 0,
+        "damageByEnemy": {
+          "sword": 2,
+          "beam": 2,
+          "twinblade": 4,
+          "mortar": 2
+        }
+      },
+      "bestHit": 8,
+      "rewards": [
+        {
+          "wave": 1,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "steppers_roar",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "steppers_roar"
+        },
+        {
+          "wave": 2,
+          "kind": "weapon",
+          "offered": [
+            "kungkungjjak_shortsword",
+            "rumba_rapier",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "rumba_rapier"
+        },
+        {
+          "wave": 3,
+          "kind": "relic",
+          "offered": [
+            "kick_solo",
+            "turntable",
+            "snare_solo",
+            "skip"
+          ],
+          "chosen": "snare_solo"
+        },
+        {
+          "wave": 3,
+          "kind": "weapon",
+          "offered": [
+            "dnb_spear",
+            "boombap_hammer",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 4,
+          "kind": "weapon",
+          "offered": [
+            "march",
+            "trap_cross",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "trap_cross"
+        },
+        {
+          "wave": 5,
+          "kind": "weapon",
+          "offered": [
+            "kungkungjjak_shortsword",
+            "steppers_roar",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 6,
+          "kind": "relic",
+          "offered": [
+            "subwoofer",
+            "metronome",
+            "air_drum",
+            "skip"
+          ],
+          "chosen": "air_drum"
+        },
+        {
+          "wave": 6,
+          "kind": "weapon",
+          "offered": [
+            "electro808",
+            "kick1and_gun",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "kick1and_gun"
+        },
+        {
+          "wave": 7,
+          "kind": "weapon",
+          "offered": [
+            "tresillo_bow",
+            "halftime_longsword",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 8,
+          "kind": "weapon",
+          "offered": [
+            "ddadang_knuckle",
+            "trap_cross",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 9,
+          "kind": "relic",
+          "offered": [
+            "repertoire",
+            "kick_solo",
+            "rehearsal",
+            "skip"
+          ],
+          "chosen": "kick_solo"
+        },
+        {
+          "wave": 9,
+          "kind": "weapon",
+          "offered": [
+            "trap_cross",
+            "break_sword",
+            "ddadang_knuckle",
+            "keep"
+          ],
+          "chosen": "break_sword"
+        },
+        {
+          "wave": 10,
+          "kind": "weapon",
+          "offered": [
+            "steppers_roar",
+            "rumba_rapier",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "rumba_rapier"
+        },
+        {
+          "wave": 11,
+          "kind": "weapon",
+          "offered": [
+            "backbeat_bomba",
+            "boombap_hammer",
+            "electro808",
+            "keep"
+          ],
+          "chosen": "backbeat_bomba"
+        },
+        {
+          "wave": 12,
+          "kind": "relic",
+          "offered": [
+            "fermata",
+            "rehearsal",
+            "turntable",
+            "skip"
+          ],
+          "chosen": "fermata"
+        },
+        {
+          "wave": 12,
+          "kind": "weapon",
+          "offered": [
+            "electro808",
+            "kick1and_gun",
+            "kungkungjjak_shortsword",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 13,
+          "kind": "weapon",
+          "offered": [
+            "halftime_longsword",
+            "four_floor_knife",
+            "tresillo_bow",
+            "keep"
+          ],
+          "chosen": "keep"
+        },
+        {
+          "wave": 14,
+          "kind": "weapon",
+          "offered": [
+            "boombap_hammer",
+            "steppers_roar",
+            "ddadang_knuckle",
+            "keep"
+          ],
+          "chosen": "ddadang_knuckle"
+        },
+        {
+          "wave": 15,
+          "kind": "relic",
+          "offered": [
+            "walking_bass",
+            "subwoofer",
+            "sforzando",
+            "skip"
+          ],
+          "chosen": "sforzando"
+        },
+        {
+          "wave": 15,
+          "kind": "weapon",
+          "offered": [
+            "break_sword",
+            "rumba_rapier",
+            "boombap_hammer",
+            "keep"
+          ],
+          "chosen": "keep"
+        }
+      ],
+      "waves": [
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 1,
+          "weaponKind": "backbeat_sword",
+          "cleared": true,
+          "seconds": 9.733,
+          "damageTaken": 0,
+          "perfectRate": 0.286
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 2,
+          "weaponKind": "steppers_roar",
+          "cleared": true,
+          "seconds": 5.8,
+          "damageTaken": 0,
+          "perfectRate": 0.667
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 3,
+          "weaponKind": "rumba_rapier",
+          "cleared": true,
+          "seconds": 9.1,
+          "damageTaken": 0,
+          "perfectRate": 0.714
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 4,
+          "weaponKind": "rumba_rapier",
+          "cleared": true,
+          "seconds": 4.133,
+          "damageTaken": 0,
+          "perfectRate": 0.6
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 5,
+          "weaponKind": "trap_cross",
+          "cleared": true,
+          "seconds": 17.567,
+          "damageTaken": 0,
+          "perfectRate": 0.714
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 6,
+          "weaponKind": "trap_cross",
+          "cleared": true,
+          "seconds": 13.883,
+          "damageTaken": 0,
+          "perfectRate": 0.875
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 7,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 10.083,
+          "damageTaken": 0,
+          "perfectRate": 0.556
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 8,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 7.533,
+          "damageTaken": 0,
+          "perfectRate": 0.5
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 9,
+          "weaponKind": "kick1and_gun",
+          "cleared": true,
+          "seconds": 10.717,
+          "damageTaken": 0,
+          "perfectRate": 0.538
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 10,
+          "weaponKind": "break_sword",
+          "cleared": true,
+          "seconds": 22.417,
+          "damageTaken": 2,
+          "perfectRate": 0.273
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 11,
+          "weaponKind": "rumba_rapier",
+          "cleared": true,
+          "seconds": 10.983,
+          "damageTaken": 0,
+          "perfectRate": 0.6
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 12,
+          "weaponKind": "backbeat_bomba",
+          "cleared": true,
+          "seconds": 15.35,
+          "damageTaken": 0,
+          "perfectRate": 0.75
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 13,
+          "weaponKind": "backbeat_bomba",
+          "cleared": true,
+          "seconds": 16.133,
+          "damageTaken": 2,
+          "perfectRate": 0.615
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 14,
+          "weaponKind": "backbeat_bomba",
+          "cleared": true,
+          "seconds": 22.567,
+          "damageTaken": 0,
+          "perfectRate": 0.733
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 15,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": true,
+          "seconds": 7.75,
+          "damageTaken": 0,
+          "perfectRate": 0.765
+        },
+        {
+          "runId": "mw9e4asi-n2p9j1",
+          "wave": 16,
+          "weaponKind": "ddadang_knuckle",
+          "cleared": false,
+          "seconds": 17.3,
+          "damageTaken": 6,
+          "perfectRate": 0.667
+        }
+      ]
+    }
+  ]
+}
