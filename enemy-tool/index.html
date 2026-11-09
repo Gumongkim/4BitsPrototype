@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>4Bit 적 제작 툴</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="tool.css">
+</head>
+<body>
+<aside id="left">
+  <div class="left-head">
+    <h1>적 작업</h1>
+    <button id="add-work" class="icon" title="새 적 작업">+</button>
+  </div>
+  <ul id="work-list"></ul>
+  <div class="left-foot">
+    <label class="check"><input type="checkbox" id="check-all"> 전체 선택</label>
+    <div class="row-buttons">
+      <button id="import" title="내보낸 JSON 파일이나 JSON 코드블록이 있는 마크다운 파일 불러오기. 파일을 화면에 끌어다 놓아도 된다">불러오기</button>
+      <button id="export" class="primary">내보내기</button>
+    </div>
+    <button id="delete-checked" class="danger wide">체크한 적 삭제</button>
+    <input id="import-file" type="file" accept=".json,.md,.markdown,application/json,text/markdown" multiple hidden>
+    <p id="export-status" class="hint"></p>
+    <ul id="import-report" class="hint" hidden></ul>
+  </div>
+</aside>
+
+<div id="drop-overlay" hidden>여기에 놓으면 적을 불러옵니다</div>
+
+<main id="center">
+  <section class="field-wrap">
+    <div class="field-tools">
+      <button id="obstacle-mode" title="시험용 장애물. 발사체가 막히는 모습을 미리 본다. 내보내기에 들어가지 않는다">장애물 배치</button>
+      <button id="obstacle-clear">장애물 지우기</button>
+    </div>
+    <canvas id="field"></canvas>
+    <p class="hint" id="field-hint"></p>
+    <p class="hint" id="field-sub">P·E 드래그: 이동 · 더블클릭: 처음 위치로 · Space: 시연</p>
+  </section>
+</main>
+
+<aside id="right">
+  <section>
+    <h2>적</h2>
+    <label class="field">이름 <input id="enemy-name" type="text" maxlength="20"></label>
+  </section>
+
+  <section>
+    <h2>적 HP와 공격력</h2>
+    <div class="two-col">
+      <label class="field">HP <input id="stat-hp" type="number" min="0.25" step="0.25"></label>
+      <label class="field">공격력 <input id="stat-damage" type="number" min="0" step="0.25"></label>
+    </div>
+  </section>
+
+  <section>
+    <h2>행동 상태</h2>
+    <div class="tab-grid">
+      <button data-tab="idle">Idle</button>
+      <button data-tab="chase">Attack 추적</button>
+      <button data-tab="attack">Attack 시행</button>
+      <button data-tab="retreat">복귀</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>세부 행동</h2>
+
+    <div id="panel-idle" class="panel">
+      <label class="check"><input type="radio" name="idle-move" value="stay"> 적 이동 안 함</label>
+      <label class="check"><input type="radio" name="idle-move" value="move"> 적 이동</label>
+      <label class="field" id="idle-interval-wrap">이동 간격 (초). 이 간격마다 인접 빈칸으로 이동
+        <input id="idle-interval" type="number" min="0.1" step="0.1"></label>
+      <label class="field">Idle 지속시간 (초). 지나면 Attack 추적으로
+        <input id="idle-duration" type="number" min="0" step="0.1"></label>
+    </div>
+
+    <div id="panel-chase" class="panel">
+      <p id="chase-throw-note" class="note">1타가 던지기라 위치 제한이 없습니다. 이동목표는 현재 위치이며, 이동하지 않고 그 자리에서 공격합니다.</p>
+      <div id="chase-body">
+        <div class="sub-tabs">
+          <button data-chase-view="target">이동목표</button>
+          <button data-chase-view="method">이동 방법</button>
+        </div>
+        <div id="chase-target">
+          <p class="hint" id="chase-target-info"></p>
+          <button id="chase-target-reset" class="wide">자동 계산값으로 되돌리기</button>
+        </div>
+        <div id="chase-method">
+          <label class="check"><input type="radio" name="chase-method" value="shortest"> 최단거리</label>
+          <label class="check"><input type="radio" name="chase-method" value="vanish"> 화면밖 사라짐</label>
+          <div id="method-shortest" class="indent">
+            <label class="check"><input type="radio" name="chase-step" value="all"> 모두 한 칸씩 이동</label>
+            <label class="check"><input type="radio" name="chase-step" value="horizontal"> 가로만 n 칸씩 이동</label>
+            <label class="field" id="chase-n-wrap">n (한 번에 이동하는 칸 수)
+              <input id="chase-n" type="number" min="1" max="7" step="1"></label>
+            <label class="field">이동 틱 (초)
+              <input id="chase-tick" type="number" min="0.05" step="0.05"></label>
+          </div>
+          <div id="method-vanish" class="indent">
+            <label class="field">사라져서 목표에 나타날 때까지 (초)
+              <input id="chase-vanish" type="number" min="0" step="0.1"></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-attack" class="panel">
+      <div id="attack-tabs" class="attack-tabs"></div>
+      <div class="kind-toggle">
+        <button data-kind="melee">근접</button>
+        <button data-kind="projectile">발사체</button>
+        <button data-kind="throw">던지기</button>
+      </div>
+      <p class="hint" id="attack-kind-info"></p>
+      <label class="field">예고시간 (초)
+        <input id="attack-telegraph" type="number" min="0.05" step="0.05"></label>
+      <label class="field" id="attack-gap-wrap">앞 공격과의 사이 시간 (초)
+        <input id="attack-gap" type="number" min="0" step="0.05"></label>
+      <p class="hint" id="attack-range-info"></p>
+      <div class="row-buttons">
+        <button id="attack-clear">범위 비우기</button>
+        <button id="attack-delete" class="danger">이 공격 삭제</button>
+      </div>
+    </div>
+
+    <div id="panel-retreat" class="panel">
+      <p class="hint" id="retreat-info"></p>
+      <label class="field">이동 틱 (초). 1칸 이동당 시간
+        <input id="retreat-tick" type="number" min="0.05" step="0.05"></label>
+      <button id="retreat-reset" class="wide">기본값으로 (오른쪽 4x4)</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>시연</h2>
+    <button id="demo-toggle" class="primary wide">▶ 시연</button>
+    <p class="hint" id="demo-status"></p>
+  </section>
+</aside>
+
+<script src="tool.js"></script>
+</body>
+</html>
