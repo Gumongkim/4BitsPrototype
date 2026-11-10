@@ -162,7 +162,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 #right section { padding: 14px; border-bottom: 1px solid var(--edge); }
 .tab-grid, .sub-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .sub-tabs { margin-bottom: 4px; }
-.kind-toggle { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+.kind-toggle { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+.kind-toggle button { padding: 6px 4px; }
+.dash-fields { margin-top: 10px; }
 .attack-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .attack-tabs button { min-width: 42px; }
 .kind-toggle button.on, .attack-tabs button.on { background: #5c1d24; border-color: var(--attack); }

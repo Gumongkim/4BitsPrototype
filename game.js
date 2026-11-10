@@ -129,8 +129,23 @@ class Game {
     this.emit('waveStart', { wave: this.wave });
   }
 
+  // 사라짐 이동 중인 적(hidden)은 칸을 차지하지 않고 맞지도 않는다
   enemyAt(col, row) {
-    return this.enemies.find((e) => e.col === col && e.row === row) || null;
+    return this.enemies.find((e) => !e.hidden && e.col === col && e.row === row) || null;
+  }
+
+  // 화면에 보이는(사라지지 않은) 적
+  get visibleEnemies() {
+    return this.enemies.filter((e) => !e.hidden);
+  }
+
+  // 스테이지 번호와 스테이지 안의 웨이브 번호 (1부터). STAGE_COUNT를 넘어도 같은 크기로 계속 센다.
+  get stage() {
+    return Math.ceil(this.wave / CONFIG.STAGE_WAVES);
+  }
+
+  get stageLabel() {
+    return `${this.stage}-${this.wave - (this.stage - 1) * CONFIG.STAGE_WAVES}`;
   }
 
   isOccupied(col, row) {
@@ -308,7 +323,7 @@ class Game {
     Logger.rewardOffered(this, 'relic', [...choices, 'skip']);
     this.openPicker({
       kind: 'relic',
-      title: `WAVE ${this.wave} 클리어`,
+      title: `STAGE ${this.stageLabel} 클리어`,
       subtitle: `유물 선택  (보유 ${this.relics.length}/${CONFIG.RELIC_SLOTS})`,
       cards,
       onPick: (i) => {
@@ -611,30 +626,39 @@ class Game {
     this.emit('enemyKill', { enemy, source });
   }
 
-  startEnemyAttack(enemy, cells) {
+  // 근접·발사체·던지기 공격의 예고. duration초 뒤 cells를 친다.
+  startEnemyAttack(enemy, cells, duration) {
     Sfx.play('telegraph');
-    const telegraph = new EnemyTelegraph(enemy, cells, enemy.telegraphTime, enemy.def.damage);
+    const telegraph = new EnemyTelegraph(enemy, cells, duration, enemy.def.damage);
     this.telegraphs.push(telegraph);
     this.emit('telegraphStart', { enemy, telegraph });
   }
 
-  // enemy의 진행 중인 공격 예고를 지우고 적을 복귀 단계로 보낸다 (카운터포인트)
+  // 돌진 공격의 예고. 보이는 칸과 이동은 enemy.dash가 맡는다.
+  startEnemyDash(enemy) {
+    Sfx.play('telegraph');
+    this.emit('telegraphStart', { enemy, telegraph: null, dash: true });
+  }
+
+  // 적 공격 한 타가 실행됐다. 칸을 번쩍이고 플레이어가 그 칸에 있으면 피해를 준다.
+  resolveEnemyStrike(enemy, cells) {
+    const player = this.player;
+    for (const cell of cells) this.impacts.push({ col: cell.col, row: cell.row, age: 0 });
+    if (cells.some((c) => c.col === player.col && c.row === player.row)) this.hurtPlayer(enemy.def.damage, enemy.kind);
+  }
+
+  // enemy의 진행 중인 공격(예고 또는 돌진)을 지우고 남은 연속 공격 없이 복귀시킨다 (카운터포인트)
   cancelEnemyAttack(enemy) {
-    const before = this.telegraphs.length;
     this.telegraphs = this.telegraphs.filter((t) => t.owner !== enemy);
-    if (this.telegraphs.length !== before) enemy.onAttackFinished();
+    enemy.cancelAttack();
   }
 
   updateTelegraphs(dt) {
-    const player = this.player;
     for (const telegraph of this.telegraphs) {
       telegraph.update(dt);
       if (!telegraph.finished) continue;
+      this.resolveEnemyStrike(telegraph.owner, telegraph.cells);
       telegraph.owner.onAttackFinished();
-      for (const cell of telegraph.cells) {
-        this.impacts.push({ col: cell.col, row: cell.row, age: 0 });
-      }
-      if (telegraph.covers(player.col, player.row)) this.hurtPlayer(telegraph.damage, telegraph.owner.kind);
     }
     this.telegraphs = this.telegraphs.filter((t) => !t.finished);
   }

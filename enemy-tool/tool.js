@@ -25,6 +25,8 @@ const TOOL = {
   DEFAULT_VANISH: 0.8,
   DEFAULT_TELEGRAPH: 0.6,
   DEFAULT_GAP: 0.3,
+  DEFAULT_DASH_CELLS: 7,        // 돌진 최대 거리 (칸). 7이면 그리드 끝까지
+  DEFAULT_DASH_TICK: 0.15,      // 돌진 칸당 시간
   DEFAULT_ATTACK_CELLS: [[-1, 0]], // 적 왼쪽 1칸
   DEFAULT_HOME_COLS: 4,         // 복귀 목표 기본값: 오른쪽에서 몇 개 열인지
 
@@ -35,10 +37,6 @@ const TOOL = {
   // 시연
   DEMO_MAX_DT: 0.05,            // 탭이 멈췄다 돌아와도 한 번에 크게 건너뛰지 않게 한다
   IMPACT_TIME: 0.18,            // 공격 실행 순간의 번쩍임
-
-  // 지금 게임 코드의 공통 값. 내보낼 때 게임 코드 수정이 필요한지 판단한다.
-  GAME_IDLE_MOVE_INTERVAL: 3,
-  GAME_MOVE_TICK: 0.5,
 
   STORAGE_KEY: '4bit-enemy-tool.v1',
 };
@@ -68,6 +66,7 @@ const KINDS = {
   melee: { label: '근접', blocked: false, anchor: 'enemy', info: '적 칸 기준 범위. 사이에 무엇이 있어도 범위 칸을 그대로 맞힙니다.' },
   projectile: { label: '발사체', blocked: true, anchor: 'enemy', info: '적 칸 기준 범위. 적에서 대상 칸까지의 경로에 적이나 장애물이 있으면 막힙니다.' },
   throw: { label: '던지기', blocked: false, anchor: 'player', info: '공격 시작 시점의 플레이어 칸 기준 범위. 위치 제한이 없고 막히지 않습니다.' },
+  dash: { label: '돌진', blocked: true, anchor: 'enemy', info: '예고가 시작될 때 플레이어 쪽으로 방향을 정하고 예고시간 뒤 일정한 속도로 일직선 돌진합니다. 경로의 각 칸은 적이 들어가기 예고시간 전부터 순서대로 보입니다(개수 제한 없음). 플레이어에 닿으면 그 앞에서 멈추며 피해를 주고, 장애물·그리드 끝·최대 거리에서도 멈춥니다. 돌진이 끝난 칸이 적의 새 위치입니다.' },
 };
 
 const STATE_LABELS = { idle: 'Idle', chase: 'Attack 추적', attack: 'Attack 시행', retreat: '복귀' };
@@ -91,7 +90,15 @@ function defaultHomeCells() {
 }
 
 function makeAttack(cells) {
-  return { id: uid(), kind: 'melee', cells, telegraph: TOOL.DEFAULT_TELEGRAPH, gap: TOOL.DEFAULT_GAP };
+  return {
+    id: uid(),
+    kind: 'melee',
+    cells,
+    telegraph: TOOL.DEFAULT_TELEGRAPH,
+    gap: TOOL.DEFAULT_GAP,
+    dashCells: TOOL.DEFAULT_DASH_CELLS, // 돌진에서만 쓴다
+    dashTick: TOOL.DEFAULT_DASH_TICK,
+  };
 }
 
 function makeWork(name) {
@@ -106,6 +113,7 @@ function makeWork(name) {
       // 이동목표는 1타 범위에서 자동 계산한 칸에서 off를 빼고 on을 더한 것이다.
       off: [],
       on: [],
+      refresh: true,            // true면 이동할 때마다 이동목표를 다시 고르고, false면 추적 시작 때 고른 칸으로 간다
       method: 'shortest',
       step: 'all',
       n: TOOL.DEFAULT_CELLS_PER_MOVE,
@@ -167,6 +175,14 @@ function loadState() {
     if (!Array.isArray(data.obstacles)) data.obstacles = [];
     data.obstacles = data.obstacles.filter((o) => isPos(o) && !samePos(o, data.player) && !samePos(o, data.enemy));
     data.obstacleMode = false;
+    // 이전 버전에서 저장한 작업에 새 항목의 기본값을 채운다
+    for (const work of data.works) {
+      if (typeof work.chase.refresh !== 'boolean') work.chase.refresh = true;
+      for (const attack of work.attacks) {
+        if (!Number.isInteger(attack.dashCells)) attack.dashCells = TOOL.DEFAULT_DASH_CELLS;
+        if (!Number.isFinite(attack.dashTick)) attack.dashTick = TOOL.DEFAULT_DASH_TICK;
+      }
+    }
     return data;
   } catch (e) {
     return null;
@@ -219,9 +235,39 @@ function isThrowFirst(work) {
 
 // 1타 범위로 자동 계산한 이동목표. 플레이어 칸 기준 [열 차이, 행 차이]이다.
 // 적이 그 칸에 서면 1타 범위가 플레이어 칸에 닿는다. 범위가 적 기준 (a, b)면 목표는 (-a, -b)다.
+// 1타가 돌진이면 플레이어 행에서 돌진으로 닿는 거리(최대 거리 + 1칸)의 양옆 칸이다.
 function autoTargets(work) {
-  if (isThrowFirst(work)) return [];
-  return work.attacks[0].cells.map(([dc, dr]) => [-dc, -dr]);
+  const first = work.attacks[0];
+  if (first.kind === 'throw') return [];
+  if (first.kind === 'dash') {
+    const targets = [];
+    for (let d = 1; d <= Math.min(first.dashCells + 1, TOOL.COLS - 1); d++) targets.push([d, 0], [-d, 0]);
+    return targets;
+  }
+  return first.cells.map(([dc, dr]) => [-dc, -dr]);
+}
+
+// 돌진 방향. 같은 행이면 가로, 같은 열이면 세로로 플레이어를 향하고, 둘 다 아니면 플레이어 쪽 가로다.
+function dashDirection(from, to) {
+  const dc = Math.sign(to.col - from.col);
+  const dr = Math.sign(to.row - from.row);
+  if (dr === 0 || dc !== 0) return { col: dc || -1, row: 0 };
+  return { col: 0, row: dr };
+}
+
+// 돌진이 지날 칸들과 플레이어에 닿는지. blocked(칸)이면 그 앞에서 멈춘다.
+function dashPath(attack, from, player, blocked) {
+  const dir = dashDirection(from, player);
+  const cells = [];
+  let pos = from;
+  for (let step = 0; step <= attack.dashCells; step++) {
+    const next = { col: pos.col + dir.col, row: pos.row + dir.row };
+    if (samePos(next, player)) return { cells, dir, hit: true };
+    if (step === attack.dashCells || !inGrid(next.col, next.row) || blocked(next)) break;
+    cells.push(next);
+    pos = next;
+  }
+  return { cells, dir, hit: false };
 }
 
 function effectiveTargets(work) {
@@ -302,13 +348,6 @@ function stepToward(pos, target) {
   return best;
 }
 
-// 이동 방법으로 from에서 이 목표에 닿을 수 있는지. 가로만 이동은 같은 행의 n칸 배수 거리만 닿는다.
-function methodReaches(work, from, cell) {
-  const { method, step, n } = work.chase;
-  if (method !== 'shortest' || step !== 'horizontal') return true;
-  return cell.row === from.row && Math.abs(cell.col - from.col) % n === 0;
-}
-
 // 이 목표 칸이 지금 막혀 있는지. 장애물이 서 있거나, 1타가 발사체인데 플레이어까지의 경로가 막혔다.
 function targetBlocked(work, cell) {
   if (isObstacle(cell.col, cell.row)) return true;
@@ -320,14 +359,14 @@ function chooseTarget(work, from) {
   const dist = work.chase.method === 'vanish'
     ? (c, r) => Math.abs(c - from.col) + Math.abs(r - from.row)
     : work.chase.step === 'horizontal'
-      ? (c) => Math.abs(c - from.col)
+      // 세로 1칸씩 + 가로 n칸씩 걸리는 틱 수
+      ? (c, r) => Math.abs(r - from.row) + Math.ceil(Math.abs(c - from.col) / work.chase.n)
       : distancesFrom(from);
   let best = null;
   let bestScore = null;
   for (const [dc, dr] of effectiveTargets(work)) {
     const cell = { col: state.player.col + dc, row: state.player.row + dr };
     if (!inGrid(cell.col, cell.row) || samePos(cell, state.player) || targetBlocked(work, cell)) continue;
-    if (!methodReaches(work, from, cell)) continue;
     const d = dist(cell.col, cell.row);
     if (d === Infinity) continue;
     const score = [d, Math.abs(cell.row - state.player.row), -cell.col];
@@ -401,6 +440,7 @@ function toggleTarget(col, row) {
 
 function toggleAttackCell(col, row) {
   const attack = currentAttack();
+  if (attack.kind === 'dash') return; // 돌진은 범위를 찍지 않는다
   const origin = attackOrigin(attack, state.enemy);
   const dc = col - origin.col;
   const dr = row - origin.row;
@@ -595,9 +635,8 @@ function drawTargets(ctx, work) {
         continue;
       }
       const color = isAuto ? COLORS.target : COLORS.manual;
-      const reaches = methodReaches(work, state.enemy, cell);
-      fillCells(ctx, [cell], color, reaches ? 0.35 : 0.12);
-      strokeCells(ctx, [cell], color, reaches ? 0.95 : 0.4, 2);
+      fillCells(ctx, [cell], color, 0.35);
+      strokeCells(ctx, [cell], color, 0.95, 2);
       if (targetBlocked(work, cell)) drawCross(ctx, cell, COLORS.attack);
     }
   }
@@ -607,6 +646,14 @@ function drawAttackEdit(ctx, work) {
   const selected = currentAttack();
   for (const attack of work.attacks) {
     if (attack !== selected) strokeCells(ctx, attackCellsAt(attack, state.enemy), COLORS.attack, 0.3, 1);
+  }
+  if (selected.kind === 'dash') {
+    // 지금 위치에서 돌진하면 지날 칸. 플레이어에 닿으면 플레이어 칸을 빨갛게 두른다.
+    const path = dashPath(selected, state.enemy, state.player, (c) => isObstacle(c.col, c.row));
+    fillCells(ctx, path.cells, COLORS.attack, 0.2);
+    strokeCells(ctx, path.cells, COLORS.attack, 0.7, 2, [5, 4]);
+    if (path.hit) strokeCells(ctx, [state.player], COLORS.attack, 1, 3);
+    return;
   }
   const origin = attackOrigin(selected, state.enemy);
   const cells = attackCellsAt(selected, state.enemy);
@@ -628,6 +675,12 @@ function drawDemo(ctx) {
     const p = 1 - demo.timer / demo.telegraphTotal;
     fillCells(ctx, demo.cells, COLORS.attack, 0.12 + 0.43 * p);
     strokeCells(ctx, demo.cells, COLORS.attack, 0.95, 2);
+  }
+  // 돌진 예고: 칸마다 들어갈 때가 가까울수록 진해진다
+  const telegraph = demo.telegraphTotal;
+  for (const { cell, lead } of demo.dashShown) {
+    fillCells(ctx, [cell], COLORS.attack, 0.12 + 0.43 * (1 - lead / telegraph));
+    strokeCells(ctx, [cell], COLORS.attack, 0.95, 2);
   }
   if (demo.flash > 0) fillCells(ctx, demo.flashCells, COLORS.flash, demo.flash / TOOL.IMPACT_TIME);
   if (demo.vanishTarget) strokeCells(ctx, [demo.vanishTarget], COLORS.enemy, 0.7, 2, [5, 4]);
@@ -737,7 +790,14 @@ const demo = {
   timer: 0,
   moveTimer: 0,
   visible: true,
+  vanishing: false,
   vanishTarget: null,
+  target: null,                // 추적 중인 이동목표 (갱신을 끄면 이 칸을 유지한다)
+  dashDir: null,
+  dashOrigin: null,            // 돌진을 시작한 칸
+  dashSteps: 0,
+  dashShown: [],               // 지금 보이는 돌진 예고 칸 { cell, lead }
+  strikeClock: 0,              // 이번 공격의 예고가 시작된 뒤 흐른 시간
   attackIndex: 0,
   cells: [],
   telegraphTotal: 1,
@@ -755,7 +815,11 @@ const demo = {
     this.flash = 0;
     this.hurt = 0;
     this.visible = true;
+    this.vanishing = false;
     this.vanishTarget = null;
+    this.target = null;
+    this.attackIndex = 0;
+    this.dashShown = [];
     this.message = '';
     this.lastMs = performance.now();
     this.enterIdle();
@@ -764,6 +828,7 @@ const demo = {
   stop() {
     this.running = false;
     this.phase = null;
+    this.dashShown = [];
   },
 
   toggle() {
@@ -780,27 +845,25 @@ const demo = {
   },
 
   enterChase() {
-    const work = currentWork();
     this.phase = 'chase';
     this.message = '';
     this.moveTimer = 0;
-    if (isThrowFirst(work)) {
-      this.enterAttack();
-    } else if (work.chase.method === 'vanish') {
-      const target = chooseTarget(work, this.pos);
-      if (!target) {
-        this.giveUp();
-        return;
-      }
-      this.visible = false;
-      this.vanishTarget = target;
-      this.timer = work.chase.vanish;
-    }
+    this.target = null;
+    this.vanishing = false;
+    this.vanishTarget = null;
+    if (isThrowFirst(currentWork())) this.enterAttack();
   },
 
-  giveUp() {
-    this.message = '갈 수 있는 이동목표가 없어 공격을 포기했습니다.';
-    this.enterRetreat();
+  // 고정한 목표(갱신 끔)를 계속 쓸 수 있는지. 플레이어가 그 칸에 서거나 막히면 다시 고른다.
+  targetUsable(work, cell) {
+    return !!cell && !samePos(cell, state.player) && !targetBlocked(work, cell);
+  },
+
+  // 이동목표. 갱신이 켜져 있으면 매번 다시 고르고, 꺼져 있으면 처음 고른 칸을 쓴다.
+  currentTarget(work) {
+    if (work.chase.refresh || !this.targetUsable(work, this.target)) this.target = chooseTarget(work, this.pos);
+    this.message = this.target ? '' : '갈 수 있는 이동목표가 없어 계속 찾는 중입니다.';
+    return this.target;
   },
 
   enterAttack() {
@@ -811,20 +874,79 @@ const demo = {
   // 공격 시작 시점의 위치로 범위를 정한다. 발사체는 경로가 막힌 칸을 뺀다.
   beginStrike() {
     const attack = currentWork().attacks[this.attackIndex];
+    this.phase = 'attack';
+    this.timer = attack.telegraph;
+    this.telegraphTotal = attack.telegraph;
+    if (attack.kind === 'dash') {
+      // 돌진 방향은 예고가 시작될 때 정한다. 보이는 칸은 dashTelegraph가 시간으로 정한다.
+      this.dashDir = dashDirection(this.pos, state.player);
+      this.dashOrigin = { ...this.pos };
+      this.dashSteps = 0;
+      this.strikeClock = 0;
+      this.cells = [];
+      this.dashShown = this.dashTelegraph(attack);
+      return;
+    }
     const origin = attackOrigin(attack, this.pos);
     let cells = attackCellsAt(attack, this.pos);
     if (KINDS[attack.kind].blocked) cells = cells.filter((c) => !lineBlocked(origin, c));
-    this.phase = 'attack';
     this.cells = cells;
-    this.timer = attack.telegraph;
-    this.telegraphTotal = attack.telegraph;
   },
 
+  // 돌진 경로에서 지금 보여야 할 칸들. 개수 제한 없이 예고시간으로만 정한다.
+  // k번째 칸은 출발(예고 끝) 뒤 (k - 1) x 칸당 시간에 들어가고, 들어가기 예고시간 전부터 보인다.
+  // 아직 들어가지 않은 칸만 보이고, 장애물·그리드 끝·최대 거리 앞에서 끊긴다. 플레이어 칸은 보이고 그 뒤는 안 보인다.
+  // lead는 그 칸에 들어갈 때까지 남은 시간이다.
+  dashTelegraph(attack) {
+    const shown = [];
+    for (let k = this.dashSteps + 1; k <= attack.dashCells + 1; k++) {
+      const cell = { col: this.dashOrigin.col + this.dashDir.col * k, row: this.dashOrigin.row + this.dashDir.row * k };
+      if (!inGrid(cell.col, cell.row) || isObstacle(cell.col, cell.row)) break;
+      const isPlayer = samePos(cell, state.player);
+      if (k > attack.dashCells && !isPlayer) break; // 최대 거리 다음 칸은 플레이어가 있을 때만 친다
+      const lead = attack.telegraph + (k - 1) * attack.dashTick - this.strikeClock;
+      if (lead > attack.telegraph) break;
+      shown.push({ cell, lead: Math.max(0, lead) });
+      if (isPlayer) break;
+    }
+    return shown;
+  },
+
+  // 예고가 끝나면 범위를 친다. 돌진은 이때부터 달리기 시작한다.
   finishStrike() {
+    if (currentWork().attacks[this.attackIndex].kind === 'dash') {
+      this.phase = 'dash';
+      this.updateDash(); // 첫 칸은 예고가 끝난 그 순간에 들어간다
+      return;
+    }
+    this.resolveStrike(this.cells);
+  },
+
+  // 일정한 속도로 한 칸씩 나아간다. 플레이어에 닿으면 그 앞에서 멈추며 피해를 주고,
+  // 장애물·그리드 끝·최대 거리에서도 멈춘다.
+  // 이동 시각은 예고 표시와 같은 시계(strikeClock)로 정해 칸이 보인 뒤 정확히 예고시간 뒤에 들어간다.
+  updateDash() {
+    const attack = currentWork().attacks[this.attackIndex];
+    if (this.strikeClock + 1e-9 < attack.telegraph + this.dashSteps * attack.dashTick) return;
+    const next = { col: this.pos.col + this.dashDir.col, row: this.pos.row + this.dashDir.row };
+    if (samePos(next, state.player)) {
+      this.resolveStrike([next]);
+      return;
+    }
+    if (this.dashSteps >= attack.dashCells || !inGrid(next.col, next.row) || isObstacle(next.col, next.row)) {
+      this.resolveStrike([]);
+      return;
+    }
+    this.pos = next;
+    this.dashSteps++;
+  },
+
+  // 공격이 실행된 칸을 번쩍이고, 다음 공격이나 복귀로 넘어간다.
+  resolveStrike(cells) {
     const work = currentWork();
     this.flash = TOOL.IMPACT_TIME;
-    this.flashCells = this.cells;
-    if (this.cells.some((c) => samePos(c, state.player))) {
+    this.flashCells = cells;
+    if (cells.some((c) => samePos(c, state.player))) {
       this.hits++;
       this.hurt = TOOL.IMPACT_TIME;
     }
@@ -851,11 +973,22 @@ const demo = {
     this.hurt = Math.max(0, this.hurt - dt);
     this.moveTimer = Math.max(0, this.moveTimer - dt);
     this.timer = Math.max(0, this.timer - dt);
+    const strike = currentWork().attacks[this.attackIndex];
+    if (strike && strike.kind === 'dash' && (this.phase === 'attack' || this.phase === 'dash')) this.strikeClock += dt;
     if (this.phase === 'idle') this.updateIdle();
     else if (this.phase === 'chase') this.updateChase();
     else if (this.phase === 'attack') { if (this.timer <= 0) this.finishStrike(); }
+    else if (this.phase === 'dash') this.updateDash();
     else if (this.phase === 'gap') { if (this.timer <= 0) this.beginStrike(); }
     else if (this.phase === 'retreat') this.updateRetreat();
+    // 돌진 예고 칸은 시간이 흐르면서 늘어나고, 적이 들어간 칸은 빠진다
+    const attack = currentWork().attacks[this.attackIndex];
+    const dashing = attack && attack.kind === 'dash' && (this.phase === 'attack' || this.phase === 'dash');
+    if (dashing) {
+      this.dashShown = this.dashTelegraph(attack);
+    } else {
+      this.dashShown = [];
+    }
   },
 
   // 게임처럼 복귀 목표(대기 구역) 안의 인접 빈칸으로만 움직인다.
@@ -874,39 +1007,59 @@ const demo = {
     if (free.length) this.pos = free[Math.floor(Math.random() * free.length)];
   },
 
+  // 목표가 없어도 공격을 포기하지 않는다. 추적 상태로 남아 매 프레임 다시 찾는다.
   updateChase() {
     const work = currentWork();
-    if (this.vanishTarget) {
-      if (this.timer > 0) return;
-      this.pos = this.vanishTarget;
-      this.vanishTarget = null;
-      this.visible = true;
-      this.enterAttack();
+    if (work.chase.method === 'vanish') {
+      this.updateVanish(work);
       return;
     }
-    const target = chooseTarget(work, this.pos);
-    if (!target) {
-      this.giveUp();
-      return;
-    }
+    const target = this.currentTarget(work);
+    if (!target) return;
     if (samePos(target, this.pos)) {
       this.enterAttack();
       return;
     }
     if (this.moveTimer > 0) return;
-    let next;
-    if (work.chase.step === 'horizontal') {
-      next = { col: this.pos.col + Math.sign(target.col - this.pos.col) * work.chase.n, row: this.pos.row };
-      if (isObstacle(next.col, next.row) || samePos(next, state.player)) next = null;
-    } else {
-      next = stepToward(this.pos, target);
-    }
-    if (!next) {
-      this.giveUp();
-      return;
-    }
+    const next = work.chase.step === 'horizontal' ? this.horizontalStep(target, work.chase.n) : stepToward(this.pos, target);
+    if (!next) return; // 막혔으면 다음 프레임에 다시 시도한다
     this.pos = next;
     this.moveTimer = work.chase.tick;
+  },
+
+  // 세로로 1칸씩 목표 행을 맞춘 뒤 가로로 n칸씩 간다. 남은 거리가 n보다 짧으면 남은 만큼만 가고,
+  // 막힌 칸이 있으면 그 앞에서 멈춘다.
+  horizontalStep(target, n) {
+    const free = (c) => inGrid(c.col, c.row) && !isObstacle(c.col, c.row) && !samePos(c, state.player);
+    const p = this.pos;
+    if (target.row !== p.row) {
+      const next = { col: p.col, row: p.row + Math.sign(target.row - p.row) };
+      return free(next) ? next : null;
+    }
+    const dir = Math.sign(target.col - p.col);
+    const steps = Math.min(n, Math.abs(target.col - p.col));
+    let col = p.col;
+    for (let i = 0; i < steps && free({ col: col + dir, row: p.row }); i++) col += dir;
+    return col === p.col ? null : { col, row: p.row };
+  },
+
+  // 목표가 있어야 사라진다. 갱신이 켜져 있으면 나타나는 순간의 플레이어 기준으로 다시 고르고,
+  // 꺼져 있으면 사라질 때 고른 칸에 나타난다. 나타날 칸이 없으면 숨은 채 기다린다.
+  updateVanish(work) {
+    if (!this.vanishing) {
+      if (!this.currentTarget(work)) return;
+      this.vanishing = true;
+      this.visible = false;
+      this.timer = work.chase.vanish;
+    }
+    const target = this.currentTarget(work);
+    this.vanishTarget = target;
+    if (this.timer > 0 || !target) return;
+    this.pos = target;
+    this.vanishing = false;
+    this.vanishTarget = null;
+    this.visible = true;
+    this.enterAttack();
   },
 
   updateRetreat() {
@@ -938,8 +1091,9 @@ const demo = {
     const left = `${this.timer.toFixed(1)}초`;
     let text = '';
     if (this.phase === 'idle') text = `Idle · ${left} 남음`;
-    else if (this.phase === 'chase') text = this.vanishTarget ? `Attack 추적 · 사라짐 ${left}` : 'Attack 추적 · 이동 중';
+    else if (this.phase === 'chase') text = this.vanishing ? `Attack 추적 · 사라짐 ${left}` : 'Attack 추적 · 이동 중';
     else if (this.phase === 'attack') text = `Attack 시행 ${count} · 예고 ${left}`;
+    else if (this.phase === 'dash') text = `Attack 시행 ${count} · 돌진 중`;
     else if (this.phase === 'gap') text = `Attack 시행 ${count} 전 대기 · ${left}`;
     else if (this.phase === 'retreat') text = '복귀 · 이동 중';
     return `${text} · 플레이어 적중 ${this.hits}회${this.message ? ` · ${this.message}` : ''}`;
@@ -1040,7 +1194,17 @@ bindNumber('chase-tick', () => currentWork().chase.tick, (v) => { currentWork().
 bindNumber('chase-vanish', () => currentWork().chase.vanish, (v) => { currentWork().chase.vanish = v; });
 bindNumber('attack-telegraph', () => currentAttack().telegraph, (v) => { currentAttack().telegraph = v; }, { min: TOOL.MIN_TIME });
 bindNumber('attack-gap', () => currentAttack().gap, (v) => { currentAttack().gap = v; });
-bindNumber('retreat-tick', () => currentWork().retreat.tick, (v) => { currentWork().retreat.tick = v; }, { min: TOOL.MIN_TIME });
+bindNumber('attack-dash-cells', () => currentAttack().dashCells, (v) => { currentAttack().dashCells = v; }, { min: 1, max: TOOL.COLS - 1, integer: true });
+bindNumber('attack-dash-tick', () => currentAttack().dashTick, (v) => { currentAttack().dashTick = v; }, { min: TOOL.MIN_TIME });
+
+const refreshInput = $('chase-refresh');
+panelSyncs.push(() => { refreshInput.checked = currentWork().chase.refresh; });
+refreshInput.addEventListener('change', () => {
+  currentWork().chase.refresh = refreshInput.checked;
+  changed();
+});
+
+bindNumber('retreat-tick',() => currentWork().retreat.tick, (v) => { currentWork().retreat.tick = v; }, { min: TOOL.MIN_TIME });
 
 const nameInput = $('enemy-name');
 
@@ -1051,10 +1215,11 @@ function fieldHintText(work) {
   if (state.tab === 'chase') {
     if (isThrowFirst(work)) return '이동목표: 현재 위치 (파란 테두리).';
     const view = state.chaseView === 'target' ? '칸 클릭으로 켜고 끕니다' : '이동 방법 편집 중';
-    return `이동목표 · 파랑: 자동 계산 · 노랑: 직접 켠 칸 · 점선: 끈 칸 · X: 지금 막힘 · 흐림: 지금 위치에서 이동 방법으로 닿지 않음 · ${view}`;
+    return `이동목표 · 파랑: 자동 계산 · 노랑: 직접 켠 칸 · 점선: 끈 칸 · X: 지금 막힘 · ${view}`;
   }
   if (state.tab === 'attack') {
     const attack = currentAttack();
+    if (attack.kind === 'dash') return `${state.attackIndex + 1}타 돌진 · 지금 위치에서 돌진하면 지날 칸(점선)과 플레이어 적중(빨간 테두리) 미리보기 · 칸 클릭 없음`;
     const base = KINDS[attack.kind].anchor === 'player' ? '플레이어(P) 기준' : '적(E) 기준';
     return `${state.attackIndex + 1}타 공격 범위 · ${base} · 칸 클릭으로 넣고 뺍니다 · 흐린 테두리: 다른 타${KINDS[attack.kind].blocked ? ' · X: 장애물에 막힘' : ''}`;
   }
@@ -1070,6 +1235,13 @@ function renderAttackPanel(work) {
   $('attack-kind-info').textContent = KINDS[attack.kind].info;
   $('attack-gap-wrap').hidden = state.attackIndex === 0;
   $('attack-delete').disabled = work.attacks.length < 2;
+  const isDash = attack.kind === 'dash';
+  $('attack-dash-wrap').hidden = !isDash;
+  $('attack-clear').hidden = isDash;
+  if (isDash) {
+    $('attack-range-info').textContent = `범위는 찍지 않습니다. 최대 ${attack.dashCells}칸, 칸당 ${attack.dashTick}초로 달립니다. 예고시간 뒤 출발하고, 각 칸은 들어가기 예고시간 전부터 보입니다(지금 값이면 동시에 약 ${Math.min(attack.dashCells, Math.max(1, Math.floor(attack.telegraph / attack.dashTick + 1e-9)))}칸).`;
+    return;
+  }
   const count = attack.cells.length;
   const hidden = count - attackCellsAt(attack, state.enemy).length;
   $('attack-range-info').textContent = count
@@ -1090,8 +1262,13 @@ function renderChasePanel(work) {
   $('method-shortest').hidden = method !== 'shortest';
   $('method-vanish').hidden = method !== 'vanish';
   $('chase-n-wrap').hidden = step !== 'horizontal';
+  $('chase-refresh-info').textContent = work.chase.refresh
+    ? '이동할 때마다 플레이어 위치로 목표를 다시 고릅니다. 사라짐은 나타나는 순간 고릅니다.'
+    : '추적을 시작할 때 고른 칸으로 갑니다. 그 칸에 플레이어가 서거나 막힐 때만 다시 고릅니다. 사라짐은 사라질 때 고릅니다.';
   const count = effectiveTargets(work).length;
-  $('chase-target-info').textContent = `1타 범위로 계산한 위치입니다. 플레이어 기준 ${count}칸 (끈 칸 ${off.length}, 직접 켠 칸 ${on.length}). 가운데 그리드를 클릭해 켜고 끕니다.`;
+  const source = work.attacks[0].kind === 'dash' ? '1타 돌진이 닿는 플레이어 행의 칸입니다(최대 거리 + 1칸).' : '1타 범위로 계산한 위치입니다.';
+  $('chase-target-info').textContent = `${source} 플레이어 기준 ${count}칸 (끈 칸 ${off.length}, 직접 켠 칸 ${on.length}). `
+    + '가운데 그리드를 클릭해 켜고 끕니다. 목표가 없으면 공격을 포기하지 않고 계속 찾습니다.';
 }
 
 function renderPanel() {
@@ -1197,6 +1374,16 @@ const EXAMPLE_PLAYER = { col: TOOL.PLAYER_COL, row: TOOL.PLAYER_ROW };
 const EXAMPLE_ENEMY = { col: TOOL.ENEMY_COL, row: TOOL.ENEMY_ROW };
 
 function attackMap(attack) {
+  if (attack.kind === 'dash') {
+    // 돌진: 예시 위치에서 지날 칸을 진행 방향 화살표로, 플레이어에 닿으면 @로 그린다
+    const path = dashPath(attack, EXAMPLE_ENEMY, EXAMPLE_PLAYER, () => false);
+    const arrow = path.dir.col < 0 ? '<' : path.dir.col > 0 ? '>' : path.dir.row < 0 ? '^' : 'v';
+    return gridMap((col, row) => {
+      if (col === EXAMPLE_PLAYER.col && row === EXAMPLE_PLAYER.row) return path.hit ? '@' : 'P';
+      if (col === EXAMPLE_ENEMY.col && row === EXAMPLE_ENEMY.row) return 'E';
+      return path.cells.some((c) => c.col === col && c.row === row) ? arrow : '.';
+    });
+  }
   const anchor = KINDS[attack.kind].anchor;
   const origin = anchor === 'player' ? EXAMPLE_PLAYER : EXAMPLE_ENEMY;
   return gridMap((col, row) => {
@@ -1218,45 +1405,43 @@ function homeMap(home) {
   return gridMap((col, row) => (hasCell(home, col, row) ? 'H' : '.'));
 }
 
-// 지금 게임 코드(enemy.js)로는 표현할 수 없어 코드 수정이 필요한 항목
+// 지금 게임 코드(enemy.js)로는 표현할 수 없어 코드 수정이 필요한 항목.
+// 2026-11-10부터 게임이 툴의 모든 동작(연속 공격, 발사체 막힘, 돌진, 사라짐, 적별 틱·복귀 칸·이동목표 등)을 지원해 비어 있다.
+// 툴에 게임이 지원하지 않는 동작을 새로 넣으면 여기에 항목을 추가한다.
 function gameCodeNeeds(work) {
-  const needs = [];
-  const { idle, chase, attacks, retreat } = work;
-  const defaultHome = defaultHomeCells();
-  const sameHome = retreat.home.length === defaultHome.length && defaultHome.every(([c, r]) => hasCell(retreat.home, c, r));
-  if (!idle.moves) needs.push('idle.moves=false: 지금 게임의 적은 idle 중 항상 이동한다.');
-  else if (idle.interval !== TOOL.GAME_IDLE_MOVE_INTERVAL) needs.push('idle 이동 간격: 지금 게임은 ENEMY_IDLE_MOVE_INTERVAL 공통 값이다.');
-  if (!isThrowFirst(work)) {
-    if (chase.off.length || chase.on.length) needs.push('chase.targets: 지금 게임은 공격 범위로만 공격 위치를 계산하며 칸별로 끄고 켤 수 없다.');
-    if (chase.method === 'vanish') needs.push('chase.move.method=vanish: 지금 게임에 사라졌다 나타나는 이동이 없다.');
-    else if (chase.step === 'horizontal') needs.push('chase.move.stepMode=horizontal-only: 지금 게임에 가로로만 n칸씩 이동이 없다.');
-    if (chase.method === 'shortest' && chase.tick !== TOOL.GAME_MOVE_TICK) needs.push('chase 이동 틱: 지금 게임은 ENEMY_MOVE_TICK 공통 값이다.');
-  }
-  if (attacks.length > 1) needs.push('attacks 2회 이상: 지금 게임의 적은 한 번만 공격한다.');
-  if (attacks.some((a) => a.kind === 'projectile')) needs.push('kind=projectile: 지금 게임의 적 공격은 경로에 막히지 않는다.');
-  if (retreat.tick !== TOOL.GAME_MOVE_TICK) needs.push('retreat 이동 틱: 지금 게임은 ENEMY_MOVE_TICK 공통 값이다.');
-  if (!sameHome) needs.push('retreat.homeCells: 지금 게임의 복귀 구역은 ENEMY_HOME_COLS(오른쪽 4열) 공통 값이다.');
-  return needs;
+  return [];
 }
 
+// 게임 config.js ENEMIES 항목 형식. 이 값을 그대로 ENEMIES[key]에 넣으면 된다.
 function gameConfigOf(work) {
   const first = work.attacks[0];
   const game = work.game || {};
-  const config = {
+  const { chase } = work;
+  const targets = effectiveTargets(work).map((c) => [...c]);
+  const chaseConfig = chase.method === 'vanish'
+    ? { targets, refresh: chase.refresh, move: 'vanish', vanish: chase.vanish }
+    : {
+      targets, refresh: chase.refresh, move: 'shortest', step: chase.step === 'horizontal' ? 'horizontal' : 'any',
+      ...(chase.step === 'horizontal' ? { cellsPerMove: chase.n } : {}),
+      tick: chase.tick,
+    };
+  return {
     key: game.key || null,
     name: work.name,
-    family: game.family || (first.kind === 'melee' ? 'melee' : 'ranged'),
+    family: game.family || (first.kind === 'melee' || first.kind === 'dash' ? 'melee' : 'ranged'),
     firstWave: Number.isInteger(game.firstWave) ? game.firstWave : null,
     hp: work.hp,
     damage: work.damage,
-    idleDuration: work.idle.duration,
-    telegraphTime: first.telegraph,
+    idle: { moves: work.idle.moves, interval: work.idle.interval, duration: work.idle.duration },
+    chase: chaseConfig,
+    attacks: work.attacks.map((a, i) => ({
+      kind: a.kind,
+      ...(a.kind === 'dash' ? { maxCells: a.dashCells, tick: a.dashTick } : { cells: a.cells.map((c) => [...c]) }),
+      telegraph: a.telegraph,
+      ...(i > 0 ? { gap: a.gap } : {}),
+    })),
+    retreat: { home: work.retreat.home.map((c) => [...c]), tick: work.retreat.tick },
   };
-  if (first.kind === 'throw') config.stationary = true;
-  config.attack = first.kind === 'throw'
-    ? { aimed: true, cells: first.cells.map((c) => [...c]) }
-    : { cells: first.cells.map((c) => [...c]) };
-  return config;
 }
 
 function exportEnemy(work) {
@@ -1264,7 +1449,7 @@ function exportEnemy(work) {
   const throwFirst = isThrowFirst(work);
   const targets = effectiveTargets(work);
   work.attacks.forEach((a, i) => {
-    if (!a.cells.length) warnings.push(`${i + 1}타: 공격 범위가 비어 있습니다.`);
+    if (a.kind !== 'dash' && !a.cells.length) warnings.push(`${i + 1}타: 공격 범위가 비어 있습니다.`);
   });
   if (!throwFirst && !targets.length) warnings.push('이동목표가 없어 적이 공격하러 갈 수 없습니다.');
   if (!work.retreat.home.length) warnings.push('복귀 목표가 없습니다.');
@@ -1290,6 +1475,7 @@ function exportEnemy(work) {
       targetMode: throwFirst ? 'currentPosition' : 'cells',
       targets: targets.map((c) => [...c]),
       targetMap: throwFirst ? null : targetMap(targets),
+      refreshTarget: work.chase.refresh,
       move,
     },
     attacks: work.attacks.map((a, i) => ({
@@ -1297,7 +1483,8 @@ function exportEnemy(work) {
       kind: a.kind,
       blockedByObstacles: KINDS[a.kind].blocked,
       anchor: KINDS[a.kind].anchor,
-      cells: a.cells.map((c) => [...c]),
+      cells: a.kind === 'dash' ? [] : a.cells.map((c) => [...c]),
+      ...(a.kind === 'dash' ? { dash: { maxCells: a.dashCells, tickSeconds: a.dashTick } } : {}),
       telegraphSeconds: a.telegraph,
       gapBeforeSeconds: i === 0 ? 0 : a.gap,
       map: attackMap(a),
@@ -1323,18 +1510,19 @@ function buildExport(works) {
       'stats: hp와 damage(공격 1회의 공격력). 연속 공격은 타마다 같은 공격력이다.',
       'idle: moves가 true면 moveIntervalSeconds마다 인접 빈칸으로 이동한다(게임과 같이 retreat.homeCells 안에서). false면 이동하지 않는다. durationSeconds가 지나면 chase로 간다.',
       'chase.targetMode: cells면 targets 중 한 칸으로 이동한 뒤 공격한다. currentPosition이면 1타가 던지기라 위치 제한이 없어 이동 없이 그 자리에서 공격하며 targets와 move는 쓰지 않는다.',
-      'chase.targets: 플레이어 칸 기준 [열 차이, 행 차이]. 툴이 1타 범위로 계산한 위치에서 사용자가 끄고 켠 최종 결과다. 1타가 적 기준 범위 [a, b]를 가지면 자동 목표는 [-a, -b]이다. 런타임에는 그리드 안이고 플레이어 칸이 아니고 비어 있는 칸 중 가장 가까운 칸을 고른다. 거리가 같으면 플레이어 행에 가까운 칸, 그다음 오른쪽 칸이다.',
+      'chase.targets: 플레이어 칸 기준 [열 차이, 행 차이]. 툴이 1타 범위로 계산한 위치에서 사용자가 끄고 켠 최종 결과다. 1타가 적 기준 범위 [a, b]를 가지면 자동 목표는 [-a, -b]이다. 1타가 dash면 플레이어 행에서 돌진으로 닿는 [±1, 0] ~ [±(maxCells + 1), 0]이다. 런타임에는 그리드 안이고 플레이어 칸이 아니고 비어 있는 칸(1타가 막히는 종류면 플레이어까지 경로도 비어 있는 칸) 중 가장 가까운 칸을 고른다. 거리가 같으면 플레이어 행에 가까운 칸, 그다음 오른쪽 칸이다. 고를 칸이 없으면 공격을 포기하지 않고 추적 상태로 남아 계속 다시 찾는다(Idle로 돌아가지 않는다).',
+      'chase.refreshTarget: true면 이동할 때마다 목표를 다시 고르고 vanish는 나타나는 순간 고른다. false면 추적을 시작할 때(vanish는 사라질 때) 고른 칸으로 가며, 그 칸에 플레이어가 서거나 막혔을 때만 다시 고른다.',
       'chase.targetMap: 플레이어를 게임 시작 위치(P, 열 1, 행 1)에 둔 그림. T = 이동목표, . = 빈 칸. 이 위치에서 그리드 밖으로 나가는 칸은 그림에 없고 targets에만 있다.',
-      'chase.move: method가 shortest면 stepMode가 any-direction일 때 상하좌우 최단 경로로 tickSeconds마다 1칸, horizontal-only일 때 tickSeconds마다 가로로 cellsPerMove칸씩 이동한다(세로 이동 없음. 지금 행에서 그 배수 거리로 닿는 목표만 유효하고, 없으면 공격을 포기하고 retreat로 간다). method가 vanish면 화면에서 사라졌다가 vanishSeconds 뒤 목표 칸에 나타난다.',
+      'chase.move: method가 shortest면 stepMode가 any-direction일 때 상하좌우 최단 경로로 tickSeconds마다 1칸, horizontal-only일 때 tickSeconds마다 먼저 세로로 1칸씩 목표 행을 맞추고, 그 뒤 가로로 cellsPerMove칸씩 이동한다(남은 거리가 더 짧으면 남은 만큼, 막힌 칸 앞에서 멈추고 다음 틱에 다시 시도). 목표 거리는 세로 칸 수 + ceil(가로 칸 수 / cellsPerMove)로 잰다. method가 vanish면 화면에서 사라졌다가 vanishSeconds 뒤 목표 칸에 나타나고, 나타날 칸이 없으면 숨은 채 기다린다.',
       'attacks: 순서대로 실행하는 공격 목록. index 1이 1타다. 이동목표 계산에는 1타만 쓴다.',
-      'attacks[].kind: melee(근접), projectile(발사체), throw(던지기). blockedByObstacles가 true인 projectile은 적 칸에서 대상 칸까지의 직선 경로(양 끝 제외, 각 단계 좌표를 반올림한 칸)에 적이나 장애물이 있으면 그 칸을 맞히지 못한다. 이동목표도 플레이어까지 경로가 막힌 칸은 고르지 않는다. melee와 throw는 막히지 않는다.',
+      'attacks[].kind: melee(근접), projectile(발사체), throw(던지기). blockedByObstacles가 true인 projectile은 적 칸에서 대상 칸까지의 직선 경로(양 끝 제외, 각 단계 좌표를 반올림한 칸)에 적이나 장애물이 있으면 그 칸을 맞히지 못한다. 이동목표도 플레이어까지 경로가 막힌 칸은 고르지 않는다. melee와 throw는 막히지 않는다. dash(돌진)는 cells를 쓰지 않고 dash.maxCells(최대 거리, 1~7칸)와 dash.tickSeconds(칸당 시간)를 쓴다. 예고가 시작될 때 플레이어 쪽으로 방향을 정한다(같은 행이면 가로, 같은 열이면 세로, 둘 다 아니면 플레이어 쪽 가로). 예고가 끝나면 tickSeconds마다 1칸씩 일직선으로 나아간다. 예고 칸은 개수가 아니라 예고시간으로 정한다: 출발 뒤 (k - 1) x tickSeconds에 들어가는 k번째 칸은 들어가기 telegraphSeconds 전부터 보이고, 들어가면 사라진다. 그래서 예고 중에는 앞 칸부터 tickSeconds 간격으로 한 칸씩 늘어나고, 달리는 동안에는 telegraphSeconds 안에 들어갈 칸이 모두 보인다. 장애물·그리드 끝·최대 거리 너머와 플레이어 칸 뒤는 보이지 않는다. 다음 칸이 플레이어면 그 앞에서 멈추며 피해를 1번 주고, 장애물·다른 적·그리드 끝·최대 거리에서는 피해 없이 멈춘다. 멈춘 칸이 적의 새 위치다.',
       'attacks[].anchor와 cells: anchor가 enemy면 cells는 적 칸 기준 [열 차이, 행 차이]다. player면 공격 시작 시점의 플레이어 칸 기준이고 throw가 여기에 해당하며 [0, 0]도 범위가 될 수 있다. 범위는 각 타의 예고가 시작되는 순간에 정한다.',
       'attacks[].map: 그림. P = 플레이어(열 1, 행 1), E = 적(열 5, 행 1, anchor가 enemy일 때만), # = 공격 범위, @ = 플레이어 칸이 범위에 포함, . = 빈 칸.',
       'attacks[].telegraphSeconds: 공격 예고 시간. gapBeforeSeconds: 앞 타의 공격이 실행된 순간부터 이 타의 예고가 시작될 때까지의 시간. 1타는 0이다.',
       'retreat.homeCells: 복귀 선호 위치, 그리드 절대 좌표 [열, 행]. 가장 가까운 빈 칸으로 tickSeconds마다 1칸씩 돌아간다. map의 H가 그 칸이다.',
       'game: 게임 등록 정보(key = config.js ENEMIES의 키, family, firstWave). 툴에서 새로 만든 적은 null이다.',
-      'gameConfig: 지금 게임 config.js ENEMIES 항목 형식으로 옮긴 값. key나 firstWave가 null이면 사용자에게 물어 정한다. 1타의 값만 들어 있다. 새 적은 renderer.js의 ENEMY_LOOKS에도 모양을 넣는다.',
-      'needsGameCode: 지금 게임 코드로는 표현할 수 없어 enemy.js 등의 수정이 필요한 항목. 비어 있으면 gameConfig만 옮기면 동작이 같다.',
+      'gameConfig: 지금 게임 config.js ENEMIES 항목 형식으로 옮긴 값(idle, chase, attacks 전체, retreat). key나 firstWave가 null이면 사용자에게 물어 정한다. 새 적은 renderer.js의 ENEMY_LOOKS에도 모양을 넣는다. 게임은 웨이브가 오를수록 idle 지속시간과 예고시간을 공격 속도만큼 줄인다.',
+      'needsGameCode: 지금 게임 코드로는 표현할 수 없어 enemy.js 등의 수정이 필요한 항목. 비어 있으면 gameConfig만 옮기면 동작이 같다. 게임에서 장애물은 다른 적이다.',
       'warnings: 비어 있는 범위 등 확인이 필요한 점. 비어 있으면 문제없다.',
       '불러올 때는 name, game, stats, idle, chase.targets, chase.move, attacks의 kind·cells·telegraphSeconds·gapBeforeSeconds, retreat.homeCells·tickSeconds만 읽는다. 그림과 gameConfig, needsGameCode, warnings는 무시한다. 값을 고칠 때는 읽는 항목만 고치면 된다.',
     ],
@@ -1494,10 +1682,20 @@ function parseEnemy(raw, index, notes) {
         kind = 'melee';
       }
       const allowCenter = KINDS[kind].anchor === 'player';
-      const cells = cleanCells(rawAttack.cells, (a, b) => inRelativeReach(a, b) && (allowCenter || a !== 0 || b !== 0), `${label} 범위`, note);
-      if (!cells.length) note(`${label} 공격 범위가 비어 있습니다.`);
+      // 돌진은 범위 칸을 쓰지 않는다
+      const cells = kind === 'dash'
+        ? []
+        : cleanCells(rawAttack.cells, (a, b) => inRelativeReach(a, b) && (allowCenter || a !== 0 || b !== 0), `${label} 범위`, note);
+      if (kind !== 'dash' && !cells.length) note(`${label} 공격 범위가 비어 있습니다.`);
       const attack = makeAttack(cells);
       attack.kind = kind;
+      if (kind === 'dash') {
+        const dash = asObject(rawAttack.dash);
+        const maxCells = Number(dash.maxCells);
+        if (Number.isInteger(maxCells) && maxCells >= 1 && maxCells < TOOL.COLS) attack.dashCells = maxCells;
+        else note(`${label} 돌진 최대 거리가 올바르지 않아 ${TOOL.DEFAULT_DASH_CELLS}(으)로 정했습니다.`);
+        attack.dashTick = num(dash.tickSeconds, TOOL.DEFAULT_DASH_TICK, TOOL.MIN_TIME, `${label} 돌진 칸당 시간`);
+      }
       attack.telegraph = num(rawAttack.telegraphSeconds, TOOL.DEFAULT_TELEGRAPH, TOOL.MIN_TIME, `${label} 예고시간`);
       attack.gap = i === 0 ? TOOL.DEFAULT_GAP : num(rawAttack.gapBeforeSeconds, TOOL.DEFAULT_GAP, 0, `${label} 사이 시간`);
       return attack;
@@ -1508,6 +1706,7 @@ function parseEnemy(raw, index, notes) {
 
   const chase = asObject(raw.chase);
   const move = asObject(chase.move);
+  work.chase.refresh = chase.refreshTarget !== false;
   if (move.method === 'vanish') {
     work.chase.method = 'vanish';
     work.chase.vanish = num(move.vanishSeconds, TOOL.DEFAULT_VANISH, 0, '사라짐 시간');

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>4Bit 봇 시뮬레이션</title>
+<style>
+  /* 결과 표만 보이는 단순한 페이지. 게임과 같은 어두운 테마. */
+  :root { color-scheme: dark; --bg: #12141f; --fg: #e8ecf5; --dim: #8a93ad; --line: #2c3350; --accent: #4aa8ff; }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg); font: 13px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+  h1 { font-size: 16px; margin: 0 0 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+  label { color: var(--dim); }
+  input, select, button { background: #1c2030; color: var(--fg); border: 1px solid var(--line); padding: 4px 8px; font: inherit; }
+  button { border-color: var(--accent); cursor: pointer; }
+  #status { color: var(--dim); }
+  table { border-collapse: collapse; margin: 8px 0 16px; }
+  th, td { border: 1px solid var(--line); padding: 3px 8px; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  h2 { font-size: 14px; margin: 16px 0 4px; }
+</style>
+</head>
+<body>
+<h1>봇 시뮬레이션</h1>
+<div class="row">
+  <label>무기 <select id="weapon"><option value="all">전체 (티어별 요약)</option></select></label>
+  <label>무기당 판 수 <input id="runs" type="number" value="10" min="1" max="200"></label>
+  <label>목표 웨이브 <input id="waves" type="number" value="21" min="1" max="60"></label>
+  <button id="start">실행</button>
+  <span id="status"></span>
+</div>
+<div id="result"></div>
+<!-- 게임 스크립트를 그대로 불러온다. main.js(화면 루프)는 부르지 않는다. -->
+<script src="../config.js"></script>
+<script src="../input.js"></script>
+<script src="../grid.js"></script>
+<script src="../player.js"></script>
+<script src="../telegraph.js"></script>
+<script src="../enemy.js"></script>
+<script src="../rewards.js"></script>
+<script src="../relics.js"></script>
+<script src="../logger.js"></script>
+<script src="../renderer.js"></script>
+<script src="../game.js"></script>
+<script src="bot-sim.js"></script>
+</body>
+</html>

@@ -247,7 +247,7 @@ const RELIC_LOGIC = {
       const player = game.player;
       let best = null;
       let bestScore = null;
-      for (const enemy of game.enemies) {
+      for (const enemy of game.visibleEnemies) {
         const score = [
           Math.abs(enemy.col - player.col) + Math.abs(enemy.row - player.row),
           enemy.row === player.row ? 0 : 1,
@@ -283,8 +283,8 @@ const RELIC_LOGIC = {
   // 데미지는 그 노드의 기본 데미지 x damageRatio (판정·HIT·유물 배율 없음). 에어 드럼으로 센 빈 범위 노드도 발동한다.
   crescendo: {
     node(game, e, state, def) {
-      if (e.grade === 'miss' || e.hits < def.minHit || !game.enemies.length) return;
-      const enemy = pickRandom(game.enemies);
+      if (e.grade === 'miss' || e.hits < def.minHit || !game.visibleEnemies.length) return;
+      const enemy = pickRandom(game.visibleEnemies);
       game.burst(enemy.col, enemy.row, CONFIG.PARTICLES_RELIC);
       game.damageEnemy(enemy, game.player.weapon.damages[e.beat] * def.damageRatio, 'crescendo');
     },

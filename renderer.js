@@ -40,6 +40,12 @@ const ENEMY_LOOKS = {
   shotgun: { body: '#d9b63a', dark: '#94781c', marks: [[2, 13, 5, 8]] },
   mortar: { body: '#9aa36a', dark: '#5f6638', marks: [[15, 8, 8, 8]] },
   beam: { body: '#4fc3c9', dark: '#2a7f84', marks: [[3, 10, 4, 2], [3, 15, 4, 2], [3, 20, 4, 2]] },
+  charger: { body: '#d9603c', dark: '#8f3520', marks: [[2, 10, 5, 3], [2, 17, 5, 3]] },
+  assassin: { body: '#5d6b8a', dark: '#2f3850', marks: [[7, 6, 18, 4], [3, 14, 4, 2]] },
+  shieldbearer: { body: '#8c9bb0', dark: '#4f5b6e', marks: [[2, 8, 6, 16]] },
+  quake: { body: '#c98a4f', dark: '#7f5228', marks: [[2, 10, 2, 12], [5, 12, 2, 8]] },
+  hunter: { body: '#6fae4f', dark: '#3d6e2a', marks: [[2, 12, 5, 2], [3, 17, 4, 4]] },
+  cavalry: { body: '#a0703c', dark: '#5e3e1c', marks: [[1, 14, 6, 2], [9, 23, 4, 3], [19, 23, 4, 3]] },
 };
 
 const TELEGRAPH_FILLS = { melee: '#a8323e', ranged: '#b5482c' };
@@ -184,7 +190,7 @@ class Renderer {
     for (const enemy of game.enemies) this.drawEnemy(enemy);
     // 페르마타 정지 중에는 적에 하늘색 테두리를 두른다
     if (game.freezeTimer > 0) {
-      for (const enemy of game.enemies) {
+      for (const enemy of game.visibleEnemies) {
         this.frame(CONFIG.GRID_X + enemy.drawCol * CONFIG.CELL_SIZE + 5, CONFIG.GRID_Y + enemy.drawRow * CONFIG.CELL_SIZE + 4, 22, 24, COLORS.shield);
       }
     }
@@ -203,7 +209,7 @@ class Renderer {
         this.text(`${col},${row}`, Grid.cellX(col) + 1, Grid.cellY(row) + 1, 5, COLORS.dim);
       }
     }
-    for (const enemy of game.enemies) {
+    for (const enemy of game.visibleEnemies) {
       this.text(enemy.def.name, Grid.cellX(enemy.col) + CONFIG.CELL_SIZE / 2, Grid.cellY(enemy.row) + 26, 5, COLORS.text, 'center');
     }
     const fmtMs = (s) => (s === null ? '-' : `${s > 0 ? '+' : ''}${Math.round(s * 1000)}ms`);
@@ -374,7 +380,7 @@ class Renderer {
   drawRewardScreen(game) {
     this.drawOverlay();
     const cx = CONFIG.VIEW_WIDTH / 2;
-    this.text(`WAVE ${game.wave} 클리어`, cx, 8, 13, COLORS.text, 'center');
+    this.text(`STAGE ${game.stageLabel} 클리어`, cx, 8, 13, COLORS.text, 'center');
     this.text(this.statLine(game.waveStats), cx, 24, 8, COLORS.dim, 'center');
 
     // 무기 카드들과 맨 끝의 '지금 무기 유지' 카드. 모두 이름, 범위 그림, 리듬 막대, 데미지, 쿨다운을 보여준다.
@@ -463,7 +469,7 @@ class Renderer {
     this.drawOverlay();
     const cx = CONFIG.VIEW_WIDTH / 2;
     this.text('GAME OVER', cx, 30, 22, COLORS.telegraphEdge, 'center');
-    this.text(`도달 웨이브 ${game.wave}`, cx, 66, 12, COLORS.text, 'center');
+    this.text(`도달 STAGE ${game.stageLabel} (웨이브 ${game.wave})`, cx, 66, 12, COLORS.text, 'center');
     this.text(this.statLine(game.totalStats), cx, 88, 9, COLORS.dim, 'center');
     this.text(`최고 HIT ${game.bestHit}`, cx, 102, 9, POPUP_STYLES.perfect.color, 'center');
     this.text('Enter 또는 R  재시작     T  타이틀', cx, 136, 9, COLORS.ring, 'center');
@@ -471,19 +477,28 @@ class Renderer {
   }
 
   drawTelegraphs(game) {
-    const size = CONFIG.CELL_SIZE;
     for (const telegraph of game.telegraphs) {
-      for (const cell of telegraph.cells) {
-        const x = Grid.cellX(cell.col);
-        const y = Grid.cellY(cell.row);
-        this.rect(x, y, size, size, COLORS.telegraphBase);
-        // 안쪽에서 차오르는 사각형이 칸을 가득 채우면 공격이 실행된다
-        const fill = Math.round(size * telegraph.progress / 2) * 2;
-        const inset = (size - fill) / 2;
-        this.rect(x + inset, y + inset, fill, fill, TELEGRAPH_FILLS[telegraph.owner.def.family]);
-        this.frame(x, y, size, size, COLORS.telegraphEdge);
+      for (const cell of telegraph.cells) this.drawTelegraphCell(cell, telegraph.progress, telegraph.owner.def.family);
+    }
+    // 돌진 예고: 칸마다 적이 들어갈 때가 가까울수록 차오른다
+    for (const enemy of game.enemies) {
+      if (!enemy.dash) continue;
+      for (const cell of enemy.dash.shown) {
+        this.drawTelegraphCell(cell, 1 - cell.lead / enemy.dash.telegraph, enemy.def.family);
       }
     }
+  }
+
+  // 안쪽에서 차오르는 사각형이 칸을 가득 채우면 공격이 실행된다
+  drawTelegraphCell(cell, progress, family) {
+    const size = CONFIG.CELL_SIZE;
+    const x = Grid.cellX(cell.col);
+    const y = Grid.cellY(cell.row);
+    this.rect(x, y, size, size, COLORS.telegraphBase);
+    const fill = Math.round(size * Math.max(0, Math.min(1, progress)) / 2) * 2;
+    const inset = (size - fill) / 2;
+    this.rect(x + inset, y + inset, fill, fill, TELEGRAPH_FILLS[family]);
+    this.frame(x, y, size, size, COLORS.telegraphEdge);
   }
 
   drawImpacts(game) {
@@ -503,6 +518,8 @@ class Renderer {
   }
 
   drawEnemy(enemy) {
+    // 사라짐 이동 중에는 그리지 않는다
+    if (enemy.hidden) return;
     // 스폰 대기 중에는 깜빡인다
     if (enemy.spawnTimer > 0 && Math.floor(enemy.spawnTimer * 12) % 2 === 0) return;
     // 부딪힘(서브우퍼): 오른쪽으로 튀었다가 제자리로 돌아온다
@@ -534,8 +551,8 @@ class Renderer {
     const player = game.player;
     this.drawHpBar(player);
     if (Sfx.muted) this.text('음소거', 8, 16, 7, COLORS.dim);
-    // 웨이브
-    this.text(`WAVE ${game.wave}`, 160, 3, 10, COLORS.text, 'center');
+    // 스테이지 - 스테이지 안의 웨이브
+    this.text(`STAGE ${game.stageLabel}`, 160, 3, 10, COLORS.text, 'center');
     this.drawRelicSlots(game);
     // 무기 이름. 무기 슬롯이 둘이면(턴테이블) 번호와 함께 두 줄로 쓰고 장착 무기만 선명하다.
     const right = CONFIG.VIEW_WIDTH - 8;

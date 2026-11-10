@@ -1,5 +1,21 @@
 // 밸런스와 관련된 모든 숫자는 이 파일에 모은다. 시간 단위는 초.
 
+// 직사각형 범위의 칸 목록. cols, rows는 [시작, 끝] (양 끝 포함). 적 정의의 긴 칸 목록을 줄여 쓰는 데 쓴다.
+function cellBlock([col0, col1], [row0, row1]) {
+  const cells = [];
+  for (let row = row0; row <= row1; row++) {
+    for (let col = col0; col <= col1; col++) cells.push([col, row]);
+  }
+  return cells;
+}
+
+// 좌우 대칭 가로 칸 [±1, 0] ~ [±n, 0]. 돌진하는 적의 이동목표에 쓴다.
+function sideCells(n) {
+  const cells = [];
+  for (let d = 1; d <= n; d++) cells.push([d, 0], [-d, 0]);
+  return cells;
+}
+
 const CONFIG = {
   // 화면
   VIEW_WIDTH: 320,
@@ -436,77 +452,154 @@ const CONFIG = {
   HIT_UI_FADE_TIME: 0.4,        // 사이클이 바뀐 뒤 사라지는 시간
 
   // 적 공통 행동
-  ENEMY_HOME_COLS: 4,           // idle 구역: 오른쪽에서 몇 개 열인지
-  ENEMY_MOVE_TICK: 0.5,         // attack 상태의 이동 틱 (접근과 복귀)
-  ENEMY_MOVE_ANIM_TIME: 0.1,    // 새 칸으로 미끄러지는 시간. 이동 틱의 나머지는 멈춰 있다. idle 이동도 같은 시간으로 미끄러진다.
-  ENEMY_IDLE_MOVE_INTERVAL: 3,  // idle 상태의 이동 간격
+  ENEMY_MOVE_ANIM_TIME: 0.1,    // 새 칸으로 미끄러지는 시간. 이동 틱(적별 값)이 이보다 짧으면 틱 전체에 걸쳐 미끄러진다.
   ENEMY_IDLE_JITTER: 0.2,       // idle 지속 시간을 ±이 비율만큼 흩뜨린다
 
-  // 적 정의. 새 적은 여기에 추가하고 renderer.js의 ENEMY_LOOKS에 모양을 넣는다.
+  // 적 정의. 적 제작 툴(enemy-tool) 양식과 같은 구조다. 새 적은 renderer.js의 ENEMY_LOOKS에도 모양을 넣는다.
+  // 좌표는 [열 차이, 행 차이]이고 오른쪽이 +열, 아래가 +행이다. 시간은 초.
   //   family: melee 또는 ranged. 스폰 확률을 나눌 때 쓴다.
-  //   firstWave: 처음 등장하는 웨이브. 그 웨이브에는 반드시 한 마리가 나온다.
-  //   idleDuration: idle 상태 지속 시간
-  //   telegraphTime: 공격 예고 시간
-  //   공격 위치는 정하지 않는다. attack 상태가 되면 공격 범위가 플레이어에게 닿는 칸 중
-  //   다른 적이 없는 가장 가까운 칸으로 이동한다.
-  //   stationary: true면 이동하지 않고 그 자리에서 공격한다.
-  //   attack: 공격 범위
-  //     cells: [[열, 행], ...]  기준 칸에서의 상대 위치. 왼쪽이 열 -1, 위쪽이 행 -1.
-  //     rows: [행, ...]         기준 칸 왼쪽 끝까지 이어지는 행 (상대 위치)
-  //     aimed: true             기준 칸이 적이 아니라 공격 시작 시점의 플레이어 칸
+  //   firstWave: 처음 등장하는 웨이브. 그 웨이브에는 반드시 한 마리가 나온다. 스테이지마다 두 종씩 나온다.
+  //   hp, damage: 체력, 공격 1회의 공격력 (연속 공격은 타마다 같다)
+  //   idle: { moves: Idle 중 이동 여부, interval: 이동 간격, duration: Idle 지속 시간 }
+  //     Idle 이동은 retreat.home 안의 인접 빈칸으로만 한다.
+  //   chase: Attack 추적. 1타가 throw면 쓰지 않고 그 자리에서 공격한다.
+  //     targets: 이동목표 칸 (플레이어 칸 기준). 그중 비어 있고 갈 수 있는 가장 가까운 칸으로 간다.
+  //     refresh: true면 이동할 때마다 목표를 다시 고르고, false면 처음 고른 칸을 쓴다 (그 칸이 막히면 다시 고른다).
+  //     move: 'shortest'(최단거리) 또는 'vanish'(사라졌다가 목표 칸에 나타남)
+  //     step: 'any'(상하좌우 1칸씩) 또는 'horizontal'(세로 1칸씩 행을 맞춘 뒤 가로 cellsPerMove칸씩)
+  //     tick: shortest 이동 틱, vanish: 사라져 있는 시간
+  //   attacks: 순서대로 실행하는 연속 공격. 1타 범위로 이동목표가 정해진다.
+  //     kind: 'melee'(적 칸 기준, 안 막힘), 'projectile'(적 칸 기준, 경로의 다른 적에 막힘),
+  //           'throw'(공격 시작 시점의 플레이어 칸 기준), 'dash'(적이 직접 일직선으로 달림)
+  //     cells: 범위 칸. dash는 쓰지 않고 maxCells(최대 거리)와 tick(칸당 시간)을 쓴다.
+  //     telegraph: 예고 시간, gap: 앞 타가 실행된 뒤 이 타의 예고가 시작될 때까지의 시간 (2타부터)
+  //   retreat: { home: 복귀 선호 칸 (그리드 절대 좌표), tick: 복귀 이동 틱 }. 스폰도 이 칸을 먼저 고른다.
   ENEMIES: {
-    // 근접
+    // 1스테이지
     sword: {
-      name: '검병', family: 'melee', firstWave: 1,
-      hp: 4.5, damage: 2,
-      idleDuration: 5.5, telegraphTime: 0.6,
-      attack: { cells: [[-1, 0]] },
+      name: '검병', family: 'melee', firstWave: 1, hp: 4.5, damage: 2,
+      idle: { moves: true, interval: 3, duration: 5.4 },
+      chase: { targets: [[1, 0]], refresh: true, move: 'shortest', step: 'any', tick: 0.6 },
+      attacks: [{ kind: 'melee', cells: [[-1, 0]], telegraph: 0.9 }],
+      retreat: { home: cellBlock([4, 7], [0, 3]), tick: 0.6 },
     },
-    spear: {
-      name: '창병', family: 'melee', firstWave: 3,
-      hp: 4.5, damage: 2,
-      idleDuration: 6.5, telegraphTime: 0.7,
-      attack: { cells: [[-1, 0], [-2, 0]] },
-    },
-    twinblade: {
-      name: '쌍검병', family: 'melee', firstWave: 7,
-      hp: 4.5, damage: 2,
-      idleDuration: 4, telegraphTime: 0.6,
-      attack: { cells: [[-1, 0], [1, 0], [0, -1], [0, 1]] },
-    },
-    greatsword: {
-      name: '대검병', family: 'melee', firstWave: 9,
-      hp: 4.5, damage: 2,
-      idleDuration: 7.5, telegraphTime: 0.9,
-      attack: { cells: [[-1, -1], [-1, 0], [-1, 1]] },
-    },
-    // 원거리
     archer: {
-      name: '궁수', family: 'ranged', firstWave: 2,
-      hp: 3, damage: 1,
-      idleDuration: 6.5, telegraphTime: 1.0,
-      attack: { rows: [0] },
+      name: '궁수', family: 'ranged', firstWave: 2, hp: 3, damage: 1,
+      idle: { moves: true, interval: 3, duration: 6.6 },
+      chase: { targets: cellBlock([3, 7], [0, 0]), refresh: true, move: 'shortest', step: 'any', tick: 0.6 },
+      attacks: [{ kind: 'projectile', cells: cellBlock([-7, -1], [0, 0]), telegraph: 1.2 }],
+      retreat: { home: cellBlock([6, 7], [0, 3]), tick: 0.6 },
     },
+    // 2스테이지
+    spear: {
+      name: '창병', family: 'melee', firstWave: 4, hp: 4.5, damage: 2,
+      idle: { moves: true, interval: 3, duration: 6.6 },
+      chase: { targets: [[2, 0]], refresh: true, move: 'shortest', step: 'any', tick: 0.6 },
+      attacks: [{ kind: 'melee', cells: [[-1, 0], [-2, 0]], telegraph: 0.9 }],
+      retreat: { home: cellBlock([4, 7], [0, 3]), tick: 0.6 },
+    },
+    charger: {
+      name: '돌격병', family: 'melee', firstWave: 5, hp: 4, damage: 3,
+      idle: { moves: true, interval: 1.5, duration: 4.2 },
+      chase: { targets: [[1, 0], [2, 0]], refresh: false, move: 'shortest', step: 'horizontal', cellsPerMove: 2, tick: 0.3 },
+      attacks: [{ kind: 'melee', cells: [[-1, 0], [-2, 0]], telegraph: 0.6 }],
+      retreat: { home: cellBlock([6, 7], [0, 3]), tick: 0.3 },
+    },
+    // 3스테이지
     shotgun: {
-      name: '산탄병', family: 'ranged', firstWave: 5,
-      hp: 3, damage: 1,
-      idleDuration: 5.5, telegraphTime: 0.8,
-      attack: { cells: [[-1, -1], [-1, 0], [-1, 1], [-2, -1], [-2, 0], [-2, 1]] },
+      name: '산탄병', family: 'ranged', firstWave: 7, hp: 3, damage: 1,
+      idle: { moves: true, interval: 3, duration: 5.4 },
+      chase: { targets: [[1, 0], [2, 1], [2, 0], [2, -1]], refresh: true, move: 'shortest', step: 'any', tick: 0.6 },
+      attacks: [{ kind: 'projectile', cells: [[-1, 0], [-2, -1], [-2, 0], [-2, 1]], telegraph: 0.9 }],
+      retreat: { home: cellBlock([4, 7], [0, 3]), tick: 0.6 },
     },
+    assassin: {
+      name: '암살자', family: 'melee', firstWave: 8, hp: 3, damage: 3,
+      idle: { moves: true, interval: 3, duration: 6 },
+      chase: { targets: [[-1, 0]], refresh: true, move: 'vanish', vanish: 0.9 },
+      attacks: [{ kind: 'melee', cells: [[1, 0]], telegraph: 0.6 }],
+      retreat: { home: cellBlock([4, 7], [0, 3]), tick: 0.9 },
+    },
+    // 4스테이지
+    twinblade: {
+      name: '쌍검병', family: 'melee', firstWave: 10, hp: 4.5, damage: 1,
+      idle: { moves: true, interval: 3, duration: 4.2 },
+      chase: { targets: [[1, 0], [-1, 0], [0, 1], [0, -1]], refresh: true, move: 'shortest', step: 'any', tick: 0.6 },
+      attacks: [
+        { kind: 'melee', cells: [[-1, 0], [1, 0], [0, -1], [0, 1]], telegraph: 0.9 },
+        { kind: 'melee', cells: [[-1, -1], [1, -1], [-1, 1], [1, 1]], telegraph: 0.6, gap: 0 },
+      ],
+      retreat: { home: cellBlock([4, 7], [0, 3]), tick: 0.6 },
+    },
+    shieldbearer: {
+      name: '방패병', family: 'melee', firstWave: 11, hp: 9, damage: 1,
+      idle: { moves: false, interval: 3, duration: 7.2 },
+      chase: { targets: sideCells(7), refresh: true, move: 'shortest', step: 'any', tick: 0.7 },
+      attacks: [{ kind: 'dash', maxCells: 7, tick: 0.3, telegraph: 0.5 }],
+      retreat: { home: cellBlock([3, 4], [0, 3]), tick: 0.9 },
+    },
+    // 5스테이지
+    greatsword: {
+      name: '대검병', family: 'melee', firstWave: 13, hp: 7, damage: 3,
+      idle: { moves: true, interval: 3, duration: 7.5 },
+      chase: { targets: [[1, 1], [1, 0], [1, -1]], refresh: true, move: 'shortest', step: 'horizontal', cellsPerMove: 2, tick: 0.7 },
+      attacks: [{ kind: 'melee', cells: [[-1, -1], [-1, 0], [-1, 1]], telegraph: 1.5 }],
+      retreat: { home: cellBlock([4, 7], [0, 3]), tick: 0.9 },
+    },
+    quake: {
+      name: '진동술사', family: 'ranged', firstWave: 14, hp: 4, damage: 2,
+      idle: { moves: true, interval: 3, duration: 6.6 },
+      chase: { targets: [[3, -1], [3, 0], [3, 1]], refresh: true, move: 'shortest', step: 'any', tick: 0.6 },
+      attacks: [
+        { kind: 'melee', cells: cellBlock([-1, -1], [-3, 3]), telegraph: 0.6 },
+        { kind: 'melee', cells: cellBlock([-2, -2], [-3, 3]), telegraph: 0.6, gap: 0 },
+        { kind: 'melee', cells: cellBlock([-3, -3], [-3, 3]), telegraph: 0.6, gap: 0 },
+      ],
+      retreat: { home: cellBlock([4, 7], [0, 3]), tick: 0.6 },
+    },
+    // 6스테이지
     mortar: {
-      name: '포격병', family: 'ranged', firstWave: 11,
-      hp: 3, damage: 1,
-      idleDuration: 7.5, telegraphTime: 1.2,
-      stationary: true,
-      attack: { aimed: true, cells: [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]] },
+      name: '포격병', family: 'ranged', firstWave: 16, hp: 3, damage: 2,
+      idle: { moves: false, interval: 3, duration: 7.5 },
+      chase: { targets: [], refresh: true, move: 'shortest', step: 'any', tick: 0.6 },
+      attacks: [{ kind: 'throw', cells: [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]], telegraph: 1.2 }],
+      retreat: { home: cellBlock([4, 7], [0, 3]), tick: 0.6 },
     },
+    hunter: {
+      name: '사냥꾼', family: 'melee', firstWave: 17, hp: 6, damage: 1,
+      idle: { moves: true, interval: 1.8, duration: 6 },
+      chase: {
+        targets: [...cellBlock([1, 7], [0, 0]), [2, -1], [3, -2], [2, 1], [3, 2], [4, 3], [4, -3]],
+        refresh: true, move: 'shortest', step: 'any', tick: 0.3,
+      },
+      attacks: [{
+        kind: 'projectile',
+        cells: [...cellBlock([-7, -1], [0, 0]), [-2, 1], [-3, 2], [-2, -1], [-3, -2], [-4, -3], [-4, 3]],
+        telegraph: 0.6,
+      }],
+      retreat: { home: cellBlock([4, 7], [0, 3]), tick: 0.3 },
+    },
+    // 7스테이지
     beam: {
-      name: '광선병', family: 'ranged', firstWave: 13,
-      hp: 3, damage: 1,
-      idleDuration: 8.5, telegraphTime: 1.3,
-      attack: { rows: [-1, 0, 1] },
+      name: '광선병', family: 'ranged', firstWave: 19, hp: 3, damage: 2,
+      idle: { moves: true, interval: 3, duration: 8.4 },
+      chase: { targets: cellBlock([1, 7], [-1, 1]), refresh: true, move: 'shortest', step: 'any', tick: 0.6 },
+      attacks: [{ kind: 'melee', cells: cellBlock([-7, -1], [-1, 1]), telegraph: 1.5 }],
+      retreat: { home: cellBlock([6, 7], [0, 3]), tick: 0.6 },
+    },
+    cavalry: {
+      name: '기마병', family: 'melee', firstWave: 20, hp: 6, damage: 2,
+      idle: { moves: true, interval: 3, duration: 6.6 },
+      chase: { targets: sideCells(7), refresh: true, move: 'shortest', step: 'any', tick: 0.6 },
+      attacks: [{ kind: 'dash', maxCells: 7, tick: 0.15, telegraph: 0.4 }],
+      retreat: { home: cellBlock([4, 7], [0, 3]), tick: 0.6 },
     },
   },
+
+  // 스테이지: 웨이브 STAGE_WAVES개를 한 스테이지로 묶는다. STAGE_COUNT 스테이지 안에 모든 적이 나오고,
+  // 그 뒤에는 새 적 없이 같은 규칙으로 계속된다. 표시(STAGE 2-1)와 등장 순서를 정리하는 단위다.
+  STAGE_WAVES: 3,
+  STAGE_COUNT: 7,
 
   // 웨이브와 스폰
   SPAWN_FIRST_WAVE: 1,          // 1웨이브에 스폰되는 수
@@ -517,7 +610,8 @@ const CONFIG = {
   ENEMY_HP_GROWTH: 0.15,        // 웨이브당 HP 증가율
   ENEMY_ATTACK_SPEED_GROWTH: 0.06, // 웨이브당 공격 속도 증가율
   ENEMY_ATTACK_SPEED_MAX: 1.8,
-  ENEMY_TELEGRAPH_MIN: 0.6,     // 공격 예고 시간의 하한. 정의 값이나 공격 속도와 상관없이 이보다 짧아지지 않는다.
+  // 공격 예고 시간의 하한. 공격 속도가 올라도 이보다 짧아지지 않는다. 정의 값이 이보다 짧으면 정의 값이 하한이다.
+  ENEMY_TELEGRAPH_MIN: 0.6,
   WAVE_CLEAR_DELAY: 0.6,        // 마지막 적 처치 후 보상 화면까지의 대기
 
   // 보상: 웨이브를 클리어하면 무기 카드와 '지금 무기 유지' 카드 중 하나를 고른다.
@@ -576,6 +670,7 @@ const CONFIG = {
   BUMP_OFFSET: 5,               // 내부 해상도 픽셀
   BUMP_FLASH_TIME: 0.12,
   PARTICLES_BUMP: 5,
+  PARTICLES_VANISH: 6,          // 적이 사라지거나 나타날 때 튀는 입자 수 (암살자)
 
   // player.stats가 효과로 도달할 수 있는 수치의 한계. 지금은 능력치를 바꾸는 보상이 없고, 추후 유물에서 쓴다.
   STAT_LIMITS: {
@@ -586,7 +681,7 @@ const CONFIG = {
 
   // 게임오버 로그 (logger.js). 밸런스 분석용이며 게임 규칙에는 영향이 없다.
   // BUILD_VERSION: 밸런스(무기·적·유물 수치, 판정 등)를 바꿀 때마다 손으로 올린다. 로그를 빌드별로 나눠 볼 때 쓴다.
-  BUILD_VERSION: '2026.11.07-1',
+  BUILD_VERSION: '2026.11.10-1',
   LOG_MAX_RUNS: 500,            // 저장소에 남기는 최근 판 수. 넘치면 오래된 것부터 지운다.
   LOG_STORAGE_KEY: '4bit_prototype_logs',
   LOG_BACKUP_KEY: '4bit_prototype_logs_backup', // 직전 내보내기 묶음 1회분 (Shift+L 복구용)

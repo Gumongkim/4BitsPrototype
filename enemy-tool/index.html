@@ -84,6 +84,8 @@
           <button data-chase-view="method">이동 방법</button>
         </div>
         <div id="chase-target">
+          <label class="check"><input id="chase-refresh" type="checkbox"> 이동목표 갱신 (이동할 때마다 다시 고름)</label>
+          <p class="hint" id="chase-refresh-info"></p>
           <p class="hint" id="chase-target-info"></p>
           <button id="chase-target-reset" class="wide">자동 계산값으로 되돌리기</button>
         </div>
@@ -92,7 +94,7 @@
           <label class="check"><input type="radio" name="chase-method" value="vanish"> 화면밖 사라짐</label>
           <div id="method-shortest" class="indent">
             <label class="check"><input type="radio" name="chase-step" value="all"> 모두 한 칸씩 이동</label>
-            <label class="check"><input type="radio" name="chase-step" value="horizontal"> 가로만 n 칸씩 이동</label>
+            <label class="check"><input type="radio" name="chase-step" value="horizontal"> 세로 1칸씩 행을 맞춘 뒤 가로 n 칸씩 이동</label>
             <label class="field" id="chase-n-wrap">n (한 번에 이동하는 칸 수)
               <input id="chase-n" type="number" min="1" max="7" step="1"></label>
             <label class="field">이동 틱 (초)
@@ -112,12 +114,19 @@
         <button data-kind="melee">근접</button>
         <button data-kind="projectile">발사체</button>
         <button data-kind="throw">던지기</button>
+        <button data-kind="dash">돌진</button>
       </div>
       <p class="hint" id="attack-kind-info"></p>
       <label class="field">예고시간 (초)
         <input id="attack-telegraph" type="number" min="0.05" step="0.05"></label>
       <label class="field" id="attack-gap-wrap">앞 공격과의 사이 시간 (초)
         <input id="attack-gap" type="number" min="0" step="0.05"></label>
+      <div id="attack-dash-wrap" class="two-col dash-fields">
+        <label class="field">최대 거리 (칸)
+          <input id="attack-dash-cells" type="number" min="1" max="7" step="1"></label>
+        <label class="field">칸당 시간 (초)
+          <input id="attack-dash-tick" type="number" min="0.05" step="0.05"></label>
+      </div>
       <p class="hint" id="attack-range-info"></p>
       <div class="row-buttons">
         <button id="attack-clear">범위 비우기</button>
